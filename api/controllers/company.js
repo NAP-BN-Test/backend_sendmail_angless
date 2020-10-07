@@ -583,6 +583,11 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var company = mCompany(db);
+                var check = false;
+                var companyObj = await company.findAll({
+                    where: { Name: body.name }
+                })
+                if (companyObj.length) check = true;
                 company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
                 company.create({
                     UserID: body.userID ? body.userID : null,
@@ -604,6 +609,7 @@ module.exports = {
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: Constant.MESSAGE.ACTION_SUCCESS,
+                    exist: check,
                 }
                 res.json(result);
             } catch (error) {

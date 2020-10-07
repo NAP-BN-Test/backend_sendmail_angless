@@ -282,11 +282,51 @@ module.exports = {
                         limit: Number(body.itemPerPage)
                     });
                 } else {
-                    var mailCampainData = await mailCampain.findAll({
-                        where: [
-                            where,
+                    console.log(body);
+                    var data = JSON.parse(body.data)
+                    if (data.search) {
+                        where = [
+                            { Name: { [Op.like]: '%' + data.search + '%' } },
                             { Type: 'MailList' }
-                        ],
+                        ];
+                    } else {
+                        where = [
+                            { Name: { [Op.like]: '%%' } },
+                            { Type: 'MailList' }
+                        ];
+                    }
+                    let whereOjb = { [Op.and]: where };
+                    if (data.items) {
+                        for (var i = 0; i < data.items.length; i++) {
+                            let userFind = {};
+                            if (data.items[i].fields['name'] === 'Name') {
+                                userFind['Name'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    whereOjb[Op.and] = userFind
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    whereOjb[Op.or] = userFind
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    whereOjb[Op.not] = userFind
+                                }
+                            }
+                            if (data.items[i].fields['name'] === 'Subject') {
+                                userFind['Subject'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    whereOjb[Op.and] = userFind
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    whereOjb[Op.or] = userFind
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    whereOjb[Op.not] = userFind
+                                }
+                            }
+                        }
+                    }
+                    var mailCampainData = await mailCampain.findAll({
+                        where: whereOjb,
                         include: [
                             { model: mUser(db) },
                             { model: mTemplate(db), required: false, as: 'Template' }
