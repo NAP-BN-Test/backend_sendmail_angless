@@ -204,7 +204,7 @@ module.exports = function (app) {
 
     app.route('/crm/add_mail_list').post(emailList.addMailList);
 
-    app.route('/crm/add_mail_list_detail').post(emailList.addMailListDetail);
+    app.route('/crm/add_addressbook_to_maillist').post(emailList.adCompanyTodMailList);
 
     app.route('/crm/add_mail_campain').post(emailList.addMailCampain);
 

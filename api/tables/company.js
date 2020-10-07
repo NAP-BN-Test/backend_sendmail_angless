@@ -32,6 +32,7 @@ module.exports = function (db) {
         CategoryID: Sequelize.BIGINT,
         CustomerGroup: Sequelize.STRING,
         Relationship: Sequelize.STRING,
+        MailListID: Sequelize.BIGINT,
     });
 
     return table;

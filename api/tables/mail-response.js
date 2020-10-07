@@ -12,6 +12,7 @@ module.exports = function (db) {
         MailCampainID: Sequelize.BIGINT,
         Type: Sequelize.INTEGER,
         Reason: Sequelize.STRING,
+        CompanyID: Sequelize.BIGINT,
     });
 
     return table;

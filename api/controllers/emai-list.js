@@ -2,6 +2,7 @@ const Result = require('../constants/result');
 const Constant = require('../constants/constant');
 
 const Op = require('sequelize').Op;
+var mCompany = require('../tables/company');
 
 var moment = require('moment');
 var mContact = require('../tables/contact');
@@ -183,17 +184,8 @@ module.exports = {
                                 whereOjb[Op.not] = userFind
                             }
                         }
-                        if (data.items[i].fields['name'] === 'Owner') {
-                            var owner = await mUser(db).findAll({
-                                where: {
-                                    Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
-                                }
-                            })
-                            var listOwner = [];
-                            owner.forEach(item => {
-                                listOwner.push(item.ID)
-                            })
-                            userFind['OwnerID'] = { [Op.like]: listOwner }
+                        if (data.items[i].fields['name'] === 'Email') {
+                            userFind['Email'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
                             if (data.items[i].conditionFields['name'] == 'And') {
                                 whereOjb[Op.and] = userFind
                             }
@@ -206,16 +198,13 @@ module.exports = {
                         }
                     }
                 }
-                var mailListDetail = mMailListDetail(db);
-                mailListDetail.belongsTo(mUser(db), { foreignKey: 'OwnerID' });
-                mailListDetail.belongsTo(mAdditionalInformation(db), { foreignKey: 'DataID', sourceKey: 'ID', as: 'Data' });
-                mailListDetail.hasMany(mMailResponse(db), { foreignKey: 'MailListDetailID' });
-                var mMailListDetailData = await mailListDetail.findAll({
+                var company = mCompany(db);
+                company.belongsTo(mUser(db), { foreignKey: 'UserID' });
+                company.hasMany(mMailResponse(db), { foreignKey: 'MailListDetailID' });
+                var mCompanyData = await company.findAll({
                     where: whereOjb,
                     include: [
                         { model: mUser(db) },
-                        { model: mMailResponse(db) },
-                        { model: mAdditionalInformation(db), required: false, as: 'Data' },
                         {
                             model: mMailResponse(db),
                             required: false,
@@ -229,28 +218,26 @@ module.exports = {
                     limit: Number(body.itemPerPage)
                 })
 
-                var mMailListDetailCount = await mailListDetail.count({
+                var mCompanyCount = await company.count({
                     where: whereOjb
                 })
                 var array = [];
 
-                mMailListDetailData.forEach(item => {
+                mCompanyData.forEach(item => {
                     array.push({
                         id: Number(item.ID),
                         email: item.Email,
-                        owner: item.User.Name,
+                        owner: item.User ? item.User.Name : '',
                         createTime: mModules.toDatetime(item.TimeCreate),
                         mailCount: item.MailResponses.length,
                         contactName: item.Name,
-                        DataID: item.DataID ? item.DataID : null,
-                        DataName: item.Data ? item.Data.OurRef : null
                     })
                 })
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
                     array,
-                    count: mMailListDetailCount
+                    count: mCompanyCount
                 }
                 res.json(result);
             } catch (error) {
@@ -362,7 +349,6 @@ module.exports = {
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-
                 var mailCampain = mMailCampain(db);
                 mailCampain.belongsTo(mUser(db), { foreignKey: 'OwnerID' });
                 mailCampain.belongsTo(mMailList(db), { foreignKey: 'MailListID' });
@@ -379,11 +365,9 @@ module.exports = {
                     name: mailCampainData.Name,
                     subject: mailCampainData.Subject,
                     owner: mailCampainData.User.Name,
-                    createTime: mModules.toDatetime(mailCampainData.TimeCreate),
-                    endTime: mailCampainData.TimeEnd,
                     body: mailCampainData.Body,
                     mailListID: Number(mailCampainData.MailListID),
-                    mailListName: mailCampainData.MailList.Name ? mailCampainData.MailList.Name : "",
+                    mailListName: mailCampainData.MailList ? mailCampainData.MailList.Name : "",
                     Description: mailCampainData.Description,
                     Type: mailCampainData.Type
                 }
@@ -449,13 +433,37 @@ module.exports = {
 
     deleteMailList: async function (req, res) {
         let body = req.body;
-
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 if (body.listID) {
                     let listID = JSON.parse(body.listID);
-
+                    var listMaiDetail = await mMailListDetail(db).findAll({
+                        where: {
+                            MailListID: {
+                                [Op.in]: listID
+                            }
+                        }
+                    })
+                    var listIDDetail = [];
+                    listMaiDetail.forEach(item => {
+                        listIDDetail.push(item.ID);
+                    })
+                    await mMailResponse(db).destroy({
+                        where: {
+                            MailListDetailID: {
+                                [Op.in]: listIDDetail,
+                            }
+                        }
+                    })
                     await mMailListDetail(db).destroy({
+                        where: {
+                            MailListID: {
+                                [Op.in]: listID
+                            }
+                        }
+                    });
+                    await mCompany(db).update({ MailListID: null }, {
                         where: {
                             MailListID: {
                                 [Op.in]: listID
@@ -488,24 +496,21 @@ module.exports = {
         })
     },
 
-    addMailListDetail: async function (req, res) {
+    adCompanyTodMailList: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                let now = moment().subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
-                let listMail = JSON.parse(body.listMail);
-                var user = await mUser(db).findOne({ where: { ID: body.userID } })
-                for (var i = 0; i < listMail.length; i++) {
-                    var contact = await mContact(db).findOne({ where: { ID: listMail[i] } });
-                    await mMailListDetail(db).create({
-                        Email: contact.Email ? contact.Email : '',
-                        Name: contact.Name ? contact.Name : '',
-                        TimeCreate: now,
-                        MailListID: body.mailListID,
-                        OwnerID: user.ID,
-                    }).then(data => {
-                        console.log(data);
-                    })
+                if (body.listID) {
+                    let listID = JSON.parse(body.listID);
+                    for (var i = 0; i < listID.length; i++) {
+                        console.log(listID[i]);
+                        await mCompany(db).update({
+                            MailListID: body.mailListID,
+                        }, {
+                            where: { ID: listID[i] }
+                        })
+                    }
                 }
                 res.json(Result.ACTION_SUCCESS);
             } catch (error) {
@@ -691,11 +696,11 @@ module.exports = {
                     mAmazon.sendEmail(body.myMail, body.myMail, body.subject, body.body);
                     res.json(Result.ACTION_SUCCESS);
                 } else {
-                    var mailListDetailData = await mMailListDetail(db).findAll({
+                    var companyData = await mCompany(db).findAll({
                         where: { MailListID: body.mailListID }
                     })
 
-                    mailListDetailData.forEach(async (mailItem, i) => {
+                    companyData.forEach(async (mailItem) => {
 
                         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
@@ -715,7 +720,7 @@ module.exports = {
                             if (checkMailRes == false) {
                                 await mMailResponse(db).create({
                                     MailCampainID: body.campainID,
-                                    MailListDetailID: mailItem.ID,
+                                    CompanyID: mailItem.ID,
                                     TimeCreate: now,
                                     Type: Constant.MAIL_RESPONSE_TYPE.INVALID
                                 });
@@ -725,7 +730,7 @@ module.exports = {
                             if (sendMailRes)
                                 await mMailResponse(db).create({
                                     MailCampainID: body.campainID,
-                                    MailListDetailID: mailItem.ID,
+                                    CompanyID: mailItem.ID,
                                     TimeCreate: now,
                                     Type: Constant.MAIL_RESPONSE_TYPE.SEND
                                 });
@@ -743,6 +748,70 @@ module.exports = {
             res.json(error)
         })
     },
+
+    // addMailSend: async function (req, res) {
+    //     let body = req.body;
+
+    //     database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+    //         try {
+    //             let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
+
+    //             if (body.isTestMail) {
+    //                 mAmazon.sendEmail(body.myMail, body.myMail, body.subject, body.body);
+    //                 res.json(Result.ACTION_SUCCESS);
+    //             } else {
+    //                 var mailListDetailData = await mMailListDetail(db).findAll({
+    //                     where: { MailListID: body.mailListID }
+    //                 })
+
+    //                 mailListDetailData.forEach(async (mailItem, i) => {
+
+    //                     let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
+    //                     let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
+    //                     let httpTrack = `<img src="http://163.44.192.123:3302/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+
+    //                     let tokenUnsubscribe = `email=${mailItem.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
+    //                     let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
+    //                     let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+
+    //                     let bodyHtml = handleClickLink(body, mailItem.ID);
+
+    //                     bodyHtml = httpTrack + bodyHtml;
+    //                     bodyHtml = bodyHtml + unSubscribe;
+    //                     bodyHtml = bodyHtml.replace(/#ten/g, mailItem.Name);
+
+    //                     mCheckMail.checkEmail(mailItem.Email).then(async (checkMailRes) => {
+    //                         if (checkMailRes == false) {
+    //                             await mMailResponse(db).create({
+    //                                 MailCampainID: body.campainID,
+    //                                 MailListDetailID: mailItem.ID,
+    //                                 TimeCreate: now,
+    //                                 Type: Constant.MAIL_RESPONSE_TYPE.INVALID
+    //                             });
+    //                         }
+    //                     })
+    //                     mAmazon.sendEmail(body.myMail, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
+    //                         if (sendMailRes)
+    //                             await mMailResponse(db).create({
+    //                                 MailCampainID: body.campainID,
+    //                                 MailListDetailID: mailItem.ID,
+    //                                 TimeCreate: now,
+    //                                 Type: Constant.MAIL_RESPONSE_TYPE.SEND
+    //                             });
+    //                     });
+    //                 });
+    //                 res.json(Result.ACTION_SUCCESS)
+
+    //             }
+    //         } catch (error) {
+    //             console.log(error);
+    //             res.json(Result.SYS_ERROR_RESULT)
+    //         }
+
+    //     }, error => {
+    //         res.json(error)
+    //     })
+    // },
 
     getMailListOption: async function (req, res) {
         let body = req.body;
