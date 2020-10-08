@@ -17,6 +17,12 @@ let mTemplate = require('../tables/template');
 var mMailCampain = require('../tables/mail-campain');
 var mMailResponse = require('../tables/mail-response');
 
+
+var mCompanyMailList = require('../tables/company-maillist');
+var mMailListCampaign = require('../tables/maillist-campaign');
+
+
+
 var mAmazon = require('../controllers/amazon');
 var mCheckMail = require('../controllers/check-mail');
 var cUser = require('../controllers/user');
@@ -24,7 +30,8 @@ var cUser = require('../controllers/user');
 var mUser = require('../tables/user');
 
 var mModules = require('../constants/modules');
-const { MAIL_RESPONSE_TYPE } = require('../constants/constant');
+// const { MAIL_RESPONSE_TYPE } = require('../constants/constant');
+// const { NUMBER } = require('sequelize/types');
 
 function handleClickLink(body, mailListDetailID) {
     var bodyHtml = "";
@@ -50,7 +57,46 @@ function handleClickLink(body, mailListDetailID) {
 
 
 module.exports = {
-
+    copyMailCampaign: async function (req, res) {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            mMailCampain(db).findOne({ where: { ID: body.id } }).then(async data => {
+                try {
+                    let now = moment().subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
+                    data = {
+                        Name: data.Name + '(Bản sao)',
+                        TimeCreate: now,
+                        TimeEnd: now,
+                        OwnerID: Number(data.OwnerID),
+                        Type: data.Type ? data.Type : '',
+                        Body: data.Body ? data.Body : '',
+                        Subject: data.Subject ? data.Subject : ''
+                    }
+                    var MailCampainID = await mMailCampain(db).create(data);
+                    await mMailListCampaign(db).findAll({
+                        where: {
+                            MailCampainID: body.id,
+                        }
+                    }).then(async data => {
+                        for (var i = 0; i < data.length; i++) {
+                            await mMailListCampaign(db).create({
+                                MailCampainID: Number(MailCampainID.ID),
+                                MailListID: Number(data[i].MailListID),
+                            })
+                        }
+                    })
+                    var result = {
+                        status: Constant.STATUS.SUCCESS,
+                        message: Constant.MESSAGE.ACTION_SUCCESS,
+                    }
+                    res.json(result);
+                } catch (error) {
+                    console.log(error);
+                    res.json(Result.SYS_ERROR_RESULT)
+                }
+            })
+        })
+    },
     getMailList: async function (req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -157,15 +203,23 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var data = JSON.parse(body.data)
+                var listCompanyID = [];
+                await mCompanyMailList(db).findAll({
+                    where: { MailListID: body.mailListID }
+                }).then(data => {
+                    data.forEach(item => {
+                        listCompanyID.push(item.CompanyID);
+                    })
+                })
                 if (data.search) {
                     where = [
                         { Name: { [Op.like]: '%' + data.search + '%' } },
-                        { MailListID: body.mailListID }
+                        { ID: { [Op.in]: listCompanyID } }
                     ];
                 } else {
                     where = [
                         { Name: { [Op.like]: '%%' } },
-                        { MailListID: body.mailListID }
+                        { ID: { [Op.in]: listCompanyID } }
                     ];
                 }
                 let whereOjb = { [Op.and]: where };
@@ -222,17 +276,38 @@ module.exports = {
                     where: whereOjb
                 })
                 var array = [];
-
-                mCompanyData.forEach(item => {
-                    array.push({
-                        id: Number(item.ID),
-                        email: item.Email,
-                        owner: item.User ? item.User.Name : '',
-                        createTime: mModules.toDatetime(item.TimeCreate),
-                        mailCount: item.MailResponses.length,
-                        contactName: item.Name,
+                for (var i = 0; i < mCompanyData.length; i++) {
+                    let listNameCompany = '';
+                    let count = 0;
+                    var companyDuplicant = await mCompanyMailList(db).findAll({
+                        where: {
+                            CompanyID: mCompanyData[i].ID,
+                            [Op.not]: {
+                                MailListID: body.mailListID
+                            }
+                        },
                     })
-                })
+                    if (companyDuplicant.length > 0)
+                        for (var j = 0; j < companyDuplicant.length; j++) {
+                            await mMailList(db).findOne({ where: { ID: companyDuplicant[j].MailListID } }).then(data => {
+                                if (data.Name) {
+                                    count += 1;
+                                    count > 1 ? listNameCompany += ', [' + data.Name + ']' : listNameCompany += '[' + data.Name + ']';
+                                }
+                            })
+                        }
+                    array.push({
+                        id: Number(mCompanyData[i].ID),
+                        email: mCompanyData[i].Email,
+                        owner: mCompanyData[i].User ? mCompanyData[i].User.Name : '',
+                        createTime: mModules.toDatetime(mCompanyData[i].TimeCreate),
+                        mailCount: mCompanyData[i].MailResponses.length,
+                        contactName: mCompanyData[i].Name,
+                        checkDuplicate: companyDuplicant.length > 0 ? true : false,
+                        nameGroup: listNameCompany ? listNameCompany : '',
+                    })
+
+                }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -253,6 +328,7 @@ module.exports = {
 
     getListMailCampain: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var userRole = await cUser.checkUser(body.ip, body.dbName, body.userID);
@@ -321,7 +397,6 @@ module.exports = {
                             }
                         }
                     }
-                    console.log(whereOjb);
                     var mailCampainData = await mailCampain.findAll({
                         where: whereOjb,
                         include: [
@@ -385,29 +460,39 @@ module.exports = {
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
+                var listMailList = [];
+                await mMailListCampaign(db).findAll({
+                    where: { MailCampainID: body.campainID }
+                }).then(async data => {
+                    for (var i = 0; i < data.length; i++) {
+                        var mailList = await mMailList(db).findOne({
+                            where: { ID: data[i].MailListID }
+                        })
+                        listMailList.push({
+                            id: Number(data[i].MailListID),
+                            name: mailList.Name ? mailList.Name : ''
+                        })
+                    }
+                })
                 var mailCampain = mMailCampain(db);
-                mailCampain.belongsTo(mUser(db), { foreignKey: 'OwnerID' });
-                mailCampain.belongsTo(mMailList(db), { foreignKey: 'MailListID' });
+                mailCampain.belongsTo(mUser(db), { foreignKey: 'OwnerID' })
+
                 var mailCampainData = await mailCampain.findOne({
                     where: { ID: body.campainID },
                     include: [
                         { model: mUser(db) },
-                        { model: mMailList(db) }
                     ]
                 });
-
                 var obj = {
                     id: Number(mailCampainData.ID),
                     name: mailCampainData.Name,
                     subject: mailCampainData.Subject,
                     owner: mailCampainData.User.Name,
                     body: mailCampainData.Body,
-                    mailListID: Number(mailCampainData.MailListID),
-                    mailListName: mailCampainData.MailList ? mailCampainData.MailList.Name : "",
                     Description: mailCampainData.Description,
-                    Type: mailCampainData.Type
+                    Type: mailCampainData.Type,
+                    listMailList
                 }
-
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -469,7 +554,6 @@ module.exports = {
 
     deleteMailList: async function (req, res) {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 if (body.listID) {
@@ -540,11 +624,9 @@ module.exports = {
                 if (body.listID) {
                     let listID = JSON.parse(body.listID);
                     for (var i = 0; i < listID.length; i++) {
-                        console.log(listID[i]);
-                        await mCompany(db).update({
+                        await mCompanyMailList(db).create({
+                            CompanyID: listID[i],
                             MailListID: body.mailListID,
-                        }, {
-                            where: { ID: listID[i] }
                         })
                     }
                 }
@@ -572,6 +654,13 @@ module.exports = {
                             }
                         }
                     })
+                    await mMailListCampaign(db).destroy({
+                        where: {
+                            MailCampainID: {
+                                [Op.in]: listID
+                            }
+                        }
+                    })
                     await mMailCampain(db).destroy({
                         where: {
                             ID: {
@@ -579,13 +668,6 @@ module.exports = {
                             }
                         }
                     });
-                    await mAdditionalInformation(db).destroy({
-                        where: {
-                            CampaignID: {
-                                [Op.in]: listID
-                            }
-                        }
-                    })
                 }
 
                 res.json(Result.ACTION_SUCCESS);
@@ -600,25 +682,18 @@ module.exports = {
 
     deleteMailListDetail: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 if (body.listID) {
                     let listID = JSON.parse(body.listID);
-                    await mMailResponse(db).destroy({
+                    await mCompanyMailList(db).destroy({
                         where: {
-                            MailListDetailID: {
-                                [Op.in]: listID
-                            }
+                            [Op.and]: [
+                                { MailListID: body.mailListID },
+                                { CompanyID: { [Op.in]: listID } }
+                            ]
                         }
-                    });
-                    await mMailListDetail(db).destroy({
-                        where: {
-                            ID: {
-                                [Op.in]: listID
-                            }
-                        }
-                    });
+                    })
                 }
 
                 res.json(Result.ACTION_SUCCESS);
@@ -633,7 +708,6 @@ module.exports = {
 
     addMailCampain: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let now = moment().subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -644,13 +718,22 @@ module.exports = {
                     OwnerID: Number(body.userID),
                     Type: body.Type
                 }
+                var mailCampainData;
                 if (body.Type === "MailList") {
-                    data['MailListID'] = Number(body.mailListID) ? body.mailListID : null;
                     data['Subject'] = body.subject ? body.subject : null;
+                    mailCampainData = await mMailCampain(db).create(data);
+                    let listID = JSON.parse(body.mailListID);
+                    for (var i = 0; i < listID.length; i++) {
+                        await mMailListCampaign(db).create({
+                            MailCampainID: mailCampainData.ID,
+                            MailListID: listID[i],
+                        })
+                    }
                 } else {
                     data['TemplateID'] = body.TemplateID ? body.TemplateID : null;
+                    mailCampainData = await mMailCampain(db).create(data)
+
                 }
-                mailCampainData = await mMailCampain(db).create(data)
 
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -887,7 +970,6 @@ module.exports = {
 
     updateMailCampain: async function (req, res) {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let update = [];
@@ -907,8 +989,20 @@ module.exports = {
                     update.push({ key: 'Body', value: body.body });
                 }
                 if (body.Type == 'MailList') {
-                    if (body.mailListID || body.mailListID === '')
-                        update.push({ key: 'MailListID', value: body.mailListID });
+                    if (body.mailListID || body.mailListID === '') {
+                        await mMailListCampaign(db).destroy({
+                            where: {
+                                MailCampainID: body.campainID
+                            }
+                        })
+                        let listID = JSON.parse(body.mailListID);
+                        for (var i = 0; i < listID.length; i++) {
+                            await mMailListCampaign(db).create({
+                                MailCampainID: body.campainID,
+                                MailListID: listID[i],
+                            })
+                        }
+                    }
                 } else {
                     if (body.TemplateID || body.TemplateID === '')
                         update.push({ key: 'TemplateID', value: body.TemplateID });

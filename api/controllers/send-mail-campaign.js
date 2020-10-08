@@ -135,7 +135,6 @@ module.exports = {
                 })
                 var stt = 0;
                 var listContactID = [];
-                var listCampaignID = [];
                 var contact = await mContact(db).findAll({ where: { CompanyID: body.companyID } });
                 contact.forEach(item => {
                     listContactID.push(item.ID);

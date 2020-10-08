@@ -208,6 +208,10 @@ module.exports = function (app) {
 
     app.route('/crm/add_mail_campain').post(emailList.addMailCampain);
 
+    //  108/01/2020
+    app.route('/crm/copy_mail_campaign').post(emailList.copyMailCampaign);
+
+
     app.route('/crm/get_mail_list_option').post(emailList.getMailListOption);
 
     app.route('/crm/open_mail').get(emailList.addMailResponse);
