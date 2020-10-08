@@ -53,26 +53,26 @@ app.post('/api/upload', getDateInt, upload.single('photo'), function (req, res) 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // ----------------------------------------------------------handle word----------------------------------------------------------------------------------------------------------
-var fs = require('fs');
-const JSZip = require('pizzip');
-const Docxtemplater = require('docxtemplater');
-app.get('/api/test', async function (req, res) {
-    fs.readFile('D:/images_services/ageless_sendmail/photo-1601448964001.docx', 'binary', function (err, data) {
-        var zip = new JSZip(data);
-        var doc = new Docxtemplater().loadZip(zip)
-        //set the templateVariables
-        doc.setData({
-            first_name: 'John',
-            last_name: 'Doe',
-            phone: '0652455478',
-            description: 'New Website'
-        });
-        doc.render()
-        var buf = doc.getZip().generate({ type: 'nodebuffer' });
-        // buf is a nodejs buffer, you can either write it to a file or do anything else with it.
-        fs.writeFileSync(path.resolve('D:/images_services/ageless_sendmail/', 'output.docx'), buf);
-    });
-})
+// var fs = require('fs');
+// const JSZip = require('pizzip');
+// const Docxtemplater = require('docxtemplater');
+// app.get('/api/test', async function (req, res) {
+//     fs.readFile('D:/images_services/ageless_sendmail/photo-1601448964001.docx', 'binary', function (err, data) {
+//         var zip = new JSZip(data);
+//         var doc = new Docxtemplater().loadZip(zip)
+//         //set the templateVariables
+//         doc.setData({
+//             first_name: 'John',
+//             last_name: 'Doe',
+//             phone: '0652455478',
+//             description: 'New Website'
+//         });
+//         doc.render()
+//         var buf = doc.getZip().generate({ type: 'nodebuffer' });
+//         // buf is a nodejs buffer, you can either write it to a file or do anything else with it.
+//         fs.writeFileSync(path.resolve('D:/images_services/ageless_sendmail/', 'output.docx'), buf);
+//     });
+// })
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 app.use(session({
     name: 'user_sid',
