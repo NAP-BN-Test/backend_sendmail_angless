@@ -442,7 +442,7 @@ module.exports = {
                 Name: body.name,
                 Gender: body.gender,
                 JobTile: body.jobTile,
-                Phone: body.phone,
+                Phone: body.phone ? body.phone.replace(/plus/g, '+') : '',
                 Email: body.email,
                 Address: body.address,
                 Zalo: body.zalo,
@@ -450,7 +450,7 @@ module.exports = {
                 Skype: body.skype,
                 TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                 Note: body.Note,
-                Fax: body.Fax,
+                Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
                 Active: body.Active,
                 Status: body.Status
             }).then(data => {
@@ -594,9 +594,8 @@ module.exports = {
 
             if (body.contactAddress || body.contactAddress === '')
                 listUpdate.push({ key: 'Address', value: body.contactAddress });
-
             if (body.contactPhone || body.contactPhone === '')
-                listUpdate.push({ key: 'Phone', value: body.contactPhone });
+                listUpdate.push({ key: 'Phone', value: body.contactPhone.replace(/plus/g, '+') });
 
             if (body.contactEmail || body.contactEmail === '')
                 listUpdate.push({ key: 'Email', value: body.contactEmail });
@@ -605,7 +604,7 @@ module.exports = {
                 listUpdate.push({ key: 'JobTile', value: body.contactJobTile });
 
             if (body.Fax || body.Fax === '')
-                listUpdate.push({ key: 'Fax', value: body.Fax })
+                listUpdate.push({ key: 'Fax', value: body.Fax.replace(/plus/g, '+') })
 
             if (body.Active || body.Active === '')
                 listUpdate.push({ key: 'Active', value: body.Active });

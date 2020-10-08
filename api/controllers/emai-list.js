@@ -30,8 +30,6 @@ var cUser = require('../controllers/user');
 var mUser = require('../tables/user');
 
 var mModules = require('../constants/modules');
-// const { MAIL_RESPONSE_TYPE } = require('../constants/constant');
-// const { NUMBER } = require('sequelize/types');
 
 function handleClickLink(body, mailListDetailID) {
     var bodyHtml = "";
@@ -815,10 +813,30 @@ module.exports = {
                     mAmazon.sendEmail(body.myMail, body.myMail, body.subject, body.body);
                     res.json(Result.ACTION_SUCCESS);
                 } else {
-                    var companyData = await mCompany(db).findAll({
-                        where: { MailListID: body.mailListID }
+                    var mMailListID = [];
+                    await mMailListCampaign(db).findAll({
+                        where: {
+                            MailCampainID: body.mailCampaignID
+                        }
+                    }).then(data => {
+                        data.forEach(item => {
+                            mMailListID.push(item.MailListID)
+                        })
                     })
-
+                    var mCompanyIDs = [];
+                    await mCompanyMailList(db).findAll({
+                        where: {
+                            MailListID: { [Op.in]: mMailListID }
+                        }
+                    }).then(company => {
+                        company.forEach(item => {
+                            mCompanyIDs.push(item.CompanyID);
+                        })
+                    })
+                    console.log('mCompanyIDs: ', mCompanyIDs);
+                    var companyData = await mCompany(db).findAll({
+                        where: { ID: { [Op.in]: mCompanyIDs } }
+                    })
                     companyData.forEach(async (mailItem) => {
 
                         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
