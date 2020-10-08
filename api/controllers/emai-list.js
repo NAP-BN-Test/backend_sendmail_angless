@@ -255,7 +255,6 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-
                 var userRole = await cUser.checkUser(body.ip, body.dbName, body.userID);
                 var where = [];
                 if (userRole) where = await mModules.handleWhereClause([{ key: 'OwnerID', value: Number(body.userID) }]);
@@ -263,8 +262,6 @@ module.exports = {
                 var mailCampain = mMailCampain(db);
                 mailCampain.belongsTo(mUser(db), { foreignKey: 'OwnerID' });
                 mailCampain.belongsTo(mTemplate(db), { foreignKey: 'TemplateID', sourceKey: 'TemplateID', as: 'Template' });
-
-
                 if (body.Type == 'MailMerge') {
                     var mailCampainData = await mailCampain.findAll({
                         where: [
@@ -282,8 +279,7 @@ module.exports = {
                         limit: Number(body.itemPerPage)
                     });
                 } else {
-                    console.log(body);
-                    var data = JSON.parse(body.data)
+                    var data = JSON.parse(body.data);
                     if (data.search) {
                         where = [
                             { Name: { [Op.like]: '%' + data.search + '%' } },
@@ -325,6 +321,7 @@ module.exports = {
                             }
                         }
                     }
+                    console.log(whereOjb);
                     var mailCampainData = await mailCampain.findAll({
                         where: whereOjb,
                         include: [
@@ -356,10 +353,9 @@ module.exports = {
                         id: Number(mailCampainData[i].ID),
                         name: mailCampainData[i].Name,
                         subject: mailCampainData[i].Subject,
-                        owner: mailCampainData[i].User.Name,
+                        owner: mailCampainData[i].User ? mailCampainData[i].User.Name : '',
                         createTime: mModules.toDatetime(mailCampainData[i].TimeCreate),
                         nearestSend: '2020-05-30 14:00',
-                        TemplateID: mailCampainData[i].TemplateID,
                         TemplateName: mailCampainData[i].Template ? mailCampainData[i].Template.Name : '',
                         NumberAddressBook: numberAddressBook,
                         Description: mailCampainData[i].Description
@@ -994,6 +990,5 @@ module.exports = {
             res.json(error)
         })
     }
-
 
 }
