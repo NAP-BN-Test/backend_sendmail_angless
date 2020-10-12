@@ -26,6 +26,7 @@ module.exports = function (db) {
         Note: Sequelize.STRING,
         Fax: Sequelize.STRING,
         Active: Sequelize.STRING,
+        StatusMail: Sequelize.STRING,
     });
 
     return table;

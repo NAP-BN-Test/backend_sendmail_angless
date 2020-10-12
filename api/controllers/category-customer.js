@@ -12,7 +12,6 @@ var mCategoryCustomer = require('../tables/category-customer');
 module.exports = {
     getListAll: (req, res) => {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let where = {};
@@ -65,7 +64,6 @@ module.exports = {
     },
     addCategory: (req, res) => {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             await mCategoryCustomer(db).create({
                 Name: body.Name,

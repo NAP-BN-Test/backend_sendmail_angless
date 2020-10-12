@@ -47,7 +47,7 @@ function convertStringToListObjectEmail(string) {
         result = string.split(";")
         result.forEach(item => {
             let resultObj = {};
-            resultObj.name = item + '(unsubscribe)';
+            resultObj.name = item;
             resultArray.push(resultObj);
         })
     }
@@ -452,7 +452,8 @@ module.exports = {
                 Note: body.Note,
                 Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
                 Active: body.Active,
-                Status: body.Status
+                Status: body.Status,
+                StatusMail: body.statusMail,
             }).then(data => {
                 var obj = {
                     id: data.ID,
@@ -614,6 +615,8 @@ module.exports = {
 
             if (body.Status || body.Status === '')
                 listUpdate.push({ key: 'Status', value: body.Status })
+            if (body.statusMail || body.statusMail === '')
+                listUpdate.push({ key: 'StatusMail', value: body.statusMail })
 
 
             let update = {};
@@ -845,7 +848,8 @@ module.exports = {
                                 JobTile: elm.JobTile,
                                 JobTileName: elm.JobTileID ? elm.JobTileID.Name : '',
                                 Note: elm.Note ? elm.Note : '',
-                                Status: elm.Status ? elm.Status : ''
+                                Status: elm.Status ? elm.Status : '',
+                                statusMail: elm.StatusMail ? elm.StatusMail : '',
                             })
                         });
                         var result = {

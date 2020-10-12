@@ -212,7 +212,6 @@ module.exports = {
     },
     updateAdditionalInformation: (req, res) => {
         let body = req.body;
-        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -385,7 +384,6 @@ module.exports = {
     },
     createImformationfromContact: (req, res) => {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
 
             let contact = mContact(db);

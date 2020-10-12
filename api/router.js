@@ -40,7 +40,10 @@ module.exports = function (app) {
     app.route('/crm/delete_user').post(user.deleteUser);
 
     //Company
+    app.route('/crm/import_address_boook').post(company.importAddressbook);
+
     app.route('/crm/get_list_company').post(company.getListCompany);
+
     app.route('/crm/get_list_name_company').post(company.getListNameCompany);
 
     app.route('/crm/get_detail_company').post(company.getDetailCompany);
@@ -204,7 +207,7 @@ module.exports = function (app) {
 
     app.route('/crm/add_mail_list').post(emailList.addMailList);
 
-    app.route('/crm/add_addressbook_to_maillist').post(emailList.adCompanyTodMailList);
+    app.route('/crm/add_addressbook_to_maillist').post(emailList.addCompanyTodMailList);
 
     app.route('/crm/add_mail_campain').post(emailList.addMailCampain);
 

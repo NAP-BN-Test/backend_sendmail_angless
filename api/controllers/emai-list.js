@@ -95,6 +95,7 @@ module.exports = {
             })
         })
     },
+
     getMailList: async function (req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -326,7 +327,6 @@ module.exports = {
 
     getListMailCampain: async function (req, res) {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var userRole = await cUser.checkUser(body.ip, body.dbName, body.userID);
@@ -567,13 +567,15 @@ module.exports = {
                     listMaiDetail.forEach(item => {
                         listIDDetail.push(item.ID);
                     })
-                    await mMailResponse(db).destroy({
-                        where: {
-                            MailListDetailID: {
-                                [Op.in]: listIDDetail,
+                    if (listIDDetail.length > 0) {
+                        await mMailResponse(db).destroy({
+                            where: {
+                                MailListDetailID: {
+                                    [Op.in]: listIDDetail,
+                                }
                             }
-                        }
-                    })
+                        })
+                    }
                     await mMailListDetail(db).destroy({
                         where: {
                             MailListID: {
@@ -595,6 +597,13 @@ module.exports = {
                             }
                         }
                     });
+                    await mMailListCampaign(db).destroy({
+                        where: {
+                            MailListID: {
+                                [Op.in]: listID
+                            }
+                        }
+                    })
                     await mMailList(db).destroy({
                         where: {
                             ID: {
@@ -614,9 +623,8 @@ module.exports = {
         })
     },
 
-    adCompanyTodMailList: async function (req, res) {
+    addCompanyTodMailList: async function (req, res) {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 if (body.listID) {
