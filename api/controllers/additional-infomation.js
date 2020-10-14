@@ -79,6 +79,9 @@ module.exports = {
                                 ApplicationNo: data[i].ApplicationNo ? data[i].ApplicationNo : null,
                                 ClassA: data[i].ClassA ? data[i].ClassA : null,
                                 FilingDate: data[i].FilingDate ? data[i].FilingDate : null,
+                                DateReminder: data[i].DateReminder ? data[i].DateReminder : null,
+                                DateSend: data[i].DateSend ? data[i].DateSend : null,
+                                Result: data[i].Result ? data[i].Result : null,
                                 PriorTrademark: data[i].PriorTrademark ? data[i].PriorTrademark : null,
                                 Owner: data[i].Owner,
                                 RegNo: data[i].RegNo ? data[i].RegNo : null,
@@ -138,6 +141,9 @@ module.exports = {
                 ApplicationNo: body.ApplicationNo ? body.ApplicationNo : null,
                 ClassA: body.ClassA ? body.ClassA : null,
                 FilingDate: body.FilingDate ? body.FilingDate : null,
+                DateSend: body.DateSend ? body.DateSend : null,
+                Result: body.Result ? body.Result : null,
+                DateReminder: body.DateReminder ? body.DateReminder : null,
                 PriorTrademark: body.PriorTrademark ? body.PriorTrademark : null,
                 Owner: body.Owner,
                 RegNo: body.RegNo ? body.RegNo : null,
@@ -212,6 +218,8 @@ module.exports = {
     },
     updateAdditionalInformation: (req, res) => {
         let body = req.body;
+        console.log(body);
+
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -226,10 +234,21 @@ module.exports = {
                         update.push({ key: 'ApplicationNo', value: body.ApplicationNo });
                     if (body.ClassA || body.ClassA === '')
                         update.push({ key: 'ClassA', value: body.ClassA });
-                    if (body.FilingDate !== 'Invalid date') {
-                        let time = moment(body.FilingDate).format('YYYY-MM-DD');
+                    if (body.FilingDate) {
+                        let time = moment(body.FilingDate).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                         update.push({ key: 'FilingDate', value: time });
                     }
+                    if (body.DateSend) {
+                        let time = moment(body.DateSend).format('YYYY-MM-DD HH:mm:ss.SSS');
+                        console.log(time);
+                        update.push({ key: 'DateSend', value: time });
+                    }
+                    if (body.DateReminder) {
+                        let time = moment(body.DateReminder).format('YYYY-MM-DD HH:mm:ss.SSS');
+                        update.push({ key: 'DateReminder', value: time });
+                    }
+                    if (body.Result || body.Result === '')
+                        update.push({ key: 'Result', value: body.Result.toString() });
                     if (body.PriorTrademark || body.PriorTrademark === '')
                         update.push({ key: 'PriorTrademark', value: body.PriorTrademark.toString() });
                     if (body.Owner || body.Owner === '')

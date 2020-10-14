@@ -28,6 +28,11 @@ function getDataInformation(db, ID) {
 function handleReplaceText(text, listKey, obj_information) {
     var result = text;
     listKey.forEach(item => {
+        if (item === 'DateSend') {
+            let now = moment().format('YYYY-MM-DD');
+            var re = RegExp('&lt;&lt;' + item + '&gt;&gt;', 'g');
+            result = result.replace(re, now)
+        }
         if (item === 'PAT' || item === 'PriorTrademark') {
             var re = RegExp('&lt;&lt;' + item + '&gt;&gt;', 'g');
             if (obj_information[item]) {
@@ -40,6 +45,7 @@ function handleReplaceText(text, listKey, obj_information) {
             var re = RegExp('&lt;&lt;' + item + '&gt;&gt;', 'g');
             result = result.replace(re, obj_information[item] ? obj_information[item] : '');
         }
+
     })
     return result;
 }

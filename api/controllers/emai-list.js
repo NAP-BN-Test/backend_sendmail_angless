@@ -97,7 +97,6 @@ async function resetJob(db) {
                 var companyData = await mCompany(db).findAll({
                     where: { ID: { [Op.in]: mCompanyIDs } }
                 })
-                console.log(campaign[i].TimeSend);
                 var job = schedule.scheduleJob(campaign[i].TimeSend, function () {
                     companyData.forEach(async (mailItem) => {
                         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
@@ -909,16 +908,20 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-
+                let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
+                let timeSend = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS');
+                console.log(now);
+                console.log(timeSend);
                 if (body.isTestMail) {
                     mAmazon.sendEmail(body.myMail, body.myMail, body.subject, body.body);
                     res.json(Result.ACTION_SUCCESS);
                 } else {
                     // update time send mail--------------------------------------------------------------------------------------------------------------------------
                     await mMailCampain(db).update({
-                        TimeSend: body.timeSend,
+                        TimeSend: timeSend,
                         ResBody: JSON.stringify(body),
                     }, {
                         where: { ID: body.campainID }

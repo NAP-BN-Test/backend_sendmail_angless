@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-
+// datetime bắt buộc phải khai báo now TimeSend: Sequelize.NOW
 module.exports = function (db) {
     var table = db.define('MailCampain', {
         ID: {
@@ -17,7 +17,7 @@ module.exports = function (db) {
         Body: Sequelize.STRING,
         Description: Sequelize.STRING,
         Type: Sequelize.STRING,
-        TimeSend: Sequelize.DATE,
+        TimeSend: Sequelize.NOW,
         ResBody: Sequelize.STRING,
     });
 

@@ -32,6 +32,9 @@ module.exports = function (db) {
         TimeUpdate: Sequelize.NOW,
         CampaignID: Sequelize.BIGINT,
         ContactID: Sequelize.BIGINT,
+        DateReminder: Sequelize.DATE,
+        Result: Sequelize.STRING,
+        DateSend: Sequelize.DATE,
     });
 
     return table;
