@@ -97,8 +97,21 @@ let routes = require('./api/router') //importing route
 routes(app)
 
 const port = process.env.PORT || 3002
+const Result = require('./api/constants/result');
+var database = require('./api/db');
+var resetJob = require('./api/controllers/emai-list');
 
 server.listen(port, function () {
+    database.checkServerInvalid('localhost', 'LOGISTIC_CRM_SEND', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+        try {
+            resetJob.resetJob(db);
+        } catch (error) {
+            console.log(error);
+            res.json(Result.SYS_ERROR_RESULT)
+        }
+    }, error => {
+        res.json(error)
+    })
     console.log('http://localhost:' + port);
 });
 

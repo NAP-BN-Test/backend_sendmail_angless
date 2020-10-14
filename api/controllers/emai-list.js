@@ -53,8 +53,98 @@ function handleClickLink(body, mailListDetailID) {
     } else return body.body;
 }
 
+async function getCompanyIDFromCampaignID(db, campainID) {
+    var mMailListID = [];
+    await mMailListCampaign(db).findAll({
+        where: {
+            MailCampainID: campainID
+        }
+    }).then(data => {
+        data.forEach(item => {
+            mMailListID.push(item.MailListID)
+        })
+    })
+    var mCompanyIDs = [];
+    await mCompanyMailList(db).findAll({
+        where: {
+            MailListID: { [Op.in]: mMailListID }
+        }
+    }).then(company => {
+        company.forEach(item => {
+            mCompanyIDs.push(item.CompanyID);
+        })
+    })
+    return mCompanyIDs;
+}
+async function resetJob(db) {
+    try {
+        let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
+
+        var schedule = require('node-schedule');
+        var campaign = await mMailCampain(db).findAll({
+            where: {
+                [Op.and]: [
+                    { TimeSend: { [Op.ne]: null } },
+                    { ResBody: { [Op.ne]: null } }
+
+                ]
+            }
+        })
+        if (campaign.length > 0) {
+            for (var i = 0; i < campaign.length; i++) {
+                var body = JSON.parse(campaign[i].ResBody);
+                var mCompanyIDs = await getCompanyIDFromCampaignID(db, body.campainID);
+                var companyData = await mCompany(db).findAll({
+                    where: { ID: { [Op.in]: mCompanyIDs } }
+                })
+                console.log(campaign[i].TimeSend);
+                var job = schedule.scheduleJob(campaign[i].TimeSend, function () {
+                    companyData.forEach(async (mailItem) => {
+                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
+                        let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
+                        let httpTrack = `<img src="http://163.44.192.123:3302/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+
+                        let tokenUnsubscribe = `email=${mailItem.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
+                        let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
+                        let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+
+                        let bodyHtml = handleClickLink(body, mailItem.ID);
+
+                        bodyHtml = httpTrack + bodyHtml;
+                        bodyHtml = bodyHtml + unSubscribe;
+                        bodyHtml = bodyHtml.replace(/#ten/g, mailItem.Name);
+                        mCheckMail.checkEmail(mailItem.Email).then(async (checkMailRes) => {
+                            if (checkMailRes == false) {
+                                await mMailResponse(db).create({
+                                    MailCampainID: body.campainID,
+                                    CompanyID: mailItem.ID,
+                                    TimeCreate: now,
+                                    Type: Constant.MAIL_RESPONSE_TYPE.INVALID
+                                });
+                            }
+                        })
+                        mAmazon.sendEmail(body.myMail, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
+                            if (sendMailRes)
+                                await mMailResponse(db).create({
+                                    MailCampainID: body.campainID,
+                                    CompanyID: mailItem.ID,
+                                    TimeCreate: now,
+                                    Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                                });
+                        });
+                    });
+                });
+            }
+        }
+    } catch (error) {
+        console.log(error);
+        res.json(Result.ERROR_JOB);
+    }
+}
 
 module.exports = {
+    resetJob,
+    getCompanyIDFromCampaignID,
     copyMailCampaign: async function (req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -153,7 +243,14 @@ module.exports = {
                 var mailList = mMailList(db);
                 mailList.belongsTo(mUser(db), { foreignKey: 'OwnerID' })
                 mailList.hasMany(mMailListDetail(db), { foreignKey: 'MailListID' })
-
+                var page = 1;
+                var itemPerPage = 100000;
+                if (body.page) {
+                    page = body.page;
+                    if (body.itemPerPage) {
+                        itemPerPage = body.itemPerPage;
+                    }
+                }
                 var mMailListData = await mailList.findAll({
                     where: whereOjb,
                     include: [
@@ -163,8 +260,8 @@ module.exports = {
                     order: [
                         ['TimeCreate', 'DESC']
                     ],
-                    offset: Number(body.itemPerPage) * (Number(body.page) - 1),
-                    limit: Number(body.itemPerPage)
+                    offset: Number(itemPerPage) * (Number(page) - 1),
+                    limit: Number(itemPerPage)
                 })
 
                 var array = [];
@@ -812,77 +909,21 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
 
                 if (body.isTestMail) {
                     mAmazon.sendEmail(body.myMail, body.myMail, body.subject, body.body);
                     res.json(Result.ACTION_SUCCESS);
                 } else {
-                    var mMailListID = [];
-                    await mMailListCampaign(db).findAll({
-                        where: {
-                            MailCampainID: body.mailCampaignID
-                        }
-                    }).then(data => {
-                        data.forEach(item => {
-                            mMailListID.push(item.MailListID)
-                        })
+                    // update time send mail--------------------------------------------------------------------------------------------------------------------------
+                    await mMailCampain(db).update({
+                        TimeSend: body.timeSend,
+                        ResBody: JSON.stringify(body),
+                    }, {
+                        where: { ID: body.campainID }
                     })
-                    var mCompanyIDs = [];
-                    await mCompanyMailList(db).findAll({
-                        where: {
-                            MailListID: { [Op.in]: mMailListID }
-                        }
-                    }).then(company => {
-                        company.forEach(item => {
-                            mCompanyIDs.push(item.CompanyID);
-                        })
-                    })
-                    console.log('mCompanyIDs: ', mCompanyIDs);
-                    var companyData = await mCompany(db).findAll({
-                        where: { ID: { [Op.in]: mCompanyIDs } }
-                    })
-                    companyData.forEach(async (mailItem) => {
-
-                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
-                        let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                        let httpTrack = `<img src="http://163.44.192.123:3302/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
-
-                        let tokenUnsubscribe = `email=${mailItem.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
-                        let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                        let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
-
-                        let bodyHtml = handleClickLink(body, mailItem.ID);
-
-                        bodyHtml = httpTrack + bodyHtml;
-                        bodyHtml = bodyHtml + unSubscribe;
-                        bodyHtml = bodyHtml.replace(/#ten/g, mailItem.Name);
-
-                        mCheckMail.checkEmail(mailItem.Email).then(async (checkMailRes) => {
-                            if (checkMailRes == false) {
-                                await mMailResponse(db).create({
-                                    MailCampainID: body.campainID,
-                                    CompanyID: mailItem.ID,
-                                    TimeCreate: now,
-                                    Type: Constant.MAIL_RESPONSE_TYPE.INVALID
-                                });
-                            }
-                        })
-                        mAmazon.sendEmail(body.myMail, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
-                            if (sendMailRes)
-                                await mMailResponse(db).create({
-                                    MailCampainID: body.campainID,
-                                    CompanyID: mailItem.ID,
-                                    TimeCreate: now,
-                                    Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                                });
-                        });
-                    });
-                    res.json(Result.ACTION_SUCCESS)
-
+                    resetJob(db);
                 }
             } catch (error) {
                 console.log(error);
@@ -893,70 +934,6 @@ module.exports = {
             res.json(error)
         })
     },
-
-    // addMailSend: async function (req, res) {
-    //     let body = req.body;
-
-    //     database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
-    //         try {
-    //             let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
-
-    //             if (body.isTestMail) {
-    //                 mAmazon.sendEmail(body.myMail, body.myMail, body.subject, body.body);
-    //                 res.json(Result.ACTION_SUCCESS);
-    //             } else {
-    //                 var mailListDetailData = await mMailListDetail(db).findAll({
-    //                     where: { MailListID: body.mailListID }
-    //                 })
-
-    //                 mailListDetailData.forEach(async (mailItem, i) => {
-
-    //                     let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
-    //                     let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-    //                     let httpTrack = `<img src="http://163.44.192.123:3302/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
-
-    //                     let tokenUnsubscribe = `email=${mailItem.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
-    //                     let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-    //                     let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
-
-    //                     let bodyHtml = handleClickLink(body, mailItem.ID);
-
-    //                     bodyHtml = httpTrack + bodyHtml;
-    //                     bodyHtml = bodyHtml + unSubscribe;
-    //                     bodyHtml = bodyHtml.replace(/#ten/g, mailItem.Name);
-
-    //                     mCheckMail.checkEmail(mailItem.Email).then(async (checkMailRes) => {
-    //                         if (checkMailRes == false) {
-    //                             await mMailResponse(db).create({
-    //                                 MailCampainID: body.campainID,
-    //                                 MailListDetailID: mailItem.ID,
-    //                                 TimeCreate: now,
-    //                                 Type: Constant.MAIL_RESPONSE_TYPE.INVALID
-    //                             });
-    //                         }
-    //                     })
-    //                     mAmazon.sendEmail(body.myMail, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
-    //                         if (sendMailRes)
-    //                             await mMailResponse(db).create({
-    //                                 MailCampainID: body.campainID,
-    //                                 MailListDetailID: mailItem.ID,
-    //                                 TimeCreate: now,
-    //                                 Type: Constant.MAIL_RESPONSE_TYPE.SEND
-    //                             });
-    //                     });
-    //                 });
-    //                 res.json(Result.ACTION_SUCCESS)
-
-    //             }
-    //         } catch (error) {
-    //             console.log(error);
-    //             res.json(Result.SYS_ERROR_RESULT)
-    //         }
-
-    //     }, error => {
-    //         res.json(error)
-    //     })
-    // },
 
     getMailListOption: async function (req, res) {
         let body = req.body;
@@ -1109,6 +1086,6 @@ module.exports = {
         }, error => {
             res.json(error)
         })
-    }
+    },
 
 }

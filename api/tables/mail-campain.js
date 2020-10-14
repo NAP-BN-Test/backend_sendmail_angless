@@ -16,7 +16,9 @@ module.exports = function (db) {
         NumberAddressBook: Sequelize.INTEGER,
         Body: Sequelize.STRING,
         Description: Sequelize.STRING,
-        Type: Sequelize.STRING
+        Type: Sequelize.STRING,
+        TimeSend: Sequelize.DATE,
+        ResBody: Sequelize.STRING,
     });
 
     return table;

@@ -1264,11 +1264,6 @@ module.exports = {
                         itemPerPage = body.itemPerPage;
                     }
                 }
-                else {
-                    if (body.itemPerPage) {
-                        itemPerPage = body.itemPerPage;
-                    }
-                }
                 var data = await company.findAll({
                     where: whereOjb,
                     include: [
@@ -1292,6 +1287,7 @@ module.exports = {
                 });
 
                 var array = [];
+                var all = await company.count({ where: whereOjb });
                 data.forEach(elm => {
                     array.push({
                         id: elm.ID,
@@ -1317,15 +1313,11 @@ module.exports = {
                         follow: elm.UserFollows[0] ? elm.UserFollows[0]['Follow'] : false,
                         checked: false,
                         companyType: elm.Type == 0 ? 'Có' : 'Không',
-                        // stageID: elm.DealStage ? elm.DealStage.ID : -1,
-                        // stageName: elm.DealStage ? elm.DealStage.Name : "",
-
                         lastActivity: mModules.toDatetime(elm.LastActivity),
                         Fax: elm.Fax,
                         Role: elm.Role,
                     })
                 });
-                var all = await company.count({ where: whereOjb });
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',

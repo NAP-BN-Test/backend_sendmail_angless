@@ -1,6 +1,10 @@
 const Constant = require('../constants/constant');
 
 module.exports = {
+    ERROR_JOB: {
+        status: Constant.STATUS.FAIL,
+        message: 'Reset job fail !'
+    },
     ERROR_RESULT: {
         status: Constant.STATUS.FAIL,
         message: Constant.MESSAGE.SYS_ERROR
