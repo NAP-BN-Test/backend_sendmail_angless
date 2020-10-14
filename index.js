@@ -102,15 +102,13 @@ var database = require('./api/db');
 var resetJob = require('./api/controllers/emai-list');
 
 server.listen(port, function () {
-    database.checkServerInvalid('localhost', 'LOGISTIC_CRM_SEND', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+    database.checkServerInvalid('118.27.192.106', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
         try {
             resetJob.resetJob(db);
         } catch (error) {
             console.log(error);
-            res.json(Result.SYS_ERROR_RESULT)
+            // res.json(Result.SYS_ERROR_RESULT)
         }
-    }, error => {
-        res.json(error)
     })
     console.log('http://localhost:' + port);
 });

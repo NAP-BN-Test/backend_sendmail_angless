@@ -137,7 +137,7 @@ async function resetJob(db) {
         }
     } catch (error) {
         console.log(error);
-        res.json(Result.ERROR_JOB);
+        // res.json(Result.ERROR_JOB);
     }
 }
 
