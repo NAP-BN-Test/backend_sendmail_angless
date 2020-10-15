@@ -17,6 +17,9 @@ const fs = require('fs');
 let mAdditionalInformation = require('../tables/additional-infomation');
 var mMailListDetail = require('../tables/mail-list-detail');
 const result = require('../constants/result');
+var mMailResponse = require('../tables/mail-response');
+const Sequelize = require('sequelize');
+
 
 function handleNumber(number) {
     if (number < 10) return "000" + number.toString();
@@ -51,6 +54,30 @@ module.exports = {
                     let array = [];
                     if (data) {
                         for (var i = 0; i < data.length; i++) {
+                            // lấy dữ liệu unsubrice
+                            let respon = await mMailResponse(db).findOne({
+                                order: [
+                                    Sequelize.literal('max(TimeCreate) DESC'),
+                                ],
+                                group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate'],
+                                where: {
+                                    [Op.and]: [
+                                        { MailCampainID: data[i].CampaignID },
+                                        { Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE }
+                                    ]
+                                }
+                            })
+                            var result = '';
+                            if (respon) {
+                                result = 'None'
+                                await mAdditionalInformation(db).update({
+                                    Result: 'None',
+                                }, { where: { ID: data[i].ID } })
+                            } else {
+                                result = data[i].Result
+                            }
+
+
                             let listNameCampaign = '';
                             let count = 0;
                             var check = await AdditionalInformation.findAll({
@@ -81,7 +108,7 @@ module.exports = {
                                 FilingDate: data[i].FilingDate ? data[i].FilingDate : null,
                                 DateReminder: data[i].DateReminder ? data[i].DateReminder : null,
                                 DateSend: data[i].DateSend ? data[i].DateSend : null,
-                                Result: data[i].Result ? data[i].Result : null,
+                                Result: result ? result : null,
                                 PriorTrademark: data[i].PriorTrademark ? data[i].PriorTrademark : null,
                                 Owner: data[i].Owner,
                                 RegNo: data[i].RegNo ? data[i].RegNo : null,
@@ -222,72 +249,89 @@ module.exports = {
 
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
-            let errorEmail = '';
-            await mCheckMail.checkEmail(body.Email).then(async (checkMailRes) => {
-                try {
-                    let update = [];
-                    if (body.PAT || body.PAT === '')
-                        update.push({ key: 'PAT', value: body.PAT.toString() });
-                    if (body.Applicant || body.Applicant === '')
-                        update.push({ key: 'Applicant', value: body.Applicant });
-                    if (body.ApplicationNo || body.ApplicationNo === '')
-                        update.push({ key: 'ApplicationNo', value: body.ApplicationNo });
-                    if (body.ClassA || body.ClassA === '')
-                        update.push({ key: 'ClassA', value: body.ClassA });
-                    if (body.FilingDate) {
-                        let time = moment(body.FilingDate).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
-                        update.push({ key: 'FilingDate', value: time });
-                    }
-                    if (body.DateSend) {
-                        let time = moment(body.DateSend).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
-                        console.log(time);
-                        update.push({ key: 'DateSend', value: time });
-                    }
-                    if (body.DateReminder) {
-                        let time = moment(body.DateReminder).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
-                        update.push({ key: 'DateReminder', value: time });
-                    }
-                    if (body.Result || body.Result === '')
-                        update.push({ key: 'Result', value: body.Result.toString() });
-                    if (body.PriorTrademark || body.PriorTrademark === '')
-                        update.push({ key: 'PriorTrademark', value: body.PriorTrademark.toString() });
-                    if (body.Owner || body.Owner === '')
-                        update.push({ key: 'Owner', value: body.Owner });
-                    if (body.RegNo || body.RegNo === '')
-                        update.push({ key: 'RegNo', value: body.RegNo });
-                    if (body.ClassB || body.ClassB === '')
-                        update.push({ key: 'ClassB', value: body.ClassB });
-                    if (body.Firm || body.Firm === '')
-                        update.push({ key: 'Firm', value: body.Firm });
-                    if (body.Address || body.Address === '')
-                        update.push({ key: 'Address', value: body.Address });
-                    if (body.Tel || body.Tel === '')
-                        update.push({ key: 'Tel', value: body.Tel });
-                    if (body.Fax || body.Fax === '')
-                        update.push({ key: 'Fax', value: body.Fax });
-                    if (errorEmail === '')
-                        update.push({ key: 'Email', value: body.Email });
-                    if (body.Status || body.Status === '')
-                        update.push({ key: 'Status', value: body.Status });
-                    if (body.Rerminder || body.Rerminder === '')
-                        update.push({ key: 'Rerminder', value: body.Rerminder });
-                    if (body.userID || body.userID === '')
-                        update.push({ key: 'UserID', value: body.userID });
-                    if (body.Description || body.Description === '')
-                        update.push({ key: 'Description', value: body.Description });
-                    database.updateTable(update, mAdditionalInformation(db), body.ID).then(response => {
-                        if (response == 1) {
-                            res.json(Result.ACTION_SUCCESS);
-                        } else {
-                            res.json(Result.SYS_ERROR_RESULT);
+            try {
+                let errorEmail = '';
+                await mCheckMail.checkEmail(body.Email).then(async (checkMailRes) => {
+                    try {
+                        let update = [];
+                        if (body.PAT || body.PAT === '')
+                            update.push({ key: 'PAT', value: body.PAT.toString() });
+                        if (body.Applicant || body.Applicant === '')
+                            update.push({ key: 'Applicant', value: body.Applicant });
+                        if (body.ApplicationNo || body.ApplicationNo === '')
+                            update.push({ key: 'ApplicationNo', value: body.ApplicationNo });
+                        if (body.ClassA || body.ClassA === '')
+                            update.push({ key: 'ClassA', value: body.ClassA });
+                        if (body.FilingDate || body.FilingDate == '') {
+                            if (body.FilingDate == '')
+                                update.push({ key: 'FilingDate', value: null });
+                            else {
+                                let time = moment(body.FilingDate).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
+                                update.push({ key: 'FilingDate', value: time });
+                            }
                         }
-                    })
-                } catch (error) {
-                    console.log(error);
-                    res.json(Result.SYS_ERROR_RESULT)
+                        if (body.DateSend || body.DateSend == '') {
+                            if (body.DateSend == '')
+                                update.push({ key: 'DateSend', value: null });
+                            else {
+                                let time = moment(body.DateSend).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
+                                update.push({ key: 'DateSend', value: time });
+                            }
+                        }
+                        if (body.DateReminder || body.DateReminder == '') {
+                            if (body.DateReminder == '')
+                                update.push({ key: 'DateReminder', value: null });
+                            else {
+                                let time = moment(body.DateReminder).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
+                                update.push({ key: 'DateReminder', value: time });
+                            }
+                        }
+                        if (body.Result || body.Result === '')
+                            update.push({ key: 'Result', value: body.Result.toString() });
+                        if (body.PriorTrademark || body.PriorTrademark === '')
+                            update.push({ key: 'PriorTrademark', value: body.PriorTrademark.toString() });
+                        if (body.Owner || body.Owner === '')
+                            update.push({ key: 'Owner', value: body.Owner });
+                        if (body.RegNo || body.RegNo === '')
+                            update.push({ key: 'RegNo', value: body.RegNo });
+                        if (body.ClassB || body.ClassB === '')
+                            update.push({ key: 'ClassB', value: body.ClassB });
+                        if (body.Firm || body.Firm === '')
+                            update.push({ key: 'Firm', value: body.Firm });
+                        if (body.Address || body.Address === '')
+                            update.push({ key: 'Address', value: body.Address });
+                        if (body.Tel || body.Tel === '')
+                            update.push({ key: 'Tel', value: body.Tel });
+                        if (body.Fax || body.Fax === '')
+                            update.push({ key: 'Fax', value: body.Fax });
+                        if (errorEmail === '')
+                            update.push({ key: 'Email', value: body.Email });
+                        if (body.Status || body.Status === '')
+                            update.push({ key: 'Status', value: body.Status });
+                        if (body.Rerminder || body.Rerminder === '')
+                            update.push({ key: 'Rerminder', value: body.Rerminder });
+                        if (body.userID || body.userID === '')
+                            update.push({ key: 'UserID', value: body.userID });
+                        if (body.Description || body.Description === '')
+                            update.push({ key: 'Description', value: body.Description });
+                        database.updateTable(update, mAdditionalInformation(db), body.ID).then(response => {
+                            if (response == 1) {
+                                res.json(Result.ACTION_SUCCESS);
+                            } else {
+                                res.json(Result.SYS_ERROR_RESULT);
+                            }
+                        })
+                    } catch (error) {
+                        console.log(error);
+                        res.json(Result.SYS_ERROR_RESULT)
 
-                }
-            })
+                    }
+                })
+            } catch (error) {
+                console.log(error);
+                res.json(Result.ERROR_RESULT)
+
+            }
         })
     },
     getDetailAdditionalInformation: (req, res) => {

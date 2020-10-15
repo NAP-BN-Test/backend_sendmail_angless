@@ -99,11 +99,10 @@ async function resetJob(db) {
                 })
                 var timeSend = moment(campaign[i].TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                 var job = schedule.scheduleJob(timeSend, function () {
-                    console.log('aaaaaa');
                     companyData.forEach(async (mailItem) => {
                         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                        let httpTrack = `<img src="http://163.44.192.123:3302/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                        let httpTrack = `<img src="118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
                         let tokenUnsubscribe = `email=${mailItem.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
                         let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
@@ -835,8 +834,8 @@ module.exports = {
                     }
                 } else {
                     data['TemplateID'] = body.TemplateID ? body.TemplateID : null;
+                    data['IDTemplateReminder'] = body.idTemplateReminder ? body.idTemplateReminder : null;
                     mailCampainData = await mMailCampain(db).create(data)
-
                 }
 
                 var result = {

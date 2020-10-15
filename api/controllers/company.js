@@ -36,6 +36,7 @@ var mCategoryCustomer = require('../tables/category-customer');
 var mCompanyMailList = require('../tables/company-maillist');
 var mMailListCampaign = require('../tables/maillist-campaign');
 var mMailList = require('../tables/mail-list');
+var mMailResponse = require('../tables/mail-response');
 
 
 
@@ -893,6 +894,11 @@ module.exports = {
 
                 mUser(db).findOne({ where: { ID: body.userID } }).then(async user => {
                     if (user.Roles == Constant.USER_ROLE.MANAGER) {
+                        await mMailResponse(db).destroy({
+                            where: {
+                                CompanyID: { [Op.in]: listcompanyID }
+                            }
+                        })
                         await mCompanyMailList(db).destroy({
                             where: {
                                 CompanyID: { [Op.in]: listcompanyID },

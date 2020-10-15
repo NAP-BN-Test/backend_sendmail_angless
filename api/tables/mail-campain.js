@@ -19,6 +19,7 @@ module.exports = function (db) {
         Type: Sequelize.STRING,
         TimeSend: Sequelize.NOW,
         ResBody: Sequelize.STRING,
+        IDTemplateReminder: Sequelize.BIGINT,
     });
 
     return table;

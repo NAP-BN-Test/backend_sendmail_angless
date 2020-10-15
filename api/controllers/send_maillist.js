@@ -9,6 +9,8 @@ var mCheckMail = require('../controllers/check-mail');
 var mAmazon = require('../controllers/amazon');
 var mailmergerCampaingn = require('../controllers/mailmerge-campaign');
 var fs = require('fs');
+var moment = require('moment');
+
 // var base64Img = require('base64-img');
 // const sgMail = require('@sendgrid/mail');
 function base64_encode(file) {
@@ -76,6 +78,7 @@ function convertStringToListObject(string) {
 module.exports = {
     sendMailList: (req, res) => {
         let body = req.body;
+        let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             var information = [];
             campaign = await mMailCampain(db).findOne({
@@ -83,14 +86,33 @@ module.exports = {
                     ID: body.CampaignID,
                 }
             })
-            template = await mTemplate(db).findOne({
-                where: {
-                    ID: campaign.TemplateID,
-                }
-            })
+            if (body.typeSend == 'Send') {
+                template = await mTemplate(db).findOne({
+                    where: {
+                        ID: campaign.TemplateID,
+                    }
+                })
+            } else {
+                template = await mTemplate(db).findOne({
+                    where: {
+                        ID: campaign.IDTemplateReminder,
+                    }
+                })
+            }
+
             information = await mailmergerCampaingn.getAdditionalInfomation(db, body.CampaignID);
             var bodyHtml;
             information.forEach(async item => {
+                if (body.typeSend == 'Send') {
+                    await mAdditionalInformation(db).update({
+                        DateSend: now,
+                    }, { where: { ID: item.ID } })
+                }
+                else {
+                    await mAdditionalInformation(db).update({
+                        DateReminder: now,
+                    }, { where: { ID: item.ID } })
+                }
                 bodyHtml = await handlePushDataToBody(template.body, item.ID, db);
                 let Subject = item.Subject ? item.Subject : '';
                 var arrayEmail = convertStringToListObject(item.Email)
