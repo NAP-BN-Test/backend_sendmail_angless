@@ -239,12 +239,12 @@ module.exports = {
                         update.push({ key: 'FilingDate', value: time });
                     }
                     if (body.DateSend) {
-                        let time = moment(body.DateSend).format('YYYY-MM-DD HH:mm:ss.SSS');
+                        let time = moment(body.DateSend).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                         console.log(time);
                         update.push({ key: 'DateSend', value: time });
                     }
                     if (body.DateReminder) {
-                        let time = moment(body.DateReminder).format('YYYY-MM-DD HH:mm:ss.SSS');
+                        let time = moment(body.DateReminder).add(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                         update.push({ key: 'DateReminder', value: time });
                     }
                     if (body.Result || body.Result === '')

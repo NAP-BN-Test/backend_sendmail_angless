@@ -35,6 +35,8 @@ var mCategoryCustomer = require('../tables/category-customer');
 
 var mCompanyMailList = require('../tables/company-maillist');
 var mMailListCampaign = require('../tables/maillist-campaign');
+var mMailList = require('../tables/mail-list');
+
 
 
 
@@ -400,10 +402,6 @@ module.exports = {
                         where: { UserID: body.userID, Type: 1 }
                     },
                     { model: mCity(db), required: false },
-                    // {
-                    //     model: mDealStage(db),
-                    //     required: false,
-                    // },
                     { model: mCountry(db), required: false, as: 'Country' },
                     { model: mCategoryCustomer(db), required: false },
 
@@ -414,6 +412,30 @@ module.exports = {
                 if (companyParent) {
                     company = await mCompany(db).findOne({ where: { ID: companyParent.ParentID } })
                 }
+                let listGroup = [];
+                let listGroupID = [];
+                await mCompanyMailList(db).findAll({
+                    where: { CompanyID: data['ID'] },
+                }).then(companymaillist => {
+                    if (companymaillist.length > 0)
+                        companymaillist.forEach(item => {
+                            listGroupID.push(item.MailListID);
+                        })
+                })
+                if (listGroupID)
+                    await mMailList(db).findAll({
+                        where: {
+                            ID: { [Op.in]: listGroupID },
+                        }
+                    }).then(maillist => {
+                        if (maillist)
+                            maillist.forEach(item => {
+                                listGroup.push({
+                                    id: Number(item.ID),
+                                    name: item.Name,
+                                })
+                            })
+                    })
                 var obj = {
                     id: data['ID'],
                     name: data['Name'],
@@ -426,8 +448,6 @@ module.exports = {
                     cityID: data.City ? data.City.ID : -1,
                     city: data.City ? data.City.Name : "",
                     follow: data.UserFollows[0] ? data.UserFollows[0]['Follow'] : false,
-                    // stageID: data.DealStage ? data.DealStage.ID : -1,
-                    // stageName: data.DealStage ? data.DealStage.Name : "",
                     Fax: data.Fax,
                     Role: data.Role,
                     CountryID: data.Country ? data.Country.ID : "",
@@ -436,7 +456,7 @@ module.exports = {
                     ParentID: company ? company.ID : '',
                     ParentName: company ? company.Name : '',
                     relationship: data.Relationship ? data.Relationship : '',
-                    customerGroup: data.CustomerGroup ? data.CustomerGroup : '',
+                    customerGroup: listGroup,
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -573,8 +593,16 @@ module.exports = {
             if (body.relationship || body.relationship === '')
                 listUpdate.push({ key: 'Relationship', value: body.relationship });
 
-            if (body.customerGroup || body.customerGroup === '')
-                listUpdate.push({ key: 'CustomerGroup', value: body.customerGroup });
+            if (body.customerGroup || body.customerGroup === '') {
+                var listID = JSON.parse(body.customerGroup);
+                await mCompanyMailList(db).destroy({ where: { CompanyID: body.companyID } });
+                for (var i = 0; i < listID.length; i++) {
+                    await mCompanyMailList(db).create({
+                        CompanyID: body.companyID,
+                        MailListID: listID[i],
+                    })
+                }
+            }
 
             if (body.ChildID || body.ChildID === '') {
                 if (body.ChildID === '') {
@@ -676,8 +704,17 @@ module.exports = {
                     Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
                     Role: body.Role ? body.Role : '',
                     Note: body.Note ? body.Note : '',
-                    CustomerGroup: body.customerGroup ? body.customerGroup : '',
                     Relationship: body.relationship ? body.relationship : '',
+                }).then(async data => {
+                    if (body.customerGroup) {
+                        var listID = JSON.parse(body.customerGroup);
+                        for (var i = 0; i < listID.length; i++) {
+                            await mCompanyMailList(db).create({
+                                CompanyID: data.ID,
+                                MailListID: listID[i],
+                            })
+                        }
+                    }
                 })
                 var result = {
                     status: Constant.STATUS.SUCCESS,
