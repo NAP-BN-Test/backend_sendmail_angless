@@ -433,6 +433,7 @@ module.exports = {
                 var mailCampain = mMailCampain(db);
                 mailCampain.belongsTo(mUser(db), { foreignKey: 'OwnerID' });
                 mailCampain.belongsTo(mTemplate(db), { foreignKey: 'TemplateID', sourceKey: 'TemplateID', as: 'Template' });
+                mailCampain.belongsTo(mTemplate(db), { foreignKey: 'IDTemplateReminder', sourceKey: 'IDTemplateReminder', as: 'TemplateRemider' });
                 if (body.Type == 'MailMerge') {
                     var mailCampainData = await mailCampain.findAll({
                         where: [
@@ -441,7 +442,8 @@ module.exports = {
                         ],
                         include: [
                             { model: mUser(db) },
-                            { model: mTemplate(db), required: false, as: 'Template' }
+                            { model: mTemplate(db), required: false, as: 'Template' },
+                            { model: mTemplate(db), required: false, as: 'TemplateRemider' }
                         ],
                         order: [
                             ['TimeCreate', 'DESC']
@@ -496,7 +498,8 @@ module.exports = {
                         where: whereOjb,
                         include: [
                             { model: mUser(db) },
-                            { model: mTemplate(db), required: false, as: 'Template' }
+                            { model: mTemplate(db), required: false, as: 'Template' },
+                            { model: mTemplate(db), required: false, as: 'TemplateRemider' }
                         ],
                         order: [
                             ['TimeCreate', 'DESC']
@@ -509,7 +512,7 @@ module.exports = {
                 var mailCampainCount = await mailCampain.count({
                     where: [
                         where,
-                        { Type: 'MailMerge' }
+                        { Type: 'MailList' }
                     ],
                 });
 
@@ -527,6 +530,7 @@ module.exports = {
                         createTime: mModules.toDatetime(mailCampainData[i].TimeCreate),
                         nearestSend: '2020-05-30 14:00',
                         TemplateName: mailCampainData[i].Template ? mailCampainData[i].Template.Name : '',
+                        TemplateReminderName: mailCampainData[i].TemplateRemider ? mailCampainData[i].TemplateRemider.Name : '',
                         NumberAddressBook: numberAddressBook,
                         Description: mailCampainData[i].Description
                     })
@@ -543,7 +547,6 @@ module.exports = {
                 console.log(error);
                 res.json(Result.SYS_ERROR_RESULT)
             }
-
         }, error => {
             res.json(error)
         })
@@ -606,7 +609,6 @@ module.exports = {
 
     addMailList: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let now = moment().subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -1009,6 +1011,8 @@ module.exports = {
                 } else {
                     if (body.TemplateID || body.TemplateID === '')
                         update.push({ key: 'TemplateID', value: body.TemplateID });
+                    if (body.idTemplateReminder || body.idTemplateReminder === '')
+                        update.push({ key: 'IDTemplateReminder', value: body.idTemplateReminder });
                     if (body.Description || body.Description === '')
                         update.push({ key: 'Description', value: body.Description });
                     if (body.NumberAddressBook || body.NumberAddressBook === '')

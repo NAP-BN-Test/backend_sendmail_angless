@@ -114,6 +114,7 @@ module.exports = {
                     }, { where: { ID: item.ID } })
                 }
                 bodyHtml = await handlePushDataToBody(template.body, item.ID, db);
+
                 let Subject = item.Subject ? item.Subject : '';
                 var arrayEmail = convertStringToListObject(item.Email)
                 for (var i = 0; i < arrayEmail.length; i++) {

@@ -1054,7 +1054,7 @@ module.exports = {
                 company.belongsTo(mUser(db), { foreignKey: 'UserID', sourceKey: 'AssignID', as: 'AssignUser' });
                 company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
                 company.belongsTo(mCountry(db), { foreignKey: 'CountryID', sourceKey: 'CountryID', as: 'Country' });
-                // company.belongsTo(mDealStage(db), { foreignKey: 'StageID', sourceKey: 'StageID' });
+
 
                 company.hasMany(mUserFollow(db), { foreignKey: 'CompanyID' })
                 company.hasMany(mDeal(db), { foreignKey: 'CompanyID' });
@@ -1093,12 +1093,8 @@ module.exports = {
                         { Email: { [Op.like]: '%' + data.search + '%' } },
                         { Fax: { [Op.like]: '%' + data.search + '%' } },
                         { Role: { [Op.like]: '%' + data.search + '%' } },
-                        { CustomerGroup: { [Op.like]: '%' + data.search + '%' } },
                         { Note: { [Op.like]: '%' + data.search + '%' } },
-                        { Source: { [Op.like]: '%' + data.search + '%' } },
-                        { Website: { [Op.like]: '%' + data.search + '%' } },
                         { Phone: { [Op.like]: '%' + data.search + '%' } },
-                        { ShortName: { [Op.like]: '%' + data.search + '%' } },
                         { Address: { [Op.like]: '%' + data.search + '%' } },
                         { Relationship: { [Op.like]: '%' + data.search + '%' } },
                         { CountryID: { [Op.in]: country } },
@@ -1211,7 +1207,29 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Customer Group') {
-                                userFind['CustomerGroup'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                var mailList = [];
+                                await mMailList(db).findAll({
+                                    where: {
+                                        [Op.or]: [
+                                            { Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' } },
+                                        ]
+                                    }
+                                }).then(data => {
+                                    data.forEach(item => {
+                                        mailList.push(item.ID);
+                                    })
+                                })
+                                let companyList = [];
+                                await mCompanyMailList(db).findAll({
+                                    where: {
+                                        MailListID: { [Op.in]: mailList }
+                                    }
+                                }).then(data => {
+                                    data.forEach(item => {
+                                        companyList.push(item.CompanyID);
+                                    })
+                                })
+                                userFind['ID'] = { [Op.in]: companyList }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     whereOjb[Op.and] = userFind
                                 }
@@ -1319,10 +1337,6 @@ module.exports = {
                             where: { UserID: body.userID, Type: 1, Follow: true }
                         },
                         { model: mCity(db), required: false },
-                        // {
-                        //     model: mDealStage(db),
-                        //     required: false,
-                        // }
                     ],
                     order: [['ID', 'DESC']],
                     offset: Number(itemPerPage) * (Number(page) - 1),
