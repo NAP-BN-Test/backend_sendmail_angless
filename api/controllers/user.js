@@ -11,7 +11,7 @@ var mUser = require('../tables/user');
 module.exports = {
     updateUser: (req, res) => {
         let body = req.body;
-
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let update = [];
             try {
@@ -221,14 +221,20 @@ module.exports = {
                     listID.push(Number(item + ""));
                 });
 
-                await mUser(db).destroy({
+                mUser(db).destroy({
                     where: {
                         ID: { [Op.in]: listID },
                         Roles: { [Op.ne]: Constant.USER_ROLE.MANAGER }
                     }
-                });
+                }).then(data => {
+                    if (data == 1) {
+                        res.json(Result.ACTION_SUCCESS);
+                    }
+                    else {
+                        res.json(Result.NO_PERMISSION);
 
-                res.json(Result.ACTION_SUCCESS);
+                    }
+                })
 
             } catch (error) {
                 console.log(error);
