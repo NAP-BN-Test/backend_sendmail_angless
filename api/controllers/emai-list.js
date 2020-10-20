@@ -20,7 +20,8 @@ var mMailResponse = require('../tables/mail-response');
 
 var mCompanyMailList = require('../tables/company-maillist');
 var mMailListCampaign = require('../tables/maillist-campaign');
-
+var mGroupCampaign = require('../tables/group-campaign');
+var mCampaignGroups = require('../tables/campaign-groups');
 
 
 var mAmazon = require('../controllers/amazon');
@@ -141,10 +142,48 @@ async function resetJob(db) {
         console.log(error);
     }
 }
+async function deleteCampaign(db, listID) {
+    await mAdditionalInformation(db).destroy({
+        where: {
+            CampaignID: {
+                [Op.in]: listID,
+            }
+        }
+    })
+    await mCampaignGroups(db).destroy({
+        where: {
+            IDCampaign: {
+                [Op.in]: listID,
+            }
+        }
+    })
+    await mMailResponse(db).destroy({
+        where: {
+            MailCampainID: {
+                [Op.in]: listID
+            }
+        }
+    })
+    await mMailListCampaign(db).destroy({
+        where: {
+            MailCampainID: {
+                [Op.in]: listID
+            }
+        }
+    })
+    await mMailCampain(db).destroy({
+        where: {
+            ID: {
+                [Op.in]: listID
+            }
+        }
+    });
+}
 
 module.exports = {
     resetJob,
     getCompanyIDFromCampaignID,
+    deleteCampaign,
     copyMailCampaign: async function (req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -435,11 +474,27 @@ module.exports = {
                 mailCampain.belongsTo(mTemplate(db), { foreignKey: 'TemplateID', sourceKey: 'TemplateID', as: 'Template' });
                 mailCampain.belongsTo(mTemplate(db), { foreignKey: 'IDTemplateReminder', sourceKey: 'IDTemplateReminder', as: 'TemplateRemider' });
                 if (body.Type == 'MailMerge') {
-                    var mailCampainData = await mailCampain.findAll({
-                        where: [
-                            where,
+                    var listID = [];
+                    if (body.idGroup) {
+                        await mCampaignGroups(db).findAll({ where: { IDGroup: body.idGroup } }).then(data => {
+                            data.forEach(item => {
+                                listID.push(item.IDCampaign)
+                            })
+                        })
+                        var array = [
+                            // where,
+                            { ID: { [Op.in]: listID } },
                             { Type: 'MailMerge' }
-                        ],
+                        ]
+                    }
+                    else {
+                        var array = [
+                            // where,
+                            { Type: 'MailMerge' }
+                        ]
+                    }
+                    var mailCampainData = await mailCampain.findAll({
+                        where: array,
                         include: [
                             { model: mUser(db) },
                             { model: mTemplate(db), required: false, as: 'Template' },
@@ -450,6 +505,12 @@ module.exports = {
                         ],
                         offset: Number(body.itemPerPage) * (Number(body.page) - 1),
                         limit: Number(body.itemPerPage)
+                    });
+                    var mailCampainCount = await mailCampain.count({
+                        where: [
+                            { ID: { [Op.in]: listID } },
+                            { Type: 'MailMerge' }
+                        ],
                     });
                 } else {
                     var data = JSON.parse(body.data);
@@ -507,33 +568,33 @@ module.exports = {
                         offset: Number(body.itemPerPage) * (Number(body.page) - 1),
                         limit: Number(body.itemPerPage)
                     });
+                    var mailCampainCount = await mailCampain.count({
+                        where: [
+                            { Type: 'MailList' }
+                        ],
+                    });
                 }
 
-                var mailCampainCount = await mailCampain.count({
-                    where: [
-                        where,
-                        { Type: 'MailList' }
-                    ],
-                });
-
                 var array = [];
-                for (var i = 0; i < mailCampainData.length; i++) {
+                if (mailCampainData) {
+                    for (var i = 0; i < mailCampainData.length; i++) {
 
-                    var numberAddressBook = await mAdditionalInformation(db).count({
-                        where: { CampaignID: mailCampainData[i].ID }
-                    });
-                    array.push({
-                        id: Number(mailCampainData[i].ID),
-                        name: mailCampainData[i].Name,
-                        subject: mailCampainData[i].Subject,
-                        owner: mailCampainData[i].User ? mailCampainData[i].User.Name : '',
-                        createTime: mModules.toDatetime(mailCampainData[i].TimeCreate),
-                        nearestSend: '2020-05-30 14:00',
-                        TemplateName: mailCampainData[i].Template ? mailCampainData[i].Template.Name : '',
-                        TemplateReminderName: mailCampainData[i].TemplateRemider ? mailCampainData[i].TemplateRemider.Name : '',
-                        NumberAddressBook: numberAddressBook,
-                        Description: mailCampainData[i].Description
-                    })
+                        var numberAddressBook = await mAdditionalInformation(db).count({
+                            where: { CampaignID: mailCampainData[i].ID }
+                        });
+                        array.push({
+                            id: Number(mailCampainData[i].ID),
+                            name: mailCampainData[i].Name,
+                            subject: mailCampainData[i].Subject,
+                            owner: mailCampainData[i].User ? mailCampainData[i].User.Name : '',
+                            createTime: mModules.toDatetime(mailCampainData[i].TimeCreate),
+                            nearestSend: '2020-05-30 14:00',
+                            TemplateName: mailCampainData[i].Template ? mailCampainData[i].Template.Name : '',
+                            TemplateReminderName: mailCampainData[i].TemplateRemider ? mailCampainData[i].TemplateRemider.Name : '',
+                            NumberAddressBook: numberAddressBook,
+                            Description: mailCampainData[i].Description
+                        })
+                    }
                 }
 
                 var result = {
@@ -752,27 +813,7 @@ module.exports = {
             try {
                 if (body.listID) {
                     let listID = JSON.parse(body.listID);
-                    await mMailResponse(db).destroy({
-                        where: {
-                            MailCampainID: {
-                                [Op.in]: listID
-                            }
-                        }
-                    })
-                    await mMailListCampaign(db).destroy({
-                        where: {
-                            MailCampainID: {
-                                [Op.in]: listID
-                            }
-                        }
-                    })
-                    await mMailCampain(db).destroy({
-                        where: {
-                            ID: {
-                                [Op.in]: listID
-                            }
-                        }
-                    });
+                    await deleteCampaign(db, listID);
                 }
 
                 res.json(Result.ACTION_SUCCESS);
@@ -837,7 +878,11 @@ module.exports = {
                 } else {
                     data['TemplateID'] = body.TemplateID ? body.TemplateID : null;
                     data['IDTemplateReminder'] = body.idTemplateReminder ? body.idTemplateReminder : null;
-                    mailCampainData = await mMailCampain(db).create(data)
+                    mailCampainData = await mMailCampain(db).create(data);
+                    await mCampaignGroups(db).create({
+                        IDCampaign: mailCampainData.ID,
+                        IDGroup: body.idGroup,
+                    })
                 }
 
                 var result = {
@@ -1009,6 +1054,13 @@ module.exports = {
                         }
                     }
                 } else {
+                    if (body.idGroup || body.idGroup === '') {
+                        await mCampaignGroups(db).update({
+                            IDGroup: body.idGroup
+                        }, {
+                            where: { IDCampaign: body.campainID }
+                        })
+                    }
                     if (body.TemplateID || body.TemplateID === '')
                         update.push({ key: 'TemplateID', value: body.TemplateID });
                     if (body.idTemplateReminder || body.idTemplateReminder === '')

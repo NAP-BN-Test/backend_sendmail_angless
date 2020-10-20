@@ -75,6 +75,9 @@ module.exports = {
                                 }, { where: { ID: data[i].ID } })
                             } else {
                                 result = data[i].Result
+                                await mAdditionalInformation(db).update({
+                                    Result: 'Acknownedge',
+                                }, { where: { ID: data[i].ID } })
                             }
 
 
@@ -135,13 +138,18 @@ module.exports = {
                         let nameCampaign = await mMailCampain(db).findOne({
                             where: { ID: body.CampaignID }
                         })
+                        var status = await mMailCampain(db).findOne({
+                            where: {
+                                ID: body.CampaignID,
+                            }
+                        })
                         var result = {
                             status: Constant.STATUS.SUCCESS,
                             message: '',
                             array, all,
+                            statusCampaign: status.StatusCampaign,
                             nameCampaign: nameCampaign ? nameCampaign.Name : ''
                         }
-
                         res.json(result);
                     }
                 })
@@ -228,8 +236,6 @@ module.exports = {
                     MailListID: body.MailListID,
                     Name: data.OurRef ? data.OurRef : null,
                     DataID: data.ID,
-                }).then(data => {
-                    console.log(data.ID);
                 })
                 res.json(result);
             }, err => {
@@ -245,8 +251,6 @@ module.exports = {
     },
     updateAdditionalInformation: (req, res) => {
         let body = req.body;
-        console.log(body);
-
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {

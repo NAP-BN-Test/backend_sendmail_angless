@@ -9,6 +9,40 @@ var moment = require('moment');
 var mUser = require('../tables/user');
 
 module.exports = {
+    updateUser: (req, res) => {
+        let body = req.body;
+
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            let update = [];
+            try {
+                if (body.username || body.username === '')
+                    update.push({ key: 'Username', value: body.username });
+                if (body.password || body.password === '')
+                    update.push({ key: 'Password', value: body.password });
+                if (body.name || body.name === '')
+                    update.push({ key: 'Name', value: body.name });
+                if (body.roles || body.roles === '')
+                    update.push({ key: 'Roles', value: body.roles });
+                if (body.phone || body.phone === '')
+                    update.push({ key: 'Phone', value: body.phone });
+                if (body.email || body.email === '')
+                    update.push({ key: 'Email', value: body.email });
+                if (body.nameAcronym || body.nameAcronym === '')
+                    update.push({ key: 'NameAcronym', value: body.nameAcronym });
+                database.updateTable(update, mUser(db), body.id).then(response => {
+                    if (response == 1) {
+                        res.json(Result.ACTION_SUCCESS);
+                    } else {
+                        res.json(Result.SYS_ERROR_RESULT);
+                    }
+                })
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+
+        })
+    },
     getListUser: (req, res) => {//take this list for dropdown
         let body = req.body;
 
@@ -103,7 +137,7 @@ module.exports = {
                                 Password: body.regPassword,
                                 Phone: body.regPhone ? body.regPhone : "",
                                 Email: body.regEmail ? body.regEmail : "",
-                                Roles: Constant.USER_ROLE.STAFF,
+                                Roles: body.roles,
                                 TimeCreate: moment().format("YYYY-MM-DD HH:mm:ss.SSS")
                             });
                             if (userCreate)
@@ -154,7 +188,9 @@ module.exports = {
                             name: elm.Name,
                             username: elm.Username,
                             phone: elm.Phone,
-                            email: elm.Email
+                            email: elm.Email,
+                            password: elm.Password,
+                            roles: elm.Roles == 2 ? 'Quản lý' : 'Nhân viên',
                         })
                     });
                 }
@@ -185,7 +221,7 @@ module.exports = {
                     listID.push(Number(item + ""));
                 });
 
-                mUser(db).destroy({
+                await mUser(db).destroy({
                     where: {
                         ID: { [Op.in]: listID },
                         Roles: { [Op.ne]: Constant.USER_ROLE.MANAGER }

@@ -35,6 +35,8 @@ module.exports = function (app) {
     // todoList Routes
     app.route('/crm/user_login').post(login.login);
 
+    app.route('/crm/update_user').post(user.updateUser);
+
     app.route('/crm/add_user').post(user.addUser);
     app.route('/crm/get_category_list_user').post(user.getListUserCategory);
     app.route('/crm/delete_user').post(user.deleteUser);
@@ -361,5 +363,13 @@ module.exports = function (app) {
 
     app.route('/crm/get_list_mail_campaign').post(mail.getListMailCampaign);
     app.route('/crm/get_list_mailmerge').post(mail.getListMailMerge);
+
+    // group campaign 
+    var groupCampaign = require('./controllers/group-campaign');
+    app.route('/crm/get_list_group_campaign').post(groupCampaign.getListGroupCampaign);
+    app.route('/crm/add_group_campaign').post(groupCampaign.addGroupCampaign);
+    app.route('/crm/update_group_campaign').post(groupCampaign.updateGroupCampaign);
+    app.route('/crm/delete_group_campaign').post(groupCampaign.deleteGroupCampaign);
+
 
 };

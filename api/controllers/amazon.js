@@ -56,8 +56,6 @@ module.exports = {
                     res.json(Result.SYS_ERROR_RESULT);
                 } // an error occurred
                 else {
-                    console.log(data);
-
                     if (data.VerificationAttributes[body.email]) {
                         res.json(Result.ACTION_SUCCESS);
                     } else

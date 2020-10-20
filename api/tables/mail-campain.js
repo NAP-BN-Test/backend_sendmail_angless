@@ -20,6 +20,7 @@ module.exports = function (db) {
         TimeSend: Sequelize.NOW,
         ResBody: Sequelize.STRING,
         IDTemplateReminder: Sequelize.BIGINT,
+        StatusCampaign: Sequelize.BOOLEAN,
     });
 
     return table;

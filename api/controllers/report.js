@@ -376,8 +376,6 @@ module.exports = {
                 var where = [];
                 if (userRole) where = await mModules.handleWhereClause([{ key: 'OwnerID', value: Number(body.userID) }]);
 
-                console.log(where);
-
                 var mailCampain = mMailCampain(db);
                 mailCampain.belongsTo(mMailList(db), { foreignKey: 'MailListID' });
 
@@ -1144,9 +1142,6 @@ module.exports = {
                         attributes: ['Email']
                     }
                 });
-
-                console.log(mailResponseData);
-
 
                 var arrayTable = [];
                 mailResponseData.forEach(mailResponseDataItem => {
