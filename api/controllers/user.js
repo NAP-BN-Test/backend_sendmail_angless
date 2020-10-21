@@ -48,7 +48,7 @@ module.exports = {
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             if (body.all) {
-                mUser(db).findAll().then(data => {
+                mUser(db).findAll({ where: { Active: true } }).then(data => {
                     var array = [];
 
                     data.forEach(elm => {
@@ -138,6 +138,7 @@ module.exports = {
                                 Phone: body.regPhone ? body.regPhone : "",
                                 Email: body.regEmail ? body.regEmail : "",
                                 Roles: body.roles,
+                                Active: true,
                                 TimeCreate: moment().format("YYYY-MM-DD HH:mm:ss.SSS")
                             });
                             if (userCreate)
@@ -174,7 +175,10 @@ module.exports = {
                 ];
 
                 var categoryData = await mUser(db).findAll({
-                    where: { [Op.or]: whereSearch },
+                    where: [
+                        { [Op.or]: whereSearch },
+                        { Active: true }
+                    ],
                     raw: true,
                     order: [
                         ['Username', 'ASC']
@@ -221,21 +225,14 @@ module.exports = {
                     listID.push(Number(item + ""));
                 });
 
-                mUser(db).destroy({
+                await mUser(db).update({
+                    Active: false
+                }, {
                     where: {
-                        ID: { [Op.in]: listID },
-                        Roles: { [Op.ne]: Constant.USER_ROLE.MANAGER }
-                    }
-                }).then(data => {
-                    if (data == 1) {
-                        res.json(Result.ACTION_SUCCESS);
-                    }
-                    else {
-                        res.json(Result.NO_PERMISSION);
-
+                        ID: { [Op.in]: listID }
                     }
                 })
-
+                res.json(Result.ACTION_SUCCESS);
             } catch (error) {
                 console.log(error);
                 res.json(Result.SYS_ERROR_RESULT)

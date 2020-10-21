@@ -15,7 +15,8 @@ module.exports = function (db) {
         Email: Sequelize.STRING,
         TimeCreate: Sequelize.NOW,
         TimeLogin: Sequelize.NOW,
-        NameAcronym: Sequelize.STRING
+        NameAcronym: Sequelize.STRING,
+        Active: Sequelize.BOOLEAN,
     });
 
     return table;

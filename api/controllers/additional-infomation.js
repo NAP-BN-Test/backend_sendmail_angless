@@ -19,6 +19,8 @@ var mMailListDetail = require('../tables/mail-list-detail');
 const result = require('../constants/result');
 var mMailResponse = require('../tables/mail-response');
 const Sequelize = require('sequelize');
+var mCampaignGroups = require('../tables/campaign-groups');
+var mGroupCampaign = require('../tables/group-campaign');
 
 
 function handleNumber(number) {
@@ -459,7 +461,18 @@ module.exports = {
             let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
             let User = await mUser(db).findOne({ where: { ID: body.userID } })
             let NameAcronym = User.NameAcronym ? User.NameAcronym + '/' : '';
-            let OurRef = 'PR/LA/' + NameAcronym;
+            let groupCampaign = await mCampaignGroups(db).findOne({
+                where: { IDCampaign: body.CampaignID }
+            })
+            let group = await mGroupCampaign(db).findOne({
+                where: { ID: groupCampaign.IDGroup }
+            })
+            let OurRef = '';
+            if (group)
+                OurRef = group.Name + NameAcronym;
+            else
+                OurRef = '' + NameAcronym;
+
             await contact.findAll({
                 where: {
                     [Op.or]: {

@@ -11,6 +11,8 @@ var mailmergerCampaingn = require('../controllers/mailmerge-campaign');
 var fs = require('fs');
 var moment = require('moment');
 var mModules = require('../constants/modules')
+const Constant = require('../constants/constant');
+
 
 
 // var base64Img = require('base64-img');
