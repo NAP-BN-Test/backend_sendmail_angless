@@ -201,6 +201,11 @@ module.exports = function (app) {
 
 
     //Emai List
+    app.route('/crm/get_list_mail_campaign_from_group').post(emailList.getListNameMailcampaignFromGroup);
+
+
+
+
     app.route('/crm/get_mail_list').post(emailList.getMailList);
 
     app.route('/crm/get_mail_list_detail').post(emailList.getMailListDetail);

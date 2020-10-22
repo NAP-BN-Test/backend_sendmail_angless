@@ -12,7 +12,7 @@ var fs = require('fs');
 var moment = require('moment');
 var mModules = require('../constants/modules')
 const Constant = require('../constants/constant');
-
+var mUser = require('../tables/user');
 
 
 // var base64Img = require('base64-img');
@@ -138,9 +138,8 @@ module.exports = {
                     let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                     bodyHtml = httpTrack + bodyHtml;
                     bodyHtml = bodyHtml + unSubscribe;
-                    console.log(arrayEmail[i].name);
-                    console.log(bodyHtml);
-                    await mAmazon.sendEmail('tung24041998@gmail.com', arrayEmail[i].name, Subject, bodyHtml).then(async response => {
+                    let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+                    await mAmazon.sendEmail(emailSend.Email, arrayEmail[i].name, Subject, bodyHtml).then(async response => {
                         if (response) {
                             await mAdditionalInformation(db).update({
                                 Status: Constant.MAIL_RESPONSE_TYPE.SEND,

@@ -124,7 +124,8 @@ async function resetJob(db) {
                                 });
                             }
                         })
-                        mAmazon.sendEmail(body.myMail, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
+                        let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+                        mAmazon.sendEmail(emailSend.Email, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
                             if (sendMailRes)
                                 await mMailResponse(db).create({
                                     MailCampainID: body.campainID,
@@ -224,7 +225,65 @@ module.exports = {
             })
         })
     },
+    getListNameMailcampaignFromGroup: async function (req, res) {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                array = [];
+                await mGroupCampaign(db).findAll().then(async group => {
+                    for (var i = 0; i < group.length; i++) {
+                        var obj = {
+                            'idGroup': group[i].ID,
+                            'nameGroup': group[i].Name,
+                        };
+                        await mCampaignGroups(db).findAll({
+                            where: { IDGroup: group[i].ID }
+                        }).then(async group1 => {
+                            let detailList = [];
+                            if (group1.length > 0) {
+                                for (var j = 0; j < group1.length; j++) {
+                                    let detailobj = {
+                                        'id': group1[j].ID,
+                                        'name': group1[j].Name,
+                                    }
+                                    detailList.push(detailobj)
+                                    await mMailCampain(db).findAll({
+                                        where: { IDgroup1: group1[j].ID }
+                                    }).then(campaign => {
+                                        if (campaign.length > 0) {
+                                            let campaignList = [];
+                                            for (let e = 0; e < campaign.length; e++) {
+                                                let campaignObj = {
+                                                    'id': campaign[e].ID,
+                                                    'name': campaign[e].Name,
+                                                }
+                                                campaignList.push(campaignObj)
+                                            }
+                                            detailobj['listCampaign'] = campaignList;
+                                        }
+                                    })
+                                }
+                                obj['detailList'] = detailList;
+                            }
+                        })
+                        array.push(obj);
+                    }
+                })
+                var result = {
+                    status: Constant.STATUS.SUCCESS,
+                    message: '',
+                    array,
+                }
+                res.json(result);
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
 
+        }, error => {
+            res.json(error)
+        })
+    },
     getMailList: async function (req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
