@@ -689,40 +689,55 @@ module.exports = {
                 var companyObj = await company.findAll({
                     where: { Name: body.name }
                 })
-                if (companyObj.length) check = true;
-                company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
-                company.create({
-                    UserID: body.userID ? body.userID : null,
-                    Name: body.name,
-                    ShortName: body.shortName,
-                    Phone: body.phone ? body.phone.replace(/plus/g, '+') : '',
-                    Email: body.email,
-                    Address: body.address,
-                    CityID: body.cityID ? body.cityID : null,
-                    TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                    Type: 1,
-                    CountryID: body.CountryID ? body.CountryID : null,
-                    Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
-                    Role: body.Role ? body.Role : '',
-                    Note: body.Note ? body.Note : '',
-                    Relationship: body.relationship ? body.relationship : '',
-                }).then(async data => {
-                    if (body.customerGroup) {
-                        var listID = JSON.parse(body.customerGroup);
-                        for (var i = 0; i < listID.length; i++) {
-                            await mCompanyMailList(db).create({
-                                CompanyID: data.ID,
-                                MailListID: listID[i],
-                            })
-                        }
-                    }
+                var companyExits = await company.findAll({
+                    where: [
+                        { Name: body.name },
+                        { Address: body.address },
+                    ]
                 })
-                var result = {
-                    status: Constant.STATUS.SUCCESS,
-                    message: Constant.MESSAGE.ACTION_SUCCESS,
-                    exist: check,
+                if (companyExits.length <= 0) {
+                    if (companyObj.length) check = true;
+                    company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
+                    company.create({
+                        UserID: body.userID ? body.userID : null,
+                        Name: body.name,
+                        ShortName: body.shortName,
+                        Phone: body.phone ? body.phone.replace(/plus/g, '+') : '',
+                        Email: body.email,
+                        Address: body.address,
+                        CityID: body.cityID ? body.cityID : null,
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        Type: 1,
+                        CountryID: body.CountryID ? body.CountryID : null,
+                        Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
+                        Role: body.Role ? body.Role : '',
+                        Note: body.Note ? body.Note : '',
+                        Relationship: body.relationship ? body.relationship : '',
+                    }).then(async data => {
+                        if (body.customerGroup) {
+                            var listID = JSON.parse(body.customerGroup);
+                            for (var i = 0; i < listID.length; i++) {
+                                await mCompanyMailList(db).create({
+                                    CompanyID: data.ID,
+                                    MailListID: listID[i],
+                                })
+                            }
+                        }
+                    })
+                    var result = {
+                        status: Constant.STATUS.SUCCESS,
+                        message: Constant.MESSAGE.ACTION_SUCCESS,
+                        exist: check,
+                    }
+                    res.json(result);
+                } else {
+                    var result = {
+                        status: Constant.STATUS.FAIL,
+                        message: Constant.MESSAGE.INVALID_COMPANY,
+                    }
+                    res.json(result);
                 }
-                res.json(result);
+
             } catch (error) {
                 console.log(error);
                 var result = {

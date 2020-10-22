@@ -52,8 +52,8 @@ module.exports = {
 
     checkServerInvalid: async function (ip, dbName, secretKey) {
         if (secretKey == '00a2152372fa8e0e62edbb45dd82831a') {
-            const dbServer = new Sequelize('CustomerDB', 'sa', '1234', {
-                host: 'localhost',
+            const dbServer = new Sequelize('CustomerDB', 'customeruser', '123456a$', {
+                host: '118.27.192.106',
                 dialect: 'mssql',
                 operatorsAliases: '0',
                 pool: {

@@ -34,6 +34,7 @@ module.exports = function (app) {
 
     // todoList Routes
     app.route('/crm/user_login').post(login.login);
+    app.route('/crm/get_email_root').post(user.getNameEmailRoot);
 
     app.route('/crm/update_user').post(user.updateUser);
 

@@ -275,5 +275,25 @@ module.exports = {
             }
         })
     },
+    getNameEmailRoot: (req, res) => {
+        let body = req.body;
+
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                mUser(db).findOne({ where: { Name: 'root' } }).then(data => {
+                    var result = {
+                        status: Constant.STATUS.SUCCESS,
+                        message: '',
+                        email: data.Email,
+                    }
+                    res.json(result)
+                })
+
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+        })
+    }
 
 }

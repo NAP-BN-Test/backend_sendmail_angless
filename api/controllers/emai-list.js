@@ -527,14 +527,12 @@ module.exports = {
                 var userRole = await cUser.checkUser(body.ip, body.dbName, body.userID);
                 var where = [];
                 if (userRole) where = await mModules.handleWhereClause([{ key: 'OwnerID', value: Number(body.userID) }]);
-
                 var mailCampain = mMailCampain(db);
                 mailCampain.belongsTo(mUser(db), { foreignKey: 'OwnerID' });
                 mailCampain.belongsTo(mTemplate(db), { foreignKey: 'TemplateID', sourceKey: 'TemplateID', as: 'Template' });
                 mailCampain.belongsTo(mTemplate(db), { foreignKey: 'IDTemplateReminder', sourceKey: 'IDTemplateReminder', as: 'TemplateRemider' });
                 if (body.Type == 'MailMerge') {
-                    var listID = [];
-                    if (body.idGroup) {
+                    if (body.idGroup1) {
                         var array = [
                             // where,
                             { IDGroup1: body.idGroup1 },
@@ -1107,9 +1105,9 @@ module.exports = {
                         }
                     }
                 } else {
-                    if (body.idGroup || body.idGroup === '') {
+                    if (body.idGroup1 || body.idGroup1 === '') {
                         await mCampaignGroups(db).update({
-                            IDGroup: body.idGroup
+                            IDGroup: body.idGroup1
                         }, {
                             where: { IDCampaign: body.campainID }
                         })
@@ -1122,7 +1120,6 @@ module.exports = {
                         update.push({ key: 'Description', value: body.Description });
                     if (body.NumberAddressBook || body.NumberAddressBook === '')
                         update.push({ key: 'NumberAddressBook', value: Number(body.NumberAddressBook) });
-
                 }
                 database.updateTable(update, mMailCampain(db), body.campainID).then(mailCampainRes => {
                     if (mailCampainRes == 1) {
