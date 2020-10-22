@@ -144,41 +144,40 @@ async function resetJob(db) {
     }
 }
 async function deleteCampaign(db, listID) {
-    await mAdditionalInformation(db).destroy({
-        where: {
-            CampaignID: {
-                [Op.in]: listID,
+    try {
+        await mAdditionalInformation(db).destroy({
+            where: {
+                CampaignID: {
+                    [Op.in]: listID,
+                }
             }
-        }
-    })
-    await mCampaignGroups(db).destroy({
-        where: {
-            IDCampaign: {
-                [Op.in]: listID,
+        })
+        await mMailResponse(db).destroy({
+            where: {
+                MailCampainID: {
+                    [Op.in]: listID
+                }
             }
-        }
-    })
-    await mMailResponse(db).destroy({
-        where: {
-            MailCampainID: {
-                [Op.in]: listID
+        })
+        await mMailListCampaign(db).destroy({
+            where: {
+                MailCampainID: {
+                    [Op.in]: listID
+                }
             }
-        }
-    })
-    await mMailListCampaign(db).destroy({
-        where: {
-            MailCampainID: {
-                [Op.in]: listID
+        })
+        await mMailCampain(db).destroy({
+            where: {
+                ID: {
+                    [Op.in]: listID
+                }
             }
-        }
-    })
-    await mMailCampain(db).destroy({
-        where: {
-            ID: {
-                [Op.in]: listID
-            }
-        }
-    });
+        });
+    } catch (error) {
+        console.log(error);
+        res.json(Result.SYS_ERROR_RESULT)
+    }
+
 }
 
 module.exports = {
@@ -266,7 +265,8 @@ module.exports = {
                                 obj['detailList'] = detailList;
                             }
                         })
-                        array.push(obj);
+                        if (obj['detailList'])
+                            array.push(obj);
                     }
                 })
                 var result = {

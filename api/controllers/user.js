@@ -135,11 +135,30 @@ module.exports = {
                             where: { Username: body.regUsername }
                         });
                         if (userExist) {
-                            result = {
-                                status: Constant.STATUS.FAIL,
-                                message: Constant.MESSAGE.INVALID_USER
+                            console.log(userExist.Active);
+                            if (userExist.Active === true) {
+                                result = {
+                                    status: Constant.STATUS.FAIL,
+                                    message: Constant.MESSAGE.INVALID_USER
+                                }
+                                res.json(result);
+                            } else {
+                                await mUser(db).update({
+                                    Name: body.regName,
+                                    Username: body.regUsername,
+                                    NameAcronym: body.NameAcronym,
+                                    Password: body.regPassword,
+                                    Phone: body.regPhone ? body.regPhone : "",
+                                    Email: body.regEmail ? body.regEmail : "",
+                                    Roles: body.roles,
+                                    Active: true,
+                                    TimeCreate: moment().format("YYYY-MM-DD HH:mm:ss.SSS")
+                                }, {
+                                    where: { ID: userExist.ID }
+                                });
+                                res.json(Result.ACTION_SUCCESS)
                             }
-                            res.json(result);
+
                         } else {
                             var userCreate = await mUser(db).create({
                                 Name: body.regName,
@@ -202,6 +221,7 @@ module.exports = {
                 var array = [];
                 if (categoryData.length > 0) {
                     categoryData.forEach(elm => {
+                        console.log(elm.Name);
                         array.push({
                             id: elm.ID,
                             name: elm.Name,
