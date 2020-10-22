@@ -371,5 +371,16 @@ module.exports = function (app) {
     app.route('/crm/update_group_campaign').post(groupCampaign.updateGroupCampaign);
     app.route('/crm/delete_group_campaign').post(groupCampaign.deleteGroupCampaign);
 
+    // group campaign 
+    var campaignGroup = require('./controllers/campaign-group');
+    app.route('/crm/get_list_group_campaign_detail').post(campaignGroup.getListCampaignGroups);
+    app.route('/crm/add_group_campaign_detail').post(campaignGroup.addCampaignGroups);
+    app.route('/crm/update_group_campaign_detail').post(campaignGroup.updateCampaignGroups);
+    app.route('/crm/delete_group_campaign_detail').post(campaignGroup.deleteCampaignGroups);
+
+    //Config Email send
+    var config = require('./controllers/user');
+    app.route('/crm/config_email_send').post(config.configMailSend);
+
 
 };

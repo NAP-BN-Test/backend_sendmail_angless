@@ -144,6 +144,7 @@ module.exports = {
                         if (response) {
                             await mAdditionalInformation(db).update({
                                 Status: Constant.MAIL_RESPONSE_TYPE.SEND,
+                                Result: 'None',
                             }, {
                                 where: { ID: item.ID },
                             })

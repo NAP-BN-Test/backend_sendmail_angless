@@ -7,7 +7,8 @@ module.exports = function (db) {
             primaryKey: true,
             autoIncrement: true
         },
-        IDCampaign: Sequelize.BIGINT,
+        Name: Sequelize.STRING,
+        Code: Sequelize.STRING,
         IDGroup: Sequelize.BIGINT,
     });
 

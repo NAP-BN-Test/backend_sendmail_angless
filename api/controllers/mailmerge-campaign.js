@@ -253,29 +253,25 @@ module.exports = {
 
             if (body.MailmergeTemplateIDs) {
                 let listMailmergeTemplate = JSON.parse(body.MailmergeTemplateIDs);
-                let listMailmergeTemplateID = [];
-                listMailmergeTemplate.forEach(item => {
-                    listMailmergeTemplateID.push(Number(item + ""));
-                });
-
                 mTemplate(db).findOne({ where: { ID: body.userID } }).then(async user => {
-                    // if (user.Roles == Constant.USER_ROLE.MANAGER) {
-                    let update = [];
-                    update.Template_ID = null;
-                    await mMailCampain(db).update(update,
-                        {
-                            where: {
-                                [Op.or]: {
-                                    Template_ID: { [Op.in]: listMailmergeTemplateID }
-                                }
-                            }
-                        });
+                    await mMailCampain(db).update({
+                        TemplateID: null,
+                    }, {
+                        where: {
+                            TemplateID: { [Op.in]: listMailmergeTemplate },
+                        }
+                    });
+                    await mMailCampain(db).update({
+                        IDTemplateReminder: null,
+                    }, {
+                        where: {
+                            IDTemplateReminder: { [Op.in]: listMailmergeTemplate }
+                        }
+                    });
                     await mTemplate(db).destroy(
                         {
                             where: {
-                                [Op.or]: {
-                                    ID: { [Op.in]: listMailmergeTemplateID }
-                                }
+                                ID: { [Op.in]: listMailmergeTemplate }
                             }
                         },
                     ).then(() => {

@@ -21,6 +21,7 @@ module.exports = function (db) {
         ResBody: Sequelize.STRING,
         IDTemplateReminder: Sequelize.BIGINT,
         StatusCampaign: Sequelize.BOOLEAN,
+        IDGroup1: Sequelize.BIGINT,
     });
 
     return table;

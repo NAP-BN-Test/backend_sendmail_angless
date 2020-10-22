@@ -69,19 +69,6 @@ module.exports = {
                                     ]
                                 }
                             })
-                            var result = '';
-                            if (respon) {
-                                result = 'None'
-                                await mAdditionalInformation(db).update({
-                                    Result: 'None',
-                                }, { where: { ID: data[i].ID } })
-                            } else {
-                                result = data[i].Result
-                                await mAdditionalInformation(db).update({
-                                    Result: 'Acknownedge',
-                                }, { where: { ID: data[i].ID } })
-                            }
-
 
                             let listNameCampaign = '';
                             let count = 0;
@@ -113,7 +100,7 @@ module.exports = {
                                 FilingDate: data[i].FilingDate ? data[i].FilingDate : null,
                                 DateReminder: data[i].DateReminder ? data[i].DateReminder : null,
                                 DateSend: data[i].DateSend ? data[i].DateSend : null,
-                                Result: result ? result : null,
+                                Result: data[i].Result ? data[i].Result : null,
                                 PriorTrademark: data[i].PriorTrademark ? data[i].PriorTrademark : null,
                                 Owner: data[i].Owner,
                                 RegNo: data[i].RegNo ? data[i].RegNo : null,

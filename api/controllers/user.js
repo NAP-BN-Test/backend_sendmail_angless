@@ -9,9 +9,20 @@ var moment = require('moment');
 var mUser = require('../tables/user');
 
 module.exports = {
+    configMailSend: (req, res) => {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            mUser(db).update({ Email: body.email }, { where: { Name: 'root' } }).then(response => {
+                if (response == 1) {
+                    res.json(Result.ACTION_SUCCESS);
+                } else {
+                    res.json(Result.SYS_ERROR_RESULT);
+                }
+            })
+        })
+    },
     updateUser: (req, res) => {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let update = [];
             try {
@@ -165,7 +176,6 @@ module.exports = {
         let body = req.body;
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
-
             try {
                 let whereSearch = [
                     { Username: { [Op.like]: '%' + body.searchKey + '%' } },
@@ -177,7 +187,12 @@ module.exports = {
                 var categoryData = await mUser(db).findAll({
                     where: [
                         { [Op.or]: whereSearch },
-                        { Active: true }
+                        { Active: true },
+                        {
+                            Name: {
+                                [Op.ne]: 'root'
+                            }
+                        }
                     ],
                     raw: true,
                     order: [
