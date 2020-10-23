@@ -21,6 +21,8 @@ var mCompanyMailList = require('../tables/company-maillist');
 
 var mModules = require('../constants/modules');
 const { MAIL_RESPONSE_TYPE } = require('../constants/constant');
+var mailmergerCampaingn = require('../controllers/mailmerge-campaign');
+
 
 /** Xử lý mảng có ngày trùng nhau gộp vào và cộng thêm 1 đơn vị */
 function handleArray(array, body, reason) {
@@ -364,10 +366,22 @@ function handleReasonUnsubcribe(array) {
         return arraySort[0].reason;
     } else return "";
 }
-
+function convertStringToListObject(string) {
+    let result = [];
+    let resultArray = [];
+    if (string) {
+        result = string.split(";")
+        result.forEach(item => {
+            let resultObj = {};
+            resultObj.name = item;
+            resultArray.push(resultObj);
+        })
+    }
+    return resultArray;
+}
 
 module.exports = {
-
+    // mailmerge    
     getListReportByCampain: async function (req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -463,7 +477,7 @@ module.exports = {
         })
 
     },
-
+    // mailmerge
     getReportByCampainSummary: async function (req, res) {
         let body = req.body;
 
@@ -486,16 +500,17 @@ module.exports = {
                         ],
                     }]
                 });
-
-                var totalEmail = await mMailResponse(db).count({
-                    where: { MailCampainID: body.campainID },
-                    distinct: true,
-                    col: 'MailListDetailID'
-                });
+                var totalEmail = 0;
+                information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID);
+                information.forEach(async item => {
+                    var arrayEmail = convertStringToListObject(item.Email)
+                    totalEmail = arrayEmail.length
+                })
                 var nearestSend = await mMailResponse(db).findOne({
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Mailmerge',
                     },
                     order: [
                         ['TimeCreate', 'DESC']
@@ -506,7 +521,8 @@ module.exports = {
                 var startSend = await mMailResponse(db).findOne({
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Mailmerge',
                     },
                     order: [
                         ['TimeCreate', 'ASC']
@@ -517,19 +533,22 @@ module.exports = {
                 var totalSend = await mMailResponse(db).count({
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Mailmerge',
                     }
                 });
                 var totalOpen = await mMailResponse(db).count({
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        // TypeSend: 'Mailmerge',
                     }
                 });
                 var totalOpenDistinct = await mMailResponse(db).count({ // Tổng số email được mở bởi mỗi email và không trùng nhau
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: 'Mailmerge',
                     },
                     distinct: true,
                     col: 'MailListDetailID'
@@ -537,19 +556,22 @@ module.exports = {
                 var totalClickLink = await mMailResponse(db).count({
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.CLICK_LINK
+                        Type: Constant.MAIL_RESPONSE_TYPE.CLICK_LINK,
+                        TypeSend: 'Mailmerge',
                     }
                 });
                 var totalUnsubscribe = await mMailResponse(db).count({
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE
+                        TypeSend: 'Mailmerge',
+                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
                     }
                 });
                 var listMailListDetailIDData = await mMailResponse(db).findAll({
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID
+                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                        TypeSend: 'Mailmerge',
                     },
                     attributes: ['MailListDetailID'],
                     raw: true
@@ -744,18 +766,17 @@ module.exports = {
                     }]
                 });
 
-                var totalEmail = mailListData.MailListDetails.length;
-
+                var totalEmail = await mCompanyMailList(db).count({
+                    where: { MailListID: body.mailListID }
+                });
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' })
 
-                var totalSend = await mailResponse.count({
+                var totalSend = await mMailResponse(db).count({
                     where: {
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                    },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { MailListID: body.mailListID }
+                        MailCampainID: body.campainID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Maillist',
                     }
                 });
                 var totalOpen = await mailResponse.count({

@@ -101,7 +101,7 @@ async function resetJob(db) {
                 var timeSend = moment(campaign[i].TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                 var job = schedule.scheduleJob(timeSend, function () {
                     companyData.forEach(async (mailItem) => {
-                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}`;
+                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${mailItem.ID}&idMailCampain=${body.campainID}&type="Maillist"`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                         let httpTrack = `<img src="118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
@@ -126,13 +126,13 @@ async function resetJob(db) {
                         })
                         let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
                         mAmazon.sendEmail(emailSend.Email, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
-                            if (sendMailRes)
-                                await mMailResponse(db).create({
-                                    MailCampainID: body.campainID,
-                                    CompanyID: mailItem.ID,
-                                    TimeCreate: now,
-                                    Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                                });
+                            // if (sendMailRes)
+                            // await mMailResponse(db).create({
+                            //     MailCampainID: body.campainID,
+                            //     CompanyID: mailItem.ID,
+                            //     TimeCreate: now,
+                            //     Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                            // });
                         });
 
                     });
@@ -969,6 +969,7 @@ module.exports = {
         let dbName = params[1].split('=')[1];
         let idMailDetail = params[2].split('=')[1];
         let idMailCampain = params[3].split('=')[1];
+        let type = params[4].split('=')[1];
 
         database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
             try {
@@ -976,7 +977,8 @@ module.exports = {
                     MailListDetailID: idMailDetail,
                     TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                     MailCampainID: idMailCampain,
-                    Type: MAIL_RESPONSE_TYPE.OPEN
+                    Type: MAIL_RESPONSE_TYPE.OPEN,
+                    TypeSend: type ? type : '',
                 })
 
                 res.json(Result.ACTION_SUCCESS)
@@ -991,7 +993,6 @@ module.exports = {
 
     addMailClickLink: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
 
@@ -999,7 +1000,8 @@ module.exports = {
                     MailListDetailID: body.mailListDetailID,
                     TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                     MailCampainID: body.campainID,
-                    Type: Constant.MAIL_RESPONSE_TYPE.CLICK_LINK
+                    Type: Constant.MAIL_RESPONSE_TYPE.CLICK_LINK,
+                    TypeSend: body.type,
                 })
 
                 res.json(Result.ACTION_SUCCESS)
@@ -1021,7 +1023,6 @@ module.exports = {
                     mAmazon.sendEmail(body.myMail, body.myMail, body.subject, body.body);
                     res.json(Result.ACTION_SUCCESS);
                 } else {
-
                     // update time send mail--------------------------------------------------------------------------------------------------------------------------
                     await mMailCampain(db).update({
                         TimeSend: timeSend,
@@ -1029,6 +1030,12 @@ module.exports = {
                     }, {
                         where: { ID: body.campainID }
                     })
+                    await mMailResponse(db).create({
+                        MailCampainID: body.campainID,
+                        TimeCreate: now,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Maillist'
+                    });
                     resetJob(db);
                 }
             } catch (error) {

@@ -84,6 +84,12 @@ module.exports = {
         let body = req.body;
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            await mMailResponse(db).create({
+                MailCampainID: body.campainID,
+                TimeCreate: now,
+                Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                TypeSend: 'Mailmerge'
+            });
             var information = [];
             campaign = await mMailCampain(db).findOne({
                 where: {
@@ -130,7 +136,7 @@ module.exports = {
                 let Subject = item.Subject ? item.Subject : '';
                 var arrayEmail = convertStringToListObject(item.Email)
                 for (var i = 0; i < arrayEmail.length; i++) {
-                    let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${idMailDetail.ID}&idMailCampain=${body.CampaignID}`;
+                    let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&idMailDetail=${idMailDetail.ID}&idMailCampain=${body.CampaignID}&type="Mailmerge"`;
                     let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                     let httpTrack = `<img src="118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
@@ -148,11 +154,6 @@ module.exports = {
                             }, {
                                 where: { ID: item.ID },
                             })
-                            await mMailResponse(db).create({
-                                MailCampainID: body.campainID,
-                                TimeCreate: now,
-                                Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                            });
                         }
                     })
                 }
