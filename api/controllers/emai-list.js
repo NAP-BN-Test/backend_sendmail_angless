@@ -118,7 +118,6 @@ async function resetJob(db) {
                             if (checkMailRes == false) {
                                 await mMailResponse(db).create({
                                     MailCampainID: body.campainID,
-                                    MailCampainID: body.campainID,
                                     CompanyID: mailItem.ID,
                                     TimeCreate: now,
                                     Type: Constant.MAIL_RESPONSE_TYPE.INVALID
@@ -1015,7 +1014,6 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let timeSend = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -1023,6 +1021,7 @@ module.exports = {
                     mAmazon.sendEmail(body.myMail, body.myMail, body.subject, body.body);
                     res.json(Result.ACTION_SUCCESS);
                 } else {
+
                     // update time send mail--------------------------------------------------------------------------------------------------------------------------
                     await mMailCampain(db).update({
                         TimeSend: timeSend,
@@ -1098,12 +1097,19 @@ module.exports = {
                     update.push({ key: 'Body', value: body.body });
                 }
                 if (body.Type == 'MailList') {
-                    if (body.idGroup1 || body.idGroup1 === '') {
-                        if (body.idGroup1 == '') {
-                            update.push({ key: 'IDGroup1', value: null });
-                        }
-                        if (body.idGroup1) {
-                            update.push({ key: 'IDGroup1', value: body.idGroup1 });
+                    if (body.mailListID || body.mailListID === '') {
+                        console.log(body);
+                        let listID = JSON.parse(body.mailListID)
+                        await mMailListCampaign(db).destroy({
+                            where: {
+                                MailCampainID: body.campainID
+                            }
+                        })
+                        for (var i = 0; i < listID.length; i++) {
+                            await mMailListCampaign(db).create({
+                                MailListID: listID[i],
+                                MailCampainID: body.campainID,
+                            })
                         }
                     }
                 } else {

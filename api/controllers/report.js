@@ -17,6 +17,7 @@ var mMailCampain = require('../tables/mail-campain');
 var mMailResponse = require('../tables/mail-response');
 
 var mUser = require('../tables/user');
+var mCompanyMailList = require('../tables/company-maillist');
 
 var mModules = require('../constants/modules');
 const { MAIL_RESPONSE_TYPE } = require('../constants/constant');
@@ -369,18 +370,15 @@ module.exports = {
 
     getListReportByCampain: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                var userRole = await cUser.checkUser(body.ip, body.dbName, body.userID);
-                var where = [];
-                if (userRole) where = await mModules.handleWhereClause([{ key: 'OwnerID', value: Number(body.userID) }]);
-
                 var mailCampain = mMailCampain(db);
                 mailCampain.belongsTo(mMailList(db), { foreignKey: 'MailListID' });
 
                 var mailCampainData = await mailCampain.findAll({
-                    where: where,
+                    where: {
+                        IDGroup1: body.idGroup1,
+                    },
                     include: { model: mMailList(db) },
                     order: [
                         ['TimeCreate', 'DESC']
@@ -396,7 +394,7 @@ module.exports = {
                     array.push({
                         id: item.ID,
                         name: item.Name,
-                        email: item.MailList ? item.MailList.Name : "",
+                        email: '',
                         createTime: mModules.toDatetime(item.TimeCreate)
                     })
                 })
@@ -421,18 +419,12 @@ module.exports = {
 
     getListReportByMaillist: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                var userRole = await cUser.checkUser(body.ip, body.dbName, body.userID);
-                var where = [];
-                if (userRole) where = await mModules.handleWhereClause([{ key: 'OwnerID', value: Number(body.userID) }]);
-
                 var mailList = mMailList(db);
                 mailList.hasMany(mMailListDetail(db), { foreignKey: 'MailListID' });
 
                 var mailListData = await mailList.findAll({
-                    where: where,
                     include: {
                         model: mMailListDetail(db),
                     },
@@ -444,17 +436,16 @@ module.exports = {
                 });
 
                 var mailListCount = await mailList.count();
-
                 var array = [];
-                mailListData.forEach(item => {
+                for (var i = 0; i < mailListData.length; i++) {
+                    var totalEmail = await mCompanyMailList(db).count({ where: { MailListID: mailListData[i].ID } })
                     array.push({
-                        id: item.ID,
-                        name: item.Name,
-                        totalEmail: item.MailListDetails.length,
-                        createTime: mModules.toDatetime(item.TimeCreate),
+                        id: mailListData[i].ID,
+                        name: mailListData[i].Name,
+                        totalEmail: totalEmail,
+                        createTime: mModules.toDatetime(mailListData[i].TimeCreate),
                     })
-                })
-
+                }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -628,7 +619,7 @@ module.exports = {
                 }
 
                 var mailResponseData = await mailResponse.findAll({
-                    where: mWhere,
+                    // where: mWhere,
                     attributes: ['ID', 'TimeCreate', 'Reason'],
                     include: {
                         model: mMailListDetail(db),
@@ -865,7 +856,7 @@ module.exports = {
                     }
                 }
                 var mailResponseData = await mailResponse.findAll({
-                    where: mWhere,
+                    // where: mWhere,
                     attributes: ['ID', 'TimeCreate', 'Reason'],
                     include: {
                         model: mMailListDetail(db),
@@ -873,7 +864,6 @@ module.exports = {
                         attributes: ['Email']
                     }
                 });
-
                 var arrayTable = [];
                 mailResponseData.forEach(mailResponseDataItem => {
                     arrayTable.push({
@@ -885,7 +875,6 @@ module.exports = {
                             Number(mailResponseDataItem.MailListDetail.MailListID) : -1
                     })
                 })
-
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
                     if (arrayTable.length > 1) {
                         var arrayUnquie = [arrayTable[0]];
@@ -1134,7 +1123,7 @@ module.exports = {
                     }
                 }
                 var mailResponseData = await mailResponse.findAll({
-                    where: mWhere,
+                    // where: mWhere,
                     attributes: ['ID', 'TimeCreate', 'Reason'],
                     include: {
                         model: mMailListDetail(db),

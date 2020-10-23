@@ -148,6 +148,11 @@ module.exports = {
                             }, {
                                 where: { ID: item.ID },
                             })
+                            await mMailResponse(db).create({
+                                MailCampainID: body.campainID,
+                                TimeCreate: now,
+                                Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                            });
                         }
                     })
                 }
