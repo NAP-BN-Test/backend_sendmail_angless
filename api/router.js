@@ -388,5 +388,8 @@ module.exports = function (app) {
     var config = require('./controllers/user');
     app.route('/crm/config_email_send').post(config.configMailSend);
 
-
+    //  company same group
+    var companySameGroup = require('./controllers/company-same-group');
+    app.route('/crm/get_list_company_same_group').post(companySameGroup.getListCompanyAllGroup);
+    app.route('/crm/delete_company_same_group').post(companySameGroup.deleteCompanyAddGroup);
 };

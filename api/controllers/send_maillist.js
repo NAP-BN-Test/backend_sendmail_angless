@@ -117,6 +117,7 @@ module.exports = {
                 if (body.typeSend == 'Send') {
                     await mAdditionalInformation(db).update({
                         DateSend: now,
+                        Result: 'None'
                     }, { where: { ID: item.ID } })
                 }
                 else {

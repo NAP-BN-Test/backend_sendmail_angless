@@ -448,15 +448,15 @@ module.exports = {
             let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
             let User = await mUser(db).findOne({ where: { ID: body.userID } })
             let NameAcronym = User.NameAcronym ? User.NameAcronym + '/' : '';
-            let groupCampaign = await mCampaignGroups(db).findOne({
-                where: { IDCampaign: body.CampaignID }
+            let campaign = await mMailCampain(db).findOne({
+                where: { ID: body.CampaignID }
             })
-            let group = await mGroupCampaign(db).findOne({
-                where: { ID: groupCampaign.IDGroup }
+            let groupCampaign = await mCampaignGroups(db).findOne({
+                where: { ID: campaign.IDGroup1 }
             })
             let OurRef = '';
-            if (group)
-                OurRef = group.Name + NameAcronym;
+            if (groupCampaign)
+                OurRef = groupCampaign.Name + NameAcronym;
             else
                 OurRef = '' + NameAcronym;
 

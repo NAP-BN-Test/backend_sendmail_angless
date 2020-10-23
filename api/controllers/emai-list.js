@@ -118,6 +118,7 @@ async function resetJob(db) {
                             if (checkMailRes == false) {
                                 await mMailResponse(db).create({
                                     MailCampainID: body.campainID,
+                                    MailCampainID: body.campainID,
                                     CompanyID: mailItem.ID,
                                     TimeCreate: now,
                                     Type: Constant.MAIL_RESPONSE_TYPE.INVALID
@@ -137,6 +138,7 @@ async function resetJob(db) {
 
                     });
                 });
+                console.log(job);
             }
         }
     } catch (error) {
@@ -1013,6 +1015,7 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let timeSend = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -1041,14 +1044,9 @@ module.exports = {
 
     getMailListOption: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                var userRole = await cUser.checkUser(body.ip, body.dbName, body.userID);
-                var where = [];
-                if (userRole) where = await mModules.handleWhereClause([{ key: 'OwnerID', value: Number(body.userID) }]);
-
-                var mMailListData = await mMailList(db).findAll({ where: where });
+                var mMailListData = await mMailList(db).findAll({});
                 var array = [];
                 mMailListData.forEach(item => {
                     array.push({
@@ -1091,6 +1089,10 @@ module.exports = {
                 if (body.endTime || body.endTime === '') {
                     let time = moment(body.endTime).format('YYYY-MM-DD HH:mm:ss.SSS')
                     update.push({ key: 'TimeEnd', value: time });
+                }
+                if (body.timeSend || body.timeSend === '') {
+                    let time = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS')
+                    update.push({ key: 'TimeSend', value: time });
                 }
                 if (body.body || body.body === '') {
                     update.push({ key: 'Body', value: body.body });
