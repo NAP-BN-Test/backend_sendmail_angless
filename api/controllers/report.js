@@ -550,8 +550,6 @@ module.exports = {
                         Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                         TypeSend: 'Mailmerge',
                     },
-                    distinct: true,
-                    col: 'MailListDetailID'
                 });
                 var totalClickLink = await mMailResponse(db).count({
                     where: {
@@ -573,8 +571,6 @@ module.exports = {
                         Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                         TypeSend: 'Mailmerge',
                     },
-                    attributes: ['MailListDetailID'],
-                    raw: true
                 });
                 var listMailListDetailID = [];
                 if (listMailListDetailIDData.length > 0)
@@ -582,11 +578,10 @@ module.exports = {
                         listMailListDetailID.push(Number(listMailListDetailIDItem.MailListDetailID))
                     })
                 var totalInvalid = await mMailListDetail(db).count({
-                    where: { ID: { [Op.in]: listMailListDetailID } },
-                    distinct: true,
-                    col: 'Email'
+                    MailCampainID: body.campainID,
+                    Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                    TypeSend: 'Mailmerge',
                 })
-
                 var obj = {
                     name: campainData.Name,
                     subject: campainData.Subject,
@@ -653,7 +648,8 @@ module.exports = {
                 var totalOpen = await mailResponse.count({
                     where: {
                         MaillistID: body.mailListID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: 'Maillist',
                     },
                 });
                 var totalOpenDistinct = await mailResponse.count({ // Tổng số email được mở bởi mỗi email và không trùng nhau
@@ -681,14 +677,10 @@ module.exports = {
                 });
                 var totalInvalid = await mailResponse.count({
                     where: {
-                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID
+                        MaillistID: body.mailListID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                        TypeSend: 'Maillist',
                     },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { MailListID: body.mailListID }
-                    },
-                    distinct: true,
-                    col: 'MailListDetailID'
                 });
 
                 var obj = {

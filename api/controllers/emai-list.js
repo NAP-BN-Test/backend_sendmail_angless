@@ -27,6 +27,7 @@ var mCampaignGroups = require('../tables/campaign-groups');
 var mAmazon = require('../controllers/amazon');
 var mCheckMail = require('../controllers/check-mail');
 var cUser = require('../controllers/user');
+var mMailResponse = require('../tables/mail-response');
 
 var mUser = require('../tables/user');
 
@@ -101,30 +102,35 @@ async function resetJob(db, mailList) {
                 var timeSend = moment(campaign[i].TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                 var job = schedule.scheduleJob(timeSend, function () {
                     companyData.forEach(async (mailItem) => {
-                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&mailList=${body.campainID}&type=Maillist`;
+                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.campainID}&type=Maillist`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                        let httpTrack = `<img src="118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                        let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
                         let tokenUnsubscribe = `email=${mailItem.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
                         let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
                         let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
-                        let subscribe = `<p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to subscribe from this email</span></p>`
-
                         let bodyHtml = handleClickLink(body, mailItem.ID);
 
                         bodyHtml = httpTrack + bodyHtml;
-                        bodyHtml = bodyHtml + unSubscribe + subscribe;
+                        bodyHtml = bodyHtml + unSubscribe;
                         bodyHtml = bodyHtml.replace(/#ten/g, mailItem.Name);
-                        console.log('ádhfjkashfkjasdhfkjasdhfkjshdfkj');
-                        console.log(bodyHtml);
                         mCheckMail.checkEmail(mailItem.Email).then(async (checkMailRes) => {
                             if (checkMailRes == false) {
-                                await mMailResponse(db).create({
-                                    MailCampainID: body.campainID,
-                                    CompanyID: mailItem.ID,
-                                    TimeCreate: now,
-                                    Type: Constant.MAIL_RESPONSE_TYPE.INVALID
-                                });
+                                var listID = await mMailListCampaign(db).findAll({
+                                    where: {
+                                        MailCampainID: body.campainID
+                                    }
+                                })
+                                for (var i = 0; i < listID.length; i++) {
+                                    await mMailResponse(db).create({
+                                        MailCampainID: body.campainID,
+                                        CompanyID: mailItem.ID,
+                                        TimeCreate: now,
+                                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                        TypeSend: 'Maillist',
+                                        MaillistID: listID[i].MailListID
+                                    })
+                                }
                             }
                         })
                         let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });

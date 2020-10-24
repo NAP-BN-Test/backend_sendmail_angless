@@ -13,6 +13,7 @@ var moment = require('moment');
 var mModules = require('../constants/modules')
 const Constant = require('../constants/constant');
 var mUser = require('../tables/user');
+var mMailResponse = require('../tables/mail-response');
 
 
 // var base64Img = require('base64-img');
@@ -85,11 +86,11 @@ module.exports = {
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             await mMailResponse(db).create({
-                MailCampainID: body.campainID,
+                MailCampainID: body.CampaignID,
                 TimeCreate: now,
                 Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                 TypeSend: 'Mailmerge'
-            });
+            })
             var information = [];
             campaign = await mMailCampain(db).findOne({
                 where: {
@@ -136,17 +137,27 @@ module.exports = {
                 let Subject = item.Subject ? item.Subject : '';
                 var arrayEmail = convertStringToListObject(item.Email)
                 for (var i = 0; i < arrayEmail.length; i++) {
-                    let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&mailList=${idMailDetail.ID}&type="Mailmerge"`;
+                    let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.CampaignID}&type=Mailmerge`;
                     let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                    let httpTrack = `<img src="118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                    let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
                     let tokenUnsubscribe = `email=${arrayEmail[i].name}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.CampaignID}`;
                     let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
                     let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
-                    let subscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                     bodyHtml = httpTrack + bodyHtml;
-                    bodyHtml = bodyHtml + unSubscribe + subscribe;
+                    bodyHtml = bodyHtml + unSubscribe;
                     let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+                    mCheckMail.checkEmail(arrayEmail[i].name).then(async (checkMailRes) => {
+                        if (checkMailRes == false) {
+                            await mMailResponse(db).create({
+                                MailCampainID: body.campainID,
+                                TimeCreate: now,
+                                Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                TypeSend: 'Mailmerge'
+
+                            });
+                        }
+                    })
                     await mAmazon.sendEmail(emailSend.Email, arrayEmail[i].name, Subject, bodyHtml).then(async response => {
                         if (response) {
                             await mAdditionalInformation(db).update({
