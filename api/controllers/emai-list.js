@@ -101,20 +101,22 @@ async function resetJob(db, mailList) {
                 var timeSend = moment(campaign[i].TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                 var job = schedule.scheduleJob(timeSend, function () {
                     companyData.forEach(async (mailItem) => {
-                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&mailList=${body.campainID}&type="Maillist"`;
+                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&mailList=${body.campainID}&type=Maillist`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                         let httpTrack = `<img src="118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
                         let tokenUnsubscribe = `email=${mailItem.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
                         let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
                         let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
-                        let subscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                        let subscribe = `<p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to subscribe from this email</span></p>`
 
                         let bodyHtml = handleClickLink(body, mailItem.ID);
 
                         bodyHtml = httpTrack + bodyHtml;
                         bodyHtml = bodyHtml + unSubscribe + subscribe;
                         bodyHtml = bodyHtml.replace(/#ten/g, mailItem.Name);
+                        console.log('ádhfjkashfkjasdhfkjasdhfkjshdfkj');
+                        console.log(bodyHtml);
                         mCheckMail.checkEmail(mailItem.Email).then(async (checkMailRes) => {
                             if (checkMailRes == false) {
                                 await mMailResponse(db).create({
@@ -963,22 +965,26 @@ module.exports = {
 
     addMailResponse: async function (req, res) {
         let query = req._parsedUrl.query;
-        let queryDecrypt = query;
+        let queryDecrypt = mModules.decryptKey(query.replace("token=", ""));;
         let params = queryDecrypt.split('&');
         let ip = params[0].split('=')[1];
         let dbName = params[1].split('=')[1];
-        let mailList = params[2].split('=')[1];
+        let idCampaign = params[2].split('=')[1];
         let type = params[3].split('=')[1];
         database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
             try {
                 if (type === 'Maillist') {
-                    let listID = JSON.parse(mailList);
+                    var listID = await mMailListCampaign(db).findAll({
+                        where: {
+                            MailCampainID: idCampaign
+                        }
+                    })
                     for (var i = 0; i < listID.length; i++) {
                         await mMailResponse(db).create({
                             TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                             TypeSend: type ? type : '',
-                            MaillistID: listID[i],
+                            MaillistID: listID[i].MailListID,
                         })
                     }
                 } else {
@@ -986,7 +992,7 @@ module.exports = {
                         TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                         Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                         TypeSend: type ? type : '',
-                        MailCampainID: mailList
+                        MailCampainID: idCampaign
                     })
                 }
                 res.json(Result.ACTION_SUCCESS)
@@ -1124,7 +1130,6 @@ module.exports = {
                 }
                 if (body.Type == 'MailList') {
                     if (body.mailListID || body.mailListID === '') {
-                        console.log(body);
                         let listID = JSON.parse(body.mailListID)
                         await mMailListCampaign(db).destroy({
                             where: {
