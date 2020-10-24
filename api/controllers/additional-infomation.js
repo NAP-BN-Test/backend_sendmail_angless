@@ -61,7 +61,7 @@ module.exports = {
                                 order: [
                                     Sequelize.literal('max(TimeCreate) DESC'),
                                 ],
-                                group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate'],
+                                group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate', 'TypeSend', 'MaillistID'],
                                 where: {
                                     [Op.and]: [
                                         { MailCampainID: data[i].CampaignID },

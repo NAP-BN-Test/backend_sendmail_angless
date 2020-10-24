@@ -22,6 +22,7 @@ module.exports = function (db) {
         IDTemplateReminder: Sequelize.BIGINT,
         StatusCampaign: Sequelize.BOOLEAN,
         IDGroup1: Sequelize.BIGINT,
+        TimeSend: Sequelize.NOW,
     });
 
     return table;

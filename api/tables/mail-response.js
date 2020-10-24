@@ -13,6 +13,8 @@ module.exports = function (db) {
         Type: Sequelize.INTEGER,
         Reason: Sequelize.STRING,
         CompanyID: Sequelize.BIGINT,
+        TypeSend: Sequelize.STRING,
+        MaillistID: Sequelize.BIGINT,
     });
 
     return table;
