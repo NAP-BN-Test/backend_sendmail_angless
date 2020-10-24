@@ -713,8 +713,9 @@ module.exports = {
                     Description: mailCampainData.Description,
                     Type: mailCampainData.Type,
                     listMailList,
-                    timeSend: moment(mailCampainData.TimeSend).format('YYYY-MM-DD HH:mm:ss.SSS') ? moment(mailCampainData.TimeSend).format('YYYY-MM-DD HH:mm:ss.SSS') : null
+                    timeSend: mailCampainData.TimeSend ? JSON.stringify(moment(mailCampainData.TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS')) : null
                 }
+                console.log(obj);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -1129,6 +1130,7 @@ module.exports = {
                 }
                 if (body.timeSend || body.timeSend === '') {
                     let time = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS')
+                    console.log(time);
                     update.push({ key: 'TimeSend', value: time });
                 }
                 if (body.body || body.body === '') {
