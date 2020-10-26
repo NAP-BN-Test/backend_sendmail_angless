@@ -78,7 +78,7 @@ async function getCompanyIDFromCampaignID(db, campainID) {
     })
     return mCompanyIDs;
 }
-async function resetJob(db, mailList) {
+async function resetJob(db) {
     try {
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
 
@@ -95,57 +95,69 @@ async function resetJob(db, mailList) {
         if (campaign.length > 0) {
             for (var i = 0; i < campaign.length; i++) {
                 var body = JSON.parse(campaign[i].ResBody);
-                var mCompanyIDs = await getCompanyIDFromCampaignID(db, body.campainID);
-                var companyData = await mCompany(db).findAll({
-                    where: { ID: { [Op.in]: mCompanyIDs } }
+                var mMailListID = [];
+                await mMailListCampaign(db).findAll({
+                    where: {
+                        MailCampainID: campaign[i].ID
+                    }
+                }).then(data => {
+                    data.forEach(item => {
+                        mMailListID.push(item.MailListID)
+                    })
                 })
                 var timeSend = moment(campaign[i].TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
-                var job = schedule.scheduleJob(timeSend, function () {
-                    companyData.forEach(async (mailItem) => {
-                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.campainID}&type=Maillist`;
-                        let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                        let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                for (var j = 0; j < mMailListID.length; j++) {
+                    let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: mMailListID[j] } })
+                    console.log(listCompany.length, mMailListID[j]);
+                    for (var e = 0; e < listCompany.length; e++) {
+                        let company = await mCompany(db).findOne({ where: { ID: listCompany[e].CompanyID } })
+                        var job = schedule.scheduleJob(timeSend, async function () {
+                            let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mMailListID[i]}&type=Maillist`;
+                            let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
+                            let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
-                        let tokenUnsubscribe = `email=${mailItem.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
-                        let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                        let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
-                        let bodyHtml = handleClickLink(body, mailItem.ID);
+                            let tokenUnsubscribe = `email=${company.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.campainID}`;
+                            let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
+                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://unsubscribe.namanphu.tech/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                            let bodyHtml = handleClickLink(body, company.ID);
 
-                        bodyHtml = httpTrack + bodyHtml;
-                        bodyHtml = bodyHtml + unSubscribe;
-                        bodyHtml = bodyHtml.replace(/#ten/g, mailItem.Name);
-                        mCheckMail.checkEmail(mailItem.Email).then(async (checkMailRes) => {
-                            if (checkMailRes == false) {
-                                var listID = await mMailListCampaign(db).findAll({
-                                    where: {
-                                        MailCampainID: body.campainID
-                                    }
-                                })
-                                for (var i = 0; i < listID.length; i++) {
-                                    await mMailResponse(db).create({
-                                        MailCampainID: body.campainID,
-                                        TimeCreate: now,
-                                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
-                                        TypeSend: 'Maillist',
-                                        MaillistID: listID[i].MailListID
+                            bodyHtml = httpTrack + bodyHtml;
+                            bodyHtml = bodyHtml + unSubscribe;
+                            bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
+                            mCheckMail.checkEmail(company.Email).then(async (checkMailRes) => {
+                                if (checkMailRes == false) {
+                                    var listID = await mMailListCampaign(db).findAll({
+                                        where: {
+                                            MailCampainID: campaign[i].ID
+                                        }
                                     })
+                                    for (var i = 0; i < listID.length; i++) {
+                                        await mMailResponse(db).create({
+                                            MailCampainID: campaign[i].ID,
+                                            TimeCreate: now,
+                                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                            TypeSend: 'Maillist',
+                                            MaillistID: listID[i].MailListID
+                                        })
+                                    }
                                 }
-                            }
-                        })
-                        let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
-                        await mAmazon.sendEmail(emailSend.Email, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
-                            if (sendMailRes)
-                                console.log(sendMailRes);
-                            // await mMailResponse(db).create({
-                            //     MailCampainID: body.campainID,
-                            //     CompanyID: mailItem.ID,
-                            //     TimeCreate: now,
-                            //     Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                            // });
-                        });
+                            })
+                            let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+                            await mAmazon.sendEmail(emailSend.Email, company.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
+                                if (sendMailRes)
+                                    console.log(sendMailRes);
+                                // await mMailResponse(db).create({
+                                //     MailCampainID: body.campainID,
+                                //     CompanyID: company.ID,
+                                //     TimeCreate: now,
+                                //     Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                                // });
+                            });
 
-                    });
-                });
+                        });
+                        console.log(job);
+                    }
+                }
             }
         }
     } catch (error) {
@@ -1067,7 +1079,7 @@ module.exports = {
                         });
                         mailList.push(campaign[i].MailListID)
                     }
-                    resetJob(db, mailList);
+                    resetJob(db);
                 }
             } catch (error) {
                 console.log(error);
