@@ -133,8 +133,9 @@ async function resetJob(db, mailList) {
                             }
                         })
                         let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
-                        mAmazon.sendEmail(emailSend.Email, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
-                            // if (sendMailRes)
+                        await mAmazon.sendEmail(emailSend.Email, mailItem.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
+                            if (sendMailRes)
+                                console.log(sendMailRes);
                             // await mMailResponse(db).create({
                             //     MailCampainID: body.campainID,
                             //     CompanyID: mailItem.ID,
@@ -145,7 +146,6 @@ async function resetJob(db, mailList) {
 
                     });
                 });
-                console.log(job);
             }
         }
     } catch (error) {
@@ -714,6 +714,7 @@ module.exports = {
                     listMailList,
                     timeSend: mailCampainData.TimeSend ? JSON.stringify(moment(mailCampainData.TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS')) : null
                 }
+                console.log(obj);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -984,13 +985,14 @@ module.exports = {
                             MailCampainID: idCampaign
                         }
                     })
-                    if (listID.length > 0)
+                    for (var i = 0; i < listID.length; i++) {
                         await mMailResponse(db).create({
                             TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                             TypeSend: type ? type : '',
-                            MaillistID: listID[0].MailListID,
+                            MaillistID: listID[i].MailListID,
                         })
+                    }
                 } else {
                     await mMailResponse(db).create({
                         TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),

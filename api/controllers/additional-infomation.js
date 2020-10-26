@@ -396,19 +396,18 @@ module.exports = {
                 });
 
                 mUser(db).findOne({ where: { ID: body.userID } }).then(async user => {
-                    if (user.Roles == Constant.USER_ROLE.MANAGER) {
-                        await mAdditionalInformation(db).destroy(
-                            {
-                                where: {
-                                    [Op.or]: {
-                                        ID: { [Op.in]: listAdditionalInformationID }
-                                    }
+                    await mAdditionalInformation(db).destroy(
+                        {
+                            where: {
+                                [Op.or]: {
+                                    ID: { [Op.in]: listAdditionalInformationID }
                                 }
-                            },
-                        ).then(() => {
-                            res.json(Result.ACTION_SUCCESS);
-                        });
-                    }
+                            }
+                        },
+                    ).then(() => {
+                        res.json(Result.ACTION_SUCCESS);
+                    });
+
                 });
             }
         })
