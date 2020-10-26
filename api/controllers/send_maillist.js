@@ -150,7 +150,7 @@ module.exports = {
                     mCheckMail.checkEmail(arrayEmail[i].name).then(async (checkMailRes) => {
                         if (checkMailRes == false) {
                             await mMailResponse(db).create({
-                                MailCampainID: body.campainID,
+                                MailCampainID: body.CampaignID,
                                 TimeCreate: now,
                                 Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                                 TypeSend: 'Mailmerge'

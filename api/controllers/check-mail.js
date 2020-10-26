@@ -2,8 +2,9 @@ module.exports = {
     checkEmail: function (email) { //take this list for dropdown
         return new Promise(res => {
             var request = require('request')
+            // a69834eab18e99ec484e9410a47bce5b key hết hạn
             var post_options = {
-                url: `https://apilayer.net/api/check?access_key=a69834eab18e99ec484e9410a47bce5b&email=${email}`,
+                url: `https://apilayer.net/api/check?access_key=1d3e9ab19ac774c6fe13c12bb74c62db&email=${email}`,
                 method: 'GET',
                 json: true
             };
@@ -14,6 +15,7 @@ module.exports = {
                     res(false);
                 }
                 if (bodyrq) {
+                    console.log(bodyrq);
                     res(bodyrq.smtp_check);
                 }
             });

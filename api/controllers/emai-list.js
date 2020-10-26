@@ -124,7 +124,6 @@ async function resetJob(db, mailList) {
                                 for (var i = 0; i < listID.length; i++) {
                                     await mMailResponse(db).create({
                                         MailCampainID: body.campainID,
-                                        CompanyID: mailItem.ID,
                                         TimeCreate: now,
                                         Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                                         TypeSend: 'Maillist',
@@ -993,6 +992,7 @@ module.exports = {
                             TypeSend: type ? type : '',
                             MaillistID: listID[i].MailListID,
                         })
+                        break;
                     }
                 } else {
                     await mMailResponse(db).create({

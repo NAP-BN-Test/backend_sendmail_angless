@@ -577,7 +577,7 @@ module.exports = {
                     listMailListDetailIDData.forEach(listMailListDetailIDItem => {
                         listMailListDetailID.push(Number(listMailListDetailIDItem.MailListDetailID))
                     })
-                var totalInvalid = await mMailListDetail(db).count({
+                var totalInvalid = await mMailResponse(db).count({
                     MailCampainID: body.campainID,
                     Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                     TypeSend: 'Mailmerge',
