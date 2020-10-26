@@ -714,7 +714,6 @@ module.exports = {
                     listMailList,
                     timeSend: mailCampainData.TimeSend ? JSON.stringify(moment(mailCampainData.TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS')) : null
                 }
-                console.log(obj);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -985,15 +984,13 @@ module.exports = {
                             MailCampainID: idCampaign
                         }
                     })
-                    for (var i = 0; i < listID.length; i++) {
+                    if (listID.length > 0)
                         await mMailResponse(db).create({
                             TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                             TypeSend: type ? type : '',
-                            MaillistID: listID[i].MailListID,
+                            MaillistID: listID[0].MailListID,
                         })
-                        break;
-                    }
                 } else {
                     await mMailResponse(db).create({
                         TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
