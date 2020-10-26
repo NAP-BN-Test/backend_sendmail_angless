@@ -148,6 +148,7 @@ module.exports = {
                     bodyHtml = bodyHtml + unSubscribe;
                     let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
                     mCheckMail.checkEmail(arrayEmail[i].name).then(async (checkMailRes) => {
+                        console.log(checkMailRes);
                         if (checkMailRes == false) {
                             await mMailResponse(db).create({
                                 MailCampainID: body.CampaignID,
