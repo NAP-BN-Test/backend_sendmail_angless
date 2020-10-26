@@ -147,6 +147,7 @@ module.exports = {
                     bodyHtml = httpTrack + bodyHtml;
                     bodyHtml = bodyHtml + unSubscribe;
                     let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+                    console.log(arrayEmail[i].name);
                     mCheckMail.checkEmail(arrayEmail[i].name).then(async (checkMailRes) => {
                         console.log(checkMailRes);
                         if (checkMailRes == false) {

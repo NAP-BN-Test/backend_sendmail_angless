@@ -578,9 +578,11 @@ module.exports = {
                         listMailListDetailID.push(Number(listMailListDetailIDItem.MailListDetailID))
                     })
                 var totalInvalid = await mMailResponse(db).count({
-                    MailCampainID: body.campainID,
-                    Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
-                    TypeSend: 'Mailmerge',
+                    where: {
+                        MailCampainID: body.campainID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                        TypeSend: 'Mailmerge',
+                    }
                 })
                 var obj = {
                     name: campainData.Name,
@@ -682,7 +684,7 @@ module.exports = {
                         TypeSend: 'Maillist',
                     },
                 });
-
+                console.log(totalInvalid);
                 var obj = {
                     name: mailListData.Name,
                     totalEmail,
