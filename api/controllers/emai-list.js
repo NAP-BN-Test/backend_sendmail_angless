@@ -107,12 +107,12 @@ async function resetJob(db) {
                 })
                 var timeSend = moment(campaign[i].TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                 for (var j = 0; j < mMailListID.length; j++) {
+                    let mailListID = mMailListID[j];
                     let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: mMailListID[j] } })
-                    console.log(listCompany.length, mMailListID[j]);
                     for (var e = 0; e < listCompany.length; e++) {
                         let company = await mCompany(db).findOne({ where: { ID: listCompany[e].CompanyID } })
                         var job = schedule.scheduleJob(timeSend, async function () {
-                            let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mMailListID[i]}&type=Maillist`;
+                            let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist`;
                             let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                             let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
@@ -155,7 +155,6 @@ async function resetJob(db) {
                             });
 
                         });
-                        console.log(job);
                     }
                 }
             }
@@ -992,19 +991,12 @@ module.exports = {
         database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
             try {
                 if (type === 'Maillist') {
-                    var listID = await mMailListCampaign(db).findAll({
-                        where: {
-                            MailCampainID: idCampaign
-                        }
+                    await mMailResponse(db).create({
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: type ? type : '',
+                        MaillistID: idCampaign,
                     })
-                    for (var i = 0; i < listID.length; i++) {
-                        await mMailResponse(db).create({
-                            TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                            TypeSend: type ? type : '',
-                            MaillistID: listID[i].MailListID,
-                        })
-                    }
                 } else {
                     await mMailResponse(db).create({
                         TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
