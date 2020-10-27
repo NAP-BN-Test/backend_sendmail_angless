@@ -225,8 +225,6 @@ module.exports = function (app) {
 
     app.route('/crm/get_mail_list_option').post(emailList.getMailListOption);
 
-    app.route('/crm/open_mail').get(emailList.addMailResponse);
-
     app.route('/crm/delete_mail_list').post(emailList.deleteMailList);
 
     app.route('/crm/delete_mail_list_detail').post(emailList.deleteMailListDetail);

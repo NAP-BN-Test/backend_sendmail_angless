@@ -994,44 +994,42 @@ module.exports = {
         })
     },
     addMailResponse: async function (req, res) {
-        setTimeout(() => {
-            let query = req._parsedUrl.query;
-            let queryDecrypt = mModules.decryptKey(query.replace("token=", ""));;
-            let params = queryDecrypt.split('&');
-            let ip = params[0].split('=')[1];
-            let dbName = params[1].split('=')[1];
-            let idCampaign = params[2].split('=')[1];
-            let type = params[3].split('=')[1];
-            let idGetInfo = params[4].split('=')[1];
-            database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
-                try {
-                    if (type === 'Maillist') {
-                        await mMailResponse(db).create({
-                            TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                            TypeSend: type ? type : '',
-                            MaillistID: idCampaign,
-                            IDGetInfo: idGetInfo,
-                        })
-                    } else {
-                        await mMailResponse(db).create({
-                            TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                            TypeSend: type ? type : '',
-                            MailCampainID: idCampaign,
-                            IDGetInfo: idGetInfo,
-                        })
-                    }
-                    res.json(Result.ACTION_SUCCESS)
-                } catch (error) {
-                    console.log(error);
-                    res.json(Result.SYS_ERROR_RESULT)
+        let query = req._parsedUrl.query;
+        let queryDecrypt = mModules.decryptKey(query.replace("token=", ""));;
+        let params = queryDecrypt.split('&');
+        let ip = params[0].split('=')[1];
+        let dbName = params[1].split('=')[1];
+        let idCampaign = params[2].split('=')[1];
+        let type = params[3].split('=')[1];
+        let idGetInfo = params[4].split('=')[1];
+        database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+            try {
+                if (type === 'Maillist') {
+                    await mMailResponse(db).create({
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: type ? type : '',
+                        MaillistID: idCampaign,
+                        IDGetInfo: idGetInfo,
+                    })
+                } else {
+                    await mMailResponse(db).create({
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: type ? type : '',
+                        MailCampainID: idCampaign,
+                        IDGetInfo: idGetInfo,
+                    })
                 }
+                res.json(Result.ACTION_SUCCESS)
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
 
-            }, error => {
-                res.json(error)
-            })
-        }, 2000)
+        }, error => {
+            res.json(error)
+        })
     },
 
     addMailClickLink: async function (req, res) {

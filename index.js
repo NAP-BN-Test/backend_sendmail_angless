@@ -35,6 +35,7 @@ let storage = multer.diskStorage({
 });
 let upload = multer({ storage: storage });
 const DIR = 'D:/images_services/ageless_sendmail';
+
 app.post('/api/upload', getDateInt, upload.single('photo'), function (req, res) {
     if (!req.file) {
         console.log("No file received");
@@ -49,6 +50,14 @@ app.post('/api/upload', getDateInt, upload.single('photo'), function (req, res) 
         })
     }
 });
+// set time 
+const rateLimit = require("express-rate-limit");
+const someApiLimiter = rateLimit({
+    windowMs: 2000,
+    max: 1,
+});
+var emailList = require('./api/controllers/emai-list');
+app.get('/crm/open_mail', someApiLimiter, emailList.addMailResponse);
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
