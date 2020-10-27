@@ -2,7 +2,7 @@ const Result = require('../constants/result');
 const Constant = require('../constants/constant');
 
 const Op = require('sequelize').Op;
-const sequelize = require('sequelize');
+const Sequelize = require('sequelize');
 
 var moment = require('moment');
 
@@ -684,7 +684,6 @@ module.exports = {
                         TypeSend: 'Maillist',
                     },
                 });
-                console.log(totalInvalid);
                 var obj = {
                     name: mailListData.Name,
                     totalEmail,
@@ -728,6 +727,7 @@ module.exports = {
 
 
     // ----------------------------------------------------------------------------------------------------------------------------
+    // mailmerge
     getReportByCampainMailType: async function (req, res) {
         let body = req.body;
 
@@ -735,83 +735,66 @@ module.exports = {
             try {
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
-
-                var mWhere;
-                if (body.timeFrom) {
-                    mWhere = {
-                        TimeCreate: { [Op.between]: [new Date(moment.utc(body.timeFrom)), new Date(moment.utc(body.timeTo))] },
-                        MailCampainID: body.campainID,
-                        Type: body.mailType
-                    }
-                } else {
-                    mWhere = {
-                        MailCampainID: body.campainID,
-                        Type: body.mailType
-                    }
+                var totalEmail = 0;
+                information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID);
+                information.forEach(async item => {
+                    var arrayEmail = convertStringToListObject(item.Email)
+                    totalEmail += arrayEmail.length
+                })
+                if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MailCampainID: body.campainID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                            TypeSend: 'Mailmerge',
+                        }
+                    });
                 }
-
-                var mailResponseData = await mailResponse.findAll({
-                    // where: mWhere,
-                    attributes: ['ID', 'TimeCreate', 'Reason'],
-                    include: {
-                        model: mMailListDetail(db),
-                        attributes: ['Email']
-                    }
-                });
+                if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MailCampainID: body.campainID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TypeSend: 'Mailmerge',
+                        }
+                    });
+                }
+                if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
+                    var totalType = 0
+                }
 
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
-                    if (arrayTable.length > 1) {
-                        var arrayUnquie = [arrayTable[0]];
-
-                        arrayTable.forEach(itemTable => {
-                            let index = arrayUnquie.findIndex(itemUnquie => {
-                                return itemUnquie.email == itemTable.email;
-                            });
-                            if (index < 0) arrayUnquie.push(itemTable)
-                        });
-                        arrayTable = arrayUnquie
-                    }
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MailCampainID: body.campainID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            TypeSend: 'Mailmerge',
+                        }
+                    });
                 }
 
-                // var arrayTableSort = handleArray(arrayTable, body, body.mailType == Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE);
-
-                var totalEmail = await mMailResponse(db).count({ // Tổng số email đã thao tác với chiến dịch mà không trùng nhau
-                    where: { MailCampainID: body.campainID },
-                    distinct: true,
-                    col: 'MailListDetailID'
-                });
-
-                var totalTypeDistinct = await mMailResponse(db).count({ // Tổng số email tương ứng với các loại và không trùng nhau
-                    where: {
-                        MailCampainID: body.campainID,
-                        Type: body.mailType
-                    },
-                    distinct: true,
-                    col: 'MailListDetailID'
-                });
-
-                var totalType = 0; // tổng số lần cho mỗi loại mail response
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
-                // var mainReason = handleReasonUnsubcribe(arrayTable); // Lý do nhiều nhất nếu là loại unsubscribe
 
-                // BC gửi mail
-                var nearestSend = await mMailResponse(db).findOne({
+                var nearestSend = await mMailResponse(db).findOne(
+                    {
+                        order: [
+                            Sequelize.literal('max(TimeCreate) DESC'),
+                        ],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo'],
+                    }, {
                     where: {
                         MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                    },
-                    order: [
-                        ['TimeCreate', 'DESC']
-                    ],
-                    attributes: ['TimeCreate'],
-                    raw: true
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Mailmerge',
+
+                    }
                 });
-                var mainReason = 0
+                var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
                 var obj = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: parseFloat(totalTypeDistinct / totalEmail).toFixed(2), // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: (parseFloat(totalType / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
@@ -822,7 +805,7 @@ module.exports = {
                     message: '',
                     array,
                     obj,
-                    arrayTableSort
+                    arrayTableSort,
                 }
                 res.json(result);
 
@@ -844,117 +827,74 @@ module.exports = {
             try {
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
-
-                var mWhere;
-                if (body.timeFrom) {
-                    mWhere = {
-                        TimeCreate: { [Op.between]: [new Date(moment.utc(body.timeFrom)), new Date(moment.utc(body.timeTo))] },
-                        Type: body.mailType
-                    }
-                } else {
-                    mWhere = {
-                        Type: body.mailType
-                    }
-                }
-                var mailResponseData = await mailResponse.findAll({
-                    // where: mWhere,
-                    attributes: ['ID', 'TimeCreate', 'Reason'],
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { MailListID: body.mailListID },
-                        attributes: ['Email']
-                    }
+                var totalEmail = await mCompanyMailList(db).count({
+                    where: { MailListID: body.mailListID }
                 });
-                var arrayTable = [];
-                mailResponseData.forEach(mailResponseDataItem => {
-                    arrayTable.push({
-                        id: mailResponseDataItem.ID,
-                        time: mailResponseDataItem.TimeCreate,
-                        email: mailResponseDataItem.MailListDetail.Email,
-                        reason: mailResponseDataItem.Reason ? mailResponseDataItem.Reason : "",
-                        mailListID: mailResponseDataItem.MailListDetail.MailListID ?
-                            Number(mailResponseDataItem.MailListDetail.MailListID) : -1
-                    })
-                })
+                if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MaillistID: body.mailListID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                            TypeSend: 'Maillist',
+                        }
+                    });
+                }
+                if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MaillistID: body.mailListID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TypeSend: 'Maillist',
+                        }
+                    });
+                }
+                if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
+                    var totalType = 0
+                }
+
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
-                    if (arrayTable.length > 1) {
-                        var arrayUnquie = [arrayTable[0]];
-
-                        arrayTable.forEach(itemTable => {
-                            let index = arrayUnquie.findIndex(itemUnquie => {
-                                return itemUnquie.email == itemTable.email;
-                            });
-                            if (index < 0) arrayUnquie.push(itemTable)
-                        });
-                        arrayTable = arrayUnquie
-                    }
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MaillistID: body.mailListID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            TypeSend: 'Maillist',
+                        }
+                    });
                 }
 
-                var array = handleArrayChart(arrayTable, body);
-
-                var arrayTableSort = handleArray(arrayTable, body, body.mailType == Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE);
-
-                var totalEmail = await mailResponse.count({ // Tổng số email đã thao tác với chiến dịch mà không trùng nhau
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { MailListID: body.mailListID }
-                    },
-                    distinct: true,
-                    col: 'MailListDetailID'
-                });
-
-                var totalTypeDistinct = await mailResponse.count({ // Tổng số email tương ứng với các loại và không trùng nhau
-                    where: {
-                        Type: body.mailType
-                    },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { MailListID: body.mailListID }
-                    },
-                    distinct: true,
-                    col: 'MailListDetailID'
-                });
-
-                var totalType = 0; // tổng số lần cho mỗi loại mail response
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
-                var mainReason = handleReasonUnsubcribe(arrayTable); // Lý do nhiều nhất nếu là loại unsubscribe
 
-                array.forEach(arrayItem => {
-                    totalType = totalType + arrayItem.value;
-                    if (arrayItem.value > 1) totalTypeTwice = totalTypeTwice += 1;
-                });
-
-                // BC gửi mail
-                var nearestSend = await mailResponse.findOne({
+                var nearestSend = await mMailResponse(db).findOne(
+                    {
+                        order: [
+                            Sequelize.literal('max(TimeCreate) DESC'),
+                        ],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo'],
+                    }, {
                     where: {
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                    },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { MailListID: body.mailListID }
-                    },
-                    order: [
-                        ['TimeCreate', 'DESC']
-                    ],
-                    attributes: ['TimeCreate'],
-                    raw: true
-                });
+                        MaillistID: body.mailListID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Maillist',
 
+                    }
+                });
+                var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
                 var obj = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: parseFloat(totalTypeDistinct / totalEmail).toFixed(2), // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: (parseFloat(totalType / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
-
+                var array = [];
+                var arrayTableSort = [];
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
                     array,
                     obj,
-                    arrayTableSort
+                    arrayTableSort,
                 }
                 res.json(result);
 
@@ -995,84 +935,61 @@ module.exports = {
 
                 var totalSend = await mailResponse.count({
                     where: { Type: Constant.MAIL_RESPONSE_TYPE.SEND },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    }
                 });
                 var totalOpen = await mailResponse.count({
-                    where: { Type: Constant.MAIL_RESPONSE_TYPE.OPEN },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    }
+                    where: [
+                        { IDGetInfo: body.userID },
+                        { Type: Constant.MAIL_RESPONSE_TYPE.OPEN }
+                    ],
                 });
                 var totalClickLink = await mailResponse.count({
-                    where: { Type: Constant.MAIL_RESPONSE_TYPE.CLICK_LINK },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    }
+                    where: [
+                        { IDGetInfo: body.userID },
+                        { Type: Constant.MAIL_RESPONSE_TYPE.CLICK_LINK }
+                    ],
                 });
                 var listMailListDetailIDData = await mailResponse.findAll({
-                    where: { Type: Constant.MAIL_RESPONSE_TYPE.INVALID },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID },
-                    },
-                    attributes: ['MailListDetailID'],
-                    raw: true
+                    where: [
+                        { IDGetInfo: body.userID },
+                        { Type: Constant.MAIL_RESPONSE_TYPE.INVALID }
+                    ],
                 });
                 var listMailListDetailID = [];
                 if (listMailListDetailIDData.length > 0)
                     listMailListDetailIDData.forEach(listMailListDetailIDItem => {
                         listMailListDetailID.push(Number(listMailListDetailIDItem.MailListDetailID))
                     })
-                var totalInvalid = await mMailListDetail(db).count({
-                    where: { ID: { [Op.in]: listMailListDetailID } },
-                    distinct: true,
-                    col: 'Email'
+                var totalInvalid = await mailResponse.count({
+                    where: [
+                        { IDGetInfo: body.userID },
+                        { Type: Constant.MAIL_RESPONSE_TYPE.INVALID }
+                    ],
                 })
                 var totalUnsubscribe = await mailResponse.count({
-                    where: { Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    }
+                    where: [
+                        { IDGetInfo: body.userID },
+                        { Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE }
+                    ],
                 });
                 var totalEmail = await mailResponse.count({ // Tổng số email đã thao tác với chiến dịch mà không trùng nhau
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    },
-                    distinct: true,
-                    col: 'MailListDetailID'
+                    where: [
+                        { IDGetInfo: body.userID }
+                    ],
                 });
                 var totalOpenDistinct = await mailResponse.count({ // Tổng số email được mở bởi mỗi email và không trùng nhau
-                    where: { Type: Constant.MAIL_RESPONSE_TYPE.OPEN },
-
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    },
-                    distinct: true,
-                    col: 'MailListDetailID'
+                    where: [
+                        { IDGetInfo: body.userID }
+                    ],
                 });
                 var nearestSend = await mailResponse.findOne({
-                    where: {
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                    },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    },
                     order: [
-                        ['TimeCreate', 'DESC']
+                        Sequelize.literal('max(TimeCreate) DESC'),
                     ],
-                    attributes: ['TimeCreate'],
-                    raw: true
-                });
+                    group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate', 'TypeSend', 'MaillistID', 'IDGetInfo'],
+                    where: { IDGetInfo: body.userID }
 
+                });
+                console.log(nearestSend);
                 var obj = {
                     timeCreate: userData.TimeCreate ? userData.TimeCreate : null,
                     timeLogin: userData.TimeLogin ? userData.TimeLogin : null,
@@ -1087,7 +1004,6 @@ module.exports = {
                     totalUnsubscribe,
                     percentType: parseFloat(totalOpenDistinct / totalEmail * 100).toFixed(0) + '%',
                 }
-
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -1106,126 +1022,75 @@ module.exports = {
 
     getReportByUserMailType: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
-
-                var mWhere;
-                if (body.timeFrom) {
-                    mWhere = {
-                        TimeCreate: { [Op.between]: [new Date(moment.utc(body.timeFrom)), new Date(moment.utc(body.timeTo))] },
-                        Type: body.mailType
-                    }
-                } else {
-                    mWhere = {
-                        Type: body.mailType
-                    }
-                }
-                var mailResponseData = await mailResponse.findAll({
-                    // where: mWhere,
-                    attributes: ['ID', 'TimeCreate', 'Reason'],
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID },
-                        attributes: ['Email']
-                    }
+                var totalEmail = await mailResponse.count({ // Tổng số email đã thao tác với chiến dịch mà không trùng nhau
+                    where: [
+                        { IDGetInfo: body.userID }
+                    ],
                 });
-
-                var arrayTable = [];
-                mailResponseData.forEach(mailResponseDataItem => {
-                    arrayTable.push({
-                        id: mailResponseDataItem.ID,
-                        time: mailResponseDataItem.TimeCreate,
-                        email: mailResponseDataItem.MailListDetail.Email,
-                        reason: mailResponseDataItem.Reason ? mailResponseDataItem.Reason : "",
-                        mailListID: mailResponseDataItem.MailListDetail.MailListID ?
-                            Number(mailResponseDataItem.MailListDetail.MailListID) : -1
-                    })
-                })
+                if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            IDGetInfo: body.userID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        }
+                    });
+                }
+                if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            IDGetInfo: body.userID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        }
+                    });
+                }
+                if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
+                    var totalType = 0
+                }
 
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
-                    if (arrayTable.length > 1) {
-                        var arrayUnquie = [arrayTable[0]];
-
-                        arrayTable.forEach(itemTable => {
-                            let index = arrayUnquie.findIndex(itemUnquie => {
-                                return itemUnquie.email == itemTable.email;
-                            });
-                            if (index < 0) arrayUnquie.push(itemTable)
-                        });
-                        arrayTable = arrayUnquie
-                    }
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            IDGetInfo: body.userID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                        }
+                    });
                 }
 
-
-
-                var array = handleArrayChart(arrayTable, body);
-
-                var arrayTableSort = handleArray(arrayTable, body, body.mailType == Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE);
-
-                var totalEmail = await mailResponse.count({ // Tổng số email đã thao tác với chiến dịch mà không trùng nhau
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    },
-                    distinct: true,
-                    col: 'MailListDetailID'
-                });
-
-                var totalTypeDistinct = await mailResponse.count({ // Tổng số email tương ứng với các loại và không trùng nhau
-                    where: {
-                        Type: body.mailType
-                    },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    },
-                    distinct: true,
-                    col: 'MailListDetailID'
-                });
-
-                var totalType = 0; // tổng số lần cho mỗi loại mail response
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
-                var mainReason = handleReasonUnsubcribe(arrayTable); // Lý do nhiều nhất nếu là loại unsubscribe
 
-                array.forEach(arrayItem => {
-                    totalType = totalType + arrayItem.value;
-                    if (arrayItem.value > 1) totalTypeTwice = totalTypeTwice += 1;
-                });
-
-                // BC gửi mail
-                var nearestSend = await mailResponse.findOne({
+                var nearestSend = await mMailResponse(db).findOne(
+                    {
+                        order: [
+                            Sequelize.literal('max(TimeCreate) DESC'),
+                        ],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo'],
+                    }, {
                     where: {
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                    },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { OwnerID: body.userID }
-                    },
-                    order: [
-                        ['TimeCreate', 'DESC']
-                    ],
-                    attributes: ['TimeCreate'],
-                    raw: true
+                        IDGetInfo: body.userID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                    }
                 });
-
+                var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
                 var obj = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: parseFloat(totalTypeDistinct / totalEmail).toFixed(2), // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: (parseFloat(totalType / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
-
+                var array = [];
+                var arrayTableSort = [];
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
                     array,
                     obj,
-                    arrayTableSort
+                    arrayTableSort,
                 }
                 res.json(result);
 

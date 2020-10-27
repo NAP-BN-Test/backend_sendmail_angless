@@ -24,10 +24,10 @@ var mGroupCampaign = require('../tables/group-campaign');
 
 
 function handleNumber(number) {
-    if (number < 10) return "000" + number.toString();
-    if (number >= 10 && number < 100) return "00" + number.toString();
-    if (number >= 100 && number < 1000) return "0" + number.toString();
-    if (number >= 1000) return number.toString();
+    if (number < 10) return "000" + (number + 1).toString();
+    if (number >= 10 && number < 100) return "00" + (number + 1).toString();
+    if (number >= 100 && number < 1000) return "0" + (number + 1).toString();
+    if (number >= 1000) return (number + 1).toString();
 }
 
 module.exports = {
@@ -61,7 +61,7 @@ module.exports = {
                                 order: [
                                     Sequelize.literal('max(TimeCreate) DESC'),
                                 ],
-                                group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate', 'TypeSend', 'MaillistID'],
+                                group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate', 'TypeSend', 'MaillistID', 'IDGetInfo'],
                                 where: {
                                     [Op.and]: [
                                         { MailCampainID: data[i].CampaignID },
@@ -453,9 +453,12 @@ module.exports = {
             let groupCampaign = await mCampaignGroups(db).findOne({
                 where: { ID: campaign.IDGroup1 }
             })
+            let group = await (mGroupCampaign(db).findOne({
+                where: { ID: groupCampaign.IDGroup }
+            }))
             let OurRef = '';
             if (groupCampaign)
-                OurRef = groupCampaign.Name + NameAcronym;
+                OurRef = group.Name + '/' + groupCampaign.Name + '/';
             else
                 OurRef = '' + NameAcronym;
 
