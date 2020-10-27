@@ -379,7 +379,13 @@ function convertStringToListObject(string) {
     }
     return resultArray;
 }
-
+function checkDuplicate(array, elm) {
+    var check = false;
+    array.forEach(item => {
+        if (item === elm) check = true;
+    })
+    return check;
+}
 module.exports = {
     // mailmerge    
     getListReportByCampain: async function (req, res) {
@@ -711,21 +717,6 @@ module.exports = {
             res.json(error)
         })
     },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // ----------------------------------------------------------------------------------------------------------------------------
     // mailmerge
     getReportByCampainMailType: async function (req, res) {
@@ -737,10 +728,6 @@ module.exports = {
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
                 var totalEmail = 0;
                 information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID);
-                information.forEach(async item => {
-                    var arrayEmail = convertStringToListObject(item.Email)
-                    totalEmail += arrayEmail.length
-                })
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
                     var totalType = await mMailResponse(db).count({
                         where: {
@@ -772,7 +759,20 @@ module.exports = {
                         }
                     });
                 }
-
+                var arrayTableSort = [];
+                information.forEach(async item => {
+                    var arrayEmail = convertStringToListObject(item.Email)
+                    totalEmail += arrayEmail.length
+                    if (item)
+                        arrayEmail.forEach(email => {
+                            arrayTableSort.push({
+                                email: email.name,
+                                mailListID: -1,
+                                time: 'Thứ 7, 24/10/2020',
+                                value: totalType ? totalType : 0
+                            })
+                        })
+                })
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
 
                 var nearestSend = await mMailResponse(db).findOne(
@@ -786,7 +786,6 @@ module.exports = {
                         MailCampainID: body.campainID,
                         Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                         TypeSend: 'Mailmerge',
-
                     }
                 });
                 var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
@@ -798,8 +797,15 @@ module.exports = {
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
-                var array = [];
-                var arrayTableSort = [];
+                var array = [
+                    { time: "Thứ 4", value: 0 },
+                    { time: "Thứ 5", value: 0 },
+                    { time: "Thứ 6", value: 0 },
+                    { time: "Thứ 7", value: 2 },
+                    { time: "Chủ nhật", value: 0 },
+                    { time: "Thứ 2", value: 0 },
+                    { time: "Thứ 3", value: 0 },
+                ];
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -987,16 +993,28 @@ module.exports = {
                     ],
                     group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate', 'TypeSend', 'MaillistID', 'IDGetInfo'],
                     where: { IDGetInfo: body.userID }
-
                 });
-                console.log(nearestSend);
+                var totalMailCampainSend = 0;
+                var totalList = [];
+                await mailResponse.findAll({
+                    where: { IDGetInfo: body.userID }
+                }).then(data => {
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            if (!checkDuplicate(totalList, item.MailCampainID)) {
+                                totalList.push(item.MailCampainID);
+                                totalMailCampainSend += 1;
+                            }
+                        })
+                    }
+                })
                 var obj = {
                     timeCreate: userData.TimeCreate ? userData.TimeCreate : null,
                     timeLogin: userData.TimeLogin ? userData.TimeLogin : null,
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     totalMailList: userData.MailCampains.length,
                     totalMailCampain: userData.MailCampains.length,
-                    totalMailCampainSend: 3,
+                    totalMailCampainSend: totalMailCampainSend,
                     totalSend,
                     totalOpen,
                     totalClickLink,

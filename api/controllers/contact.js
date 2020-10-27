@@ -567,6 +567,7 @@ module.exports = {
                     name: data['Name'],
                     address: data['Address'],
                     phone: data['Phone'],
+                    fax: data['Fax'],
                     email: data['Email'],
                     jobTile: data['JobTile'],
                     follow: data.UserFollows[0] ? data.UserFollows[0]['Follow'] : false

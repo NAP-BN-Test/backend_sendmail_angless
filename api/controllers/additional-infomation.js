@@ -157,9 +157,23 @@ module.exports = {
             })
             let User = await mUser(db).findOne({ where: { ID: body.UserID } })
             let NameAcronym = User.Username ? User.Username + '/' : '';
-            let OurRef = 'PR/LA/' + NameAcronym;
+            let campaign = await mMailCampain(db).findOne({
+                where: { ID: body.CampaignID }
+            })
+            let groupCampaign = await mCampaignGroups(db).findOne({
+                where: { ID: campaign.IDGroup1 }
+            })
+            let group = await (mGroupCampaign(db).findOne({
+                where: { ID: groupCampaign.IDGroup }
+            }))
+            let OurRef = '';
+            if (groupCampaign)
+                OurRef = group.Name + '/' + groupCampaign.Name + '/';
+            else
+                OurRef = '' + NameAcronym;
             mAdditionalInformation(db).create({
                 OurRef: OurRef,
+                CampaignID: body.CampaignID,
                 PAT: body.PAT ? body.PAT : null,
                 Applicant: body.Applicant ? body.Applicant : null,
                 ApplicationNo: body.ApplicationNo ? body.ApplicationNo : null,
@@ -476,7 +490,6 @@ module.exports = {
             }).then(async data => {
                 if (data) {
                     for (var i = 0; i < data.length; i++) {
-                        console.log(data[i].Email);
                         await mAdditionalInformation(db).create({
                             OurRef: OurRef,
                             Address: data[i].Address ? data[i].Address : null,
