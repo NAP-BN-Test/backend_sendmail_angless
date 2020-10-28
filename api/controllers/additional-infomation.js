@@ -147,7 +147,6 @@ module.exports = {
     },
     addAdditionalInformation: (req, res) => {
         let body = req.body;
-        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -162,6 +161,7 @@ module.exports = {
                 where: { ID: body.mailMergeCampaignID }
             })
             let OurRef = '';
+
             if (campaign) {
                 let groupCampaign = await mCampaignGroups(db).findOne({
                     where: { ID: campaign.IDGroup1 }
@@ -169,7 +169,7 @@ module.exports = {
                 let group = await (mGroupCampaign(db).findOne({
                     where: { ID: groupCampaign.IDGroup }
                 }))
-                if (groupCampaign > 0)
+                if (groupCampaign)
                     OurRef = group.Name + '/' + groupCampaign.Name + '/';
                 else
                     OurRef = '' + NameAcronym;
@@ -229,7 +229,6 @@ module.exports = {
                     TimeUpdate: mModules.toDatetime(data.TimeUpdate),
                     Description: mModules.toDatetime(data.description),
                 }
-                console.log(obj);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: Constant.MESSAGE.ACTION_SUCCESS,
