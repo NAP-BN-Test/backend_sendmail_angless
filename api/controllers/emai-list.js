@@ -119,7 +119,7 @@ async function resetJob(db) {
                             IDGetInfo: body.userID
                         })
                         var job = schedule.scheduleJob(timeSend, async function () {
-                            let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}}`;
+                            let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}`;
                             let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                             let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 

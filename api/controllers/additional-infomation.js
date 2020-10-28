@@ -147,6 +147,7 @@ module.exports = {
     },
     addAdditionalInformation: (req, res) => {
         let body = req.body;
+        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -155,22 +156,25 @@ module.exports = {
                     errorEmail = Constant.MAIL_RESPONSE_TYPE.INVALID;
                 }
             })
-            let User = await mUser(db).findOne({ where: { ID: body.UserID } })
+            let User = await mUser(db).findOne({ where: { ID: body.userID } })
             let NameAcronym = User.Username ? User.Username + '/' : '';
             let campaign = await mMailCampain(db).findOne({
-                where: { ID: body.CampaignID }
+                where: { ID: body.mailMergeCampaignID }
             })
-            let groupCampaign = await mCampaignGroups(db).findOne({
-                where: { ID: campaign.IDGroup1 }
-            })
-            let group = await (mGroupCampaign(db).findOne({
-                where: { ID: groupCampaign.IDGroup }
-            }))
             let OurRef = '';
-            if (groupCampaign)
-                OurRef = group.Name + '/' + groupCampaign.Name + '/';
-            else
-                OurRef = '' + NameAcronym;
+            if (campaign) {
+                let groupCampaign = await mCampaignGroups(db).findOne({
+                    where: { ID: campaign.IDGroup1 }
+                })
+                let group = await (mGroupCampaign(db).findOne({
+                    where: { ID: groupCampaign.IDGroup }
+                }))
+                if (groupCampaign > 0)
+                    OurRef = group.Name + '/' + groupCampaign.Name + '/';
+                else
+                    OurRef = '' + NameAcronym;
+            }
+            console.log(body);
             mAdditionalInformation(db).create({
                 OurRef: OurRef,
                 CampaignID: body.CampaignID,
@@ -179,9 +183,9 @@ module.exports = {
                 ApplicationNo: body.ApplicationNo ? body.ApplicationNo : null,
                 ClassA: body.ClassA ? body.ClassA : null,
                 FilingDate: body.FilingDate ? body.FilingDate : null,
-                DateSend: body.DateSend ? body.DateSend : null,
+                // DateSend: body.DateSend ? body.DateSend : null,
                 Result: body.Result ? body.Result : null,
-                DateReminder: body.DateReminder ? body.DateReminder : null,
+                // DateReminder: body.DateReminder ? body.DateReminder : null,
                 PriorTrademark: body.PriorTrademark ? body.PriorTrademark : null,
                 Owner: body.Owner,
                 RegNo: body.RegNo ? body.RegNo : null,
@@ -195,8 +199,8 @@ module.exports = {
                 Rerminder: body.Rerminder ? body.Rerminder : null,
                 UserID: body.UserID ? body.UserID : null,
                 TimeStart: moment(body.timeStart).format('YYYY-MM-DD HH:mm:ss.SSS') ? body.timeStart : null,
-                TimeRemind: body.timeRemind ? moment(body.timeRemind).format('YYYY-MM-DD HH:mm:ss.SSS') : null,
-                TimeCreate: now,
+                TimeRemind: moment(body.timeRemind).format('YYYY-MM-DD HH:mm:ss.SSS') ? body.timeRemind : null,
+                // TimeCreate: now,
                 TimeUpdate: now,
                 Description: body.description,
             }).then(async data => {
