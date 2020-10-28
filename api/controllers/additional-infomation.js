@@ -174,7 +174,6 @@ module.exports = {
                 else
                     OurRef = '' + NameAcronym;
             }
-            console.log(body);
             mAdditionalInformation(db).create({
                 OurRef: OurRef,
                 CampaignID: body.CampaignID,
@@ -203,6 +202,7 @@ module.exports = {
                 // TimeCreate: now,
                 TimeUpdate: now,
                 Description: body.description,
+                CampaignID: Number(body.mailMergeCampaignID),
             }).then(async data => {
                 obj = {
                     OurRef: data.OurRef ? data.OurRef : null,
@@ -229,6 +229,7 @@ module.exports = {
                     TimeUpdate: mModules.toDatetime(data.TimeUpdate),
                     Description: mModules.toDatetime(data.description),
                 }
+                console.log(obj);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: Constant.MESSAGE.ACTION_SUCCESS,

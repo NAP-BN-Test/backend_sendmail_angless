@@ -111,13 +111,6 @@ async function resetJob(db) {
                     let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: mMailListID[j] } })
                     for (var e = 0; e < listCompany.length; e++) {
                         let company = await mCompany(db).findOne({ where: { ID: listCompany[e].CompanyID } })
-                        await mMailResponse(db).create({
-                            MaillistID: mailListID,
-                            TimeCreate: now,
-                            Type: Constant.MAIL_RESPONSE_TYPE.SEND,
-                            TypeSend: 'Maillist',
-                            IDGetInfo: body.userID
-                        })
                         var job = schedule.scheduleJob(timeSend, async function () {
                             let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}`;
                             let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
@@ -1002,34 +995,44 @@ module.exports = {
         let idCampaign = params[2].split('=')[1];
         let type = params[3].split('=')[1];
         let idGetInfo = params[4].split('=')[1];
-        database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
-            try {
-                if (type === 'Maillist') {
-                    await mMailResponse(db).create({
-                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                        TypeSend: type ? type : '',
-                        MaillistID: idCampaign,
-                        IDGetInfo: idGetInfo,
-                    })
-                } else {
-                    await mMailResponse(db).create({
-                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                        TypeSend: type ? type : '',
-                        MailCampainID: idCampaign,
-                        IDGetInfo: idGetInfo,
-                    })
-                }
-                res.json(Result.ACTION_SUCCESS)
-            } catch (error) {
-                console.log(error);
-                res.json(Result.SYS_ERROR_RESULT)
+        const db = new Sequelize('AGELESS_EMAIL_DB', 'ageless_email_user', '123456a$', {
+            host: '118.27.192.106',
+            dialect: 'mssql',
+            operatorsAliases: '0',
+            // Bắt buộc phải có
+            dialectOptions: {
+                options: { encrypt: false }
+            },
+            pool: {
+                max: 5,
+                min: 0,
+                acquire: 30000,
+                idle: 10000
+            },
+            define: {
+                timestamps: false,
+                freezeTableName: true
             }
+        });
 
-        }, error => {
-            res.json(error)
-        })
+        db.authenticate()
+        if (type === 'Maillist') {
+            await mMailResponse(db).create({
+                TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                TypeSend: type ? type : '',
+                MaillistID: idCampaign,
+                IDGetInfo: idGetInfo,
+            })
+        } else {
+            await mMailResponse(db).create({
+                TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                TypeSend: type ? type : '',
+                MailCampainID: idCampaign,
+                IDGetInfo: idGetInfo,
+            })
+        }
     },
 
     addMailClickLink: async function (req, res) {
@@ -1056,7 +1059,6 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
-        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1081,7 +1083,26 @@ module.exports = {
                     let listID = JSON.parse(body.mailListID);
 
                     await addGroupToCampaign(listID, body.campainID, db);
+                    var mMailListID = [];
+                    await mMailListCampaign(db).findAll({
+                        where: {
+                            MailCampainID: body.campainID
+                        }
+                    }).then(data => {
+                        data.forEach(item => {
+                            mMailListID.push(item.MailListID)
+                        })
+                    })
 
+                    for (var j = 0; j < mMailListID.length; j++) {
+                        await mMailResponse(db).create({
+                            MaillistID: mMailListID[j],
+                            TimeCreate: now,
+                            Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                            TypeSend: 'Maillist',
+                            IDGetInfo: body.userID
+                        })
+                    }
                     resetJob(db);
                     res.json(Result.ACTION_SUCCESS)
                 }
