@@ -352,7 +352,7 @@ module.exports = {
                             owner.forEach(item => {
                                 listOwner.push(item.ID)
                             })
-                            userFind['OwnerID'] = { [Op.like]: listOwner }
+                            userFind['OwnerID'] = { [Op.in]: listOwner }
                             if (data.items[i].conditionFields['name'] == 'And') {
                                 whereOjb[Op.and] = userFind
                             }
@@ -995,44 +995,27 @@ module.exports = {
         let idCampaign = params[2].split('=')[1];
         let type = params[3].split('=')[1];
         let idGetInfo = params[4].split('=')[1];
-        const db = new Sequelize('AGELESS_EMAIL_DB', 'ageless_email_user', '123456a$', {
-            host: '118.27.192.106',
-            dialect: 'mssql',
-            operatorsAliases: '0',
-            // Bắt buộc phải có
-            dialectOptions: {
-                options: { encrypt: false }
-            },
-            pool: {
-                max: 5,
-                min: 0,
-                acquire: 30000,
-                idle: 10000
-            },
-            define: {
-                timestamps: false,
-                freezeTableName: true
+        database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+            if (type === 'Maillist') {
+                await mMailResponse(db).create({
+                    TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                    Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                    TypeSend: type ? type : '',
+                    MaillistID: idCampaign,
+                    IDGetInfo: idGetInfo,
+                })
+            } else {
+                await mMailResponse(db).create({
+                    TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                    Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                    TypeSend: type ? type : '',
+                    MailCampainID: idCampaign,
+                    IDGetInfo: idGetInfo,
+                })
             }
-        });
-
-        db.authenticate()
-        if (type === 'Maillist') {
-            await mMailResponse(db).create({
-                TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                TypeSend: type ? type : '',
-                MaillistID: idCampaign,
-                IDGetInfo: idGetInfo,
-            })
-        } else {
-            await mMailResponse(db).create({
-                TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                TypeSend: type ? type : '',
-                MailCampainID: idCampaign,
-                IDGetInfo: idGetInfo,
-            })
-        }
+        }, error => {
+            res.json(error)
+        })
     },
 
     addMailClickLink: async function (req, res) {

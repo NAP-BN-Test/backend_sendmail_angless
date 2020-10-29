@@ -18,12 +18,52 @@ var mMailResponse = require('../tables/mail-response');
 
 var mUser = require('../tables/user');
 var mCompanyMailList = require('../tables/company-maillist');
-
+var mMailListCampaign = require('../tables/maillist-campaign');
 var mModules = require('../constants/modules');
+var mCompany = require('../tables/company');
 const { MAIL_RESPONSE_TYPE } = require('../constants/constant');
 var mailmergerCampaingn = require('../controllers/mailmerge-campaign');
+async function getAllDateAndCountSend(db, campainID, type, typesend) {
+    var array = [];
+    if (typesend === 'Maillist') {
+        var response = await mMailResponse(db).findAll({
+            where: {
+                MaillistID: campainID,
+                Type: type,
+                TypeSend: 'Maillist',
+            }
+        });
+    } else {
+        var response = await mMailResponse(db).findAll({
+            where: {
+                MailCampainID: campainID,
+                Type: type,
+                TypeSend: 'Mailmerge',
+            }
+        });
+    }
 
-
+    response.forEach(item => {
+        array.push(mModules.toDatetimeDay(item.TimeCreate))
+    })
+    return array
+}
+async function countValueInArray(value, array) {
+    let count = 0;
+    array.forEach(element => {
+        if (element == value)
+            count += 1;
+    });
+    return count
+}
+async function checkTimeOfObjDulicate(obj, arrayObj) {
+    arrayObj.forEach(item => {
+        if (item.time === obj.time) {
+            item.value = obj.value
+        }
+    })
+    return arrayObj;
+}
 /** Xử lý mảng có ngày trùng nhau gộp vào và cộng thêm 1 đơn vị */
 function handleArray(array, body, reason) {
 
@@ -386,6 +426,34 @@ function checkDuplicate(array, elm) {
     })
     return check;
 }
+async function handleArrayReturn(arraydate) {
+    var arrayNotDuplicant = [];
+    arraydate.forEach(item => {
+        if (!checkDuplicate(arrayNotDuplicant, item))
+            arrayNotDuplicant.push(item)
+    })
+    let array = [];
+    for (var i = 0; i < arrayNotDuplicant.length; i++) {
+        let obj = {
+            time: arrayNotDuplicant[i].split(',')[0],
+            value: await countValueInArray(arrayNotDuplicant[i], arraydate)
+        };
+        array.push(obj);
+    }
+    var arrayTemplate = [
+        { time: "Thứ 4", value: 0 },
+        { time: "Thứ 5", value: 0 },
+        { time: "Thứ 6", value: 0 },
+        { time: "Thứ 7", value: 0 },
+        { time: "Chủ nhật", value: 0 },
+        { time: "Thứ 2", value: 0 },
+        { time: "Thứ 3", value: 0 },
+    ];
+    array.forEach(element => {
+        checkTimeOfObjDulicate(element, arrayTemplate)
+    })
+    return arrayTemplate
+}
 module.exports = {
     // mailmerge    
     getListReportByCampain: async function (req, res) {
@@ -727,6 +795,7 @@ module.exports = {
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
                 var totalEmail = 0;
+                let arraydate = []
                 information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID);
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
                     var totalType = await mMailResponse(db).count({
@@ -736,6 +805,7 @@ module.exports = {
                             TypeSend: 'Mailmerge',
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.SEND, 'MailMerge');
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
                     var totalType = await mMailResponse(db).count({
@@ -745,9 +815,12 @@ module.exports = {
                             TypeSend: 'Mailmerge',
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'MailMerge');
+
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
                     var totalType = 0
+                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'MailMerge');
                 }
 
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
@@ -758,7 +831,21 @@ module.exports = {
                             TypeSend: 'Mailmerge',
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'MailMerge');
                 }
+                var nearestSend = await mMailResponse(db).findOne(
+                    {
+                        order: [
+                            Sequelize.literal('max(TimeCreate) DESC'),
+                        ],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo'],
+                    }, {
+                    where: {
+                        MailCampainID: body.campainID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Mailmerge',
+                    }
+                });
                 var arrayTableSort = [];
                 information.forEach(async item => {
                     var arrayEmail = convertStringToListObject(item.Email)
@@ -768,7 +855,7 @@ module.exports = {
                             arrayTableSort.push({
                                 email: email.name,
                                 mailListID: -1,
-                                time: 'Thứ 7, 24/10/2020',
+                                time: mModules.toDatetimeDay(nearestSend.TimeCreate),
                                 value: totalType ? totalType : 0
                             })
                         })
@@ -797,15 +884,7 @@ module.exports = {
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
-                var array = [
-                    { time: "Thứ 4", value: 0 },
-                    { time: "Thứ 5", value: 0 },
-                    { time: "Thứ 6", value: 0 },
-                    { time: "Thứ 7", value: 2 },
-                    { time: "Chủ nhật", value: 0 },
-                    { time: "Thứ 2", value: 0 },
-                    { time: "Thứ 3", value: 0 },
-                ];
+                var array = await handleArrayReturn(arraydate);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -836,6 +915,7 @@ module.exports = {
                 var totalEmail = await mCompanyMailList(db).count({
                     where: { MailListID: body.mailListID }
                 });
+                let arraydate = []
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
                     var totalType = await mMailResponse(db).count({
                         where: {
@@ -844,6 +924,7 @@ module.exports = {
                             TypeSend: 'Maillist',
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.SEND, 'Maillist');
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
                     var totalType = await mMailResponse(db).count({
@@ -853,9 +934,11 @@ module.exports = {
                             TypeSend: 'Maillist',
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'Maillist');
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
                     var totalType = 0
+                    arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'Maillist');
                 }
 
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
@@ -866,6 +949,7 @@ module.exports = {
                             TypeSend: 'Maillist',
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'Maillist');
                 }
 
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
@@ -893,8 +977,19 @@ module.exports = {
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
-                var array = [];
+                var array = await handleArrayReturn(arraydate);
                 var arrayTableSort = [];
+                let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: body.mailListID } })
+                for (var i = 0; i < listCompany.length; i++) {
+                    await mCompany(db).findOne({ where: { ID: listCompany[i].CompanyID } }).then(data => {
+                        arrayTableSort.push({
+                            email: data.Email,
+                            mailListID: -1,
+                            time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                            value: totalType ? totalType : 0
+                        })
+                    })
+                }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -940,7 +1035,10 @@ module.exports = {
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
 
                 var totalSend = await mailResponse.count({
-                    where: { Type: Constant.MAIL_RESPONSE_TYPE.SEND },
+                    where: [
+                        { Type: Constant.MAIL_RESPONSE_TYPE.SEND },
+                        { IDGetInfo: body.userID },
+                    ]
                 });
                 var totalOpen = await mailResponse.count({
                     where: [
