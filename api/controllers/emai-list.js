@@ -1076,7 +1076,6 @@ module.exports = {
                             mMailListID.push(item.MailListID)
                         })
                     })
-
                     for (var j = 0; j < mMailListID.length; j++) {
                         await mMailResponse(db).create({
                             MaillistID: mMailListID[j],

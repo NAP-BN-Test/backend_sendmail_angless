@@ -5,7 +5,7 @@ const Op = require('sequelize').Op;
 const Sequelize = require('sequelize');
 
 var moment = require('moment');
-
+let mAdditionalInformation = require('../tables/additional-infomation');
 var database = require('../db');
 
 var cUser = require('../controllers/user');
@@ -23,28 +23,35 @@ var mModules = require('../constants/modules');
 var mCompany = require('../tables/company');
 const { MAIL_RESPONSE_TYPE } = require('../constants/constant');
 var mailmergerCampaingn = require('../controllers/mailmerge-campaign');
-async function getAllDateAndCountSend(db, campainID, type, typesend) {
+async function getAllDateAndCountSend(db, typeSearch, type, typesend) {
     var array = [];
     if (typesend === 'Maillist') {
         var response = await mMailResponse(db).findAll({
             where: {
-                MaillistID: campainID,
+                MaillistID: typeSearch,
                 Type: type,
                 TypeSend: 'Maillist',
             }
         });
-    } else {
+    } else if (typesend === 'user') {
         var response = await mMailResponse(db).findAll({
             where: {
-                MailCampainID: campainID,
+                IDGetInfo: typeSearch,
+                Type: type,
+            }
+        });
+    }
+    else {
+        var response = await mMailResponse(db).findAll({
+            where: {
+                MailCampainID: typeSearch,
                 Type: type,
                 TypeSend: 'Mailmerge',
             }
         });
     }
-
     response.forEach(item => {
-        array.push(mModules.toDatetimeDay(item.TimeCreate))
+        array.push(mModules.toDatetimeDay(moment(item.TimeCreate).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS')))
     })
     return array
 }
@@ -453,6 +460,20 @@ async function handleArrayReturn(arraydate) {
         checkTimeOfObjDulicate(element, arrayTemplate)
     })
     return arrayTemplate
+}
+
+function convertStringToListObject(string) {
+    let result = [];
+    let resultArray = [];
+    if (string) {
+        result = string.split(";")
+        result.forEach(item => {
+            let resultObj = {};
+            resultObj.name = item;
+            resultArray.push(resultObj);
+        })
+    }
+    return resultArray;
 }
 module.exports = {
     // mailmerge    
@@ -1142,11 +1163,8 @@ module.exports = {
             try {
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
-                var totalEmail = await mailResponse.count({ // Tổng số email đã thao tác với chiến dịch mà không trùng nhau
-                    where: [
-                        { IDGetInfo: body.userID }
-                    ],
-                });
+                var listIDMailList = [];
+                var arraydate = [];
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
                     var totalType = await mMailResponse(db).count({
                         where: {
@@ -1154,6 +1172,7 @@ module.exports = {
                             Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.SEND, 'user');
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
                     var totalType = await mMailResponse(db).count({
@@ -1162,9 +1181,11 @@ module.exports = {
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'user');
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
                     var totalType = 0
+                    arraydate = []
                 }
 
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
@@ -1174,10 +1195,53 @@ module.exports = {
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                         }
                     });
+                    arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'user');
                 }
-
-                var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
-
+                await mMailCampain(db).findAll({
+                    where: { OwnerID: body.userID },
+                }).then(async data => {
+                    for (var i = 0; i < data.length; i++) {
+                        var mailListCampaign = await mMailListCampaign(db).findAll({ where: { MailCampainID: data[i].ID } })
+                        mailListCampaign.forEach(item => {
+                            listIDMailList.push(item.MailListID);
+                        })
+                    }
+                })
+                // Tổng số mail list
+                var totalEmail = await mCompanyMailList(db).count({
+                    where: { MailListID: { [Op.in]: listIDMailList } }
+                });
+                var arrayTableSort = [];
+                var listCompanyID = [];
+                // tổng số mail merge
+                var valueMailmerge = await mMailResponse(db).count({
+                    where: {
+                        IDGetInfo: body.userID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Mailmerge',
+                    }
+                });
+                await mAdditionalInformation(db).findAll({ where: { UserID: body.userID } }).then(data => {
+                    data.forEach(item => {
+                        var listMail = convertStringToListObject(item.Email);
+                        totalEmail += listMail.length;
+                        listMail.forEach(element => {
+                            arrayTableSort.push({
+                                email: element.name,
+                                mailListID: -1,
+                                time: mModules.toDatetimeDay(item.TimeCreate),
+                                value: valueMailmerge ? valueMailmerge : 0
+                            })
+                        })
+                    })
+                })
+                await mCompanyMailList(db).findAll({
+                    where: { MailListID: { [Op.in]: listIDMailList } }
+                }).then(data => {
+                    data.forEach(item => {
+                        listCompanyID.push(item.CompanyID)
+                    })
+                })
                 var nearestSend = await mMailResponse(db).findOne(
                     {
                         order: [
@@ -1190,6 +1254,27 @@ module.exports = {
                         Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                     }
                 });
+                var valueMaillist = await mMailResponse(db).count({
+                    where: {
+                        IDGetInfo: body.userID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Maillist',
+                    }
+                });
+                await mCompany(db).findAll({
+                    where: { ID: { [Op.in]: listCompanyID } }
+                }).then(data => {
+                    data.forEach(item => {
+                        arrayTableSort.push({
+                            email: item.Email,
+                            mailListID: -1,
+                            time: mModules.toDatetimeDay(item.TimeCreate),
+                            value: valueMaillist ? valueMaillist : 0
+                        })
+                    })
+                })
+                var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
+                var array = await handleArrayReturn(arraydate);
                 var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
                 var obj = {
                     totalEmail,
@@ -1199,8 +1284,6 @@ module.exports = {
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
-                var array = [];
-                var arrayTableSort = [];
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
