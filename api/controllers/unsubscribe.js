@@ -17,24 +17,25 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
-
-                var mailListDetailObj = await mMailListDetail(db).findOne({
-                    where: { Email: body.email },
-                    attributes: ['ID'],
-                    raw: true
-                });
-                if (mailListDetailObj) {
+                if (body.typeSend === 'Maillist') {
                     await mMailResponse(db).create({
-                        MailListDetailID: mailListDetailObj.ID,
                         TimeCreate: now,
-                        Reason: body.reason,
-                        MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE
+                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                        TypeSend: body.typeSend,
+                        MaillistID: body.campainID,
+                        IDGetInfo: body.idGetInfo,
+                        Email: body.email
                     })
-
-                    res.json(Result.ACTION_SUCCESS)
-
-                } else res.json(Result.NO_DATA_RESULT)
+                } else {
+                    await mMailResponse(db).create({
+                        TimeCreate: now,
+                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                        TypeSend: body.typeSend,
+                        MailCampainID: body.campainID,
+                        IDGetInfo: body.idGetInfo,
+                        Email: body.email,
+                    })
+                }
             } catch (error) {
                 console.log(error);
                 res.json(Result.SYS_ERROR_RESULT)

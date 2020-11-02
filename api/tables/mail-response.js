@@ -16,6 +16,7 @@ module.exports = function (db) {
         TypeSend: Sequelize.STRING,
         MaillistID: Sequelize.BIGINT,
         IDGetInfo: Sequelize.BIGINT,
+        Email: Sequelize.STRING,
     });
 
     return table;

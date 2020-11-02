@@ -135,7 +135,6 @@ module.exports = {
                             where: { Username: body.regUsername }
                         });
                         if (userExist) {
-                            console.log(userExist.Active);
                             if (userExist.Active === true) {
                                 result = {
                                     status: Constant.STATUS.FAIL,
@@ -221,7 +220,6 @@ module.exports = {
                 var array = [];
                 if (categoryData.length > 0) {
                     categoryData.forEach(elm => {
-                        console.log(elm.Name);
                         array.push({
                             id: elm.ID,
                             name: elm.Name,

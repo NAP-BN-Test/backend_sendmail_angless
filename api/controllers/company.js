@@ -75,7 +75,6 @@ module.exports = {
                                 Code: data[i].CountryCode,
                             }).then(data => {
                                 countryID = data.ID
-                                console.log('data:          ', data.ID);
 
                             })
                         }

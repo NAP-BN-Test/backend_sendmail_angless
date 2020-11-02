@@ -692,7 +692,7 @@ module.exports = {
                     totalInvalid,
                     totalUnsubscribe,
 
-                    percentType: parseFloat(totalOpenDistinct / totalEmail * 100).toFixed(0) + '%',
+                    percentType: parseFloat((totalOpenDistinct / totalEmail) > 1 ? 1 : (totalOpenDistinct / totalEmail) * 100).toFixed(0) + '%',
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -789,7 +789,7 @@ module.exports = {
                     totalInvalid,
                     totalUnsubscribe,
 
-                    percentType: parseFloat(totalOpenDistinct / totalEmail * 100).toFixed(0) + '%',
+                    percentType: parseFloat((totalOpenDistinct / totalEmail) > 1 ? 1 : (totalOpenDistinct / totalEmail) * 100).toFixed(0) + '%',
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -901,7 +901,7 @@ module.exports = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: (parseFloat(totalType / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: (parseFloat((totalType / totalEmail) > 1 ? 1 : (totalType / totalEmail)) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
@@ -994,7 +994,7 @@ module.exports = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: (parseFloat(totalType / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: (parseFloat((totalType / totalEmail) > 1 ? 1 : (totalType / totalEmail)) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
@@ -1139,7 +1139,7 @@ module.exports = {
                     totalClickLink,
                     totalInvalid,
                     totalUnsubscribe,
-                    percentType: parseFloat(totalOpenDistinct / totalEmail * 100).toFixed(0) + '%',
+                    percentType: parseFloat((totalOpenDistinct / totalEmail) > 1 ? 1 : (totalOpenDistinct / totalEmail) * 100).toFixed(0) + '%',
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -1280,7 +1280,7 @@ module.exports = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: (parseFloat(totalType / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: (parseFloat((totalType / totalEmail) > 1 ? 1 : (totalType / totalEmail)) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }

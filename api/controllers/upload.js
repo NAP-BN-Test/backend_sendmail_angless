@@ -61,7 +61,6 @@ async function uploadFile(source, path) {
 
 module.exports = {
     uploadFile: async function (req, res) {
-        console.log('abcdefghikln');
         const formidable = require('formidable')
         const { PassThrough } = require('stream')
 
