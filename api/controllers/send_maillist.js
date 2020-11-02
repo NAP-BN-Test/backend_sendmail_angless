@@ -144,7 +144,7 @@ module.exports = {
 
                         let tokenUnsubscribe = `email=${arrayEmail[i].name}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.CampaignID}&idGetInfo=${body.userID}&type=Mailmerge`;
                         let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                        let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://163.44.192.123:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                        let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                         bodyHtml = httpTrack + bodyHtml;
                         bodyHtml = bodyHtml + unSubscribe;
                         let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });

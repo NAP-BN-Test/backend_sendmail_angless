@@ -118,7 +118,7 @@ async function resetJob(db) {
 
                             let tokenUnsubscribe = `email=${company.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                             let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://163.44.192.123:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                             let bodyHtml = handleClickLink(body, company.ID);
 
                             bodyHtml = httpTrack + bodyHtml;
