@@ -24,7 +24,8 @@ module.exports = {
                         TypeSend: body.typeSend,
                         MaillistID: body.campainID,
                         IDGetInfo: body.idGetInfo,
-                        Email: body.email
+                        Email: body.email,
+                        Reason: body.reason,
                     })
                 } else {
                     await mMailResponse(db).create({
@@ -34,6 +35,7 @@ module.exports = {
                         MailCampainID: body.campainID,
                         IDGetInfo: body.idGetInfo,
                         Email: body.email,
+                        Reason: body.reason,
                     })
                 }
             } catch (error) {

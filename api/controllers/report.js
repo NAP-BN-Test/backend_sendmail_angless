@@ -477,6 +477,27 @@ function convertStringToListObject(string) {
     }
     return resultArray;
 }
+
+async function handleEmailOpen(db, mailListID) {
+    var listEmailOpen = await mMailResponse(db).findAll({
+        where: {
+            MaillistID: mailListID,
+            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+            TypeSend: 'Maillist',
+        }
+    });
+    var listEmailOpen = [];
+    listEmailOpen.forEach(item => {
+        listEmailOpen.push(item.Email);
+    })
+    var listEmailOpenHandled = [];
+    listEmailOpen.forEach(element => {
+        if (!checkDuplicate(totalList, element)) {
+            listEmailOpenHandled.push(element);
+        }
+    })
+    return listEmailOpenHandled;
+}
 module.exports = {
     // mailmerge    
     getListReportByCampain: async function (req, res) {
@@ -834,6 +855,10 @@ module.exports = {
                     }
                 });
                 information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID);
+                information.forEach(async item => {
+                    var arrayEmail = convertStringToListObject(item.Email)
+                    totalEmail += arrayEmail.length
+                })
                 var arrayTableSort = [];
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
                     var totalType = await mMailResponse(db).count({
@@ -846,7 +871,6 @@ module.exports = {
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.SEND, 'MailMerge');
                     information.forEach(async item => {
                         var arrayEmail = convertStringToListObject(item.Email)
-                        totalEmail += arrayEmail.length
                         if (item)
                             arrayEmail.forEach(email => {
                                 arrayTableSort.push({
@@ -867,6 +891,21 @@ module.exports = {
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'MailMerge');
+                    var listEmail = await mMailResponse(db).findAll({
+                        where: {
+                            MailCampainID: body.campainID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TypeSend: 'Mailmerge',
+                        }
+                    });
+                    listEmail.forEach(item => {
+                        arrayTableSort.push({
+                            email: item.Email,
+                            mailListID: -1,
+                            time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                            value: totalType ? totalType : 0
+                        })
+                    })
 
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
@@ -975,9 +1014,17 @@ module.exports = {
             try {
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
-                var totalEmail = await mCompanyMailList(db).count({
-                    where: { MailListID: body.mailListID }
-                });
+                var totalEmail = 0;
+                let reason = '';
+                let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: body.mailListID } })
+                for (var i = 0; i < listCompany.length; i++) {
+                    await mCompany(db).findOne({ where: { ID: listCompany[i].CompanyID } }).then(async data => {
+                        let listEmail = convertStringToListObject(data.Email)
+                        for (var j = 0; j < listEmail.length; j++) {
+                            totalEmail += 1;
+                        }
+                    })
+                }
                 let arraydate = []
                 var arrayTableSort = [];
                 var nearestSend = await mMailResponse(db).findOne(
@@ -1027,6 +1074,21 @@ module.exports = {
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'Maillist');
+                    var listEmail = await mMailResponse(db).findAll({
+                        where: {
+                            MaillistID: body.mailListID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TypeSend: 'Maillist',
+                        }
+                    });
+                    listEmail.forEach(item => {
+                        arrayTableSort.push({
+                            email: item.Email,
+                            mailListID: -1,
+                            time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                            value: totalType ? totalType : 0
+                        })
+                    })
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
                     var totalType = 0
@@ -1062,11 +1124,11 @@ module.exports = {
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MaillistID: body.mailListID,
-                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
                             TypeSend: 'Maillist',
                         }
                     });
-                    arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'Maillist');
+                    arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE, 'Maillist');
                     var listEmail = await mMailResponse(db).findAll({
                         where: {
                             MaillistID: body.mailListID,
@@ -1075,6 +1137,7 @@ module.exports = {
                         }
                     });
                     listEmail.forEach(item => {
+                        reason = item.Reason;
                         arrayTableSort.push({
                             email: item.Email,
                             mailListID: -1,
@@ -1083,14 +1146,14 @@ module.exports = {
                         })
                     })
                 }
-
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
-                var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
+                var mainReason = reason ? reason : 'Không xác định';
+                var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID);
                 var obj = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: (parseFloat((totalType / totalEmail) > 1 ? 1 : (totalType / totalEmail)) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: ((listEmailOpenHandled.length / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }

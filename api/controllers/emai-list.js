@@ -129,7 +129,7 @@ async function resetJob(db) {
                         for (var f = 0; f < arrayEmail.length; f++) {
                             let emailReceived = arrayEmail[f].name;
                             var job = schedule.scheduleJob(timeSend, async function () {
-                                let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}`;
+                                let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}`;
                                 let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                                 let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
@@ -1015,6 +1015,7 @@ module.exports = {
         let idCampaign = params[2].split('=')[1];
         let type = params[3].split('=')[1];
         let idGetInfo = params[4].split('=')[1];
+        let email = params[5].split('=')[1];
         database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
             if (type === 'Maillist') {
                 await mMailResponse(db).create({
@@ -1023,6 +1024,7 @@ module.exports = {
                     TypeSend: type ? type : '',
                     MaillistID: idCampaign,
                     IDGetInfo: idGetInfo,
+                    Email: email,
                 })
             } else {
                 await mMailResponse(db).create({
@@ -1031,6 +1033,7 @@ module.exports = {
                     TypeSend: type ? type : '',
                     MailCampainID: idCampaign,
                     IDGetInfo: idGetInfo,
+                    Email: email,
                 })
             }
         }, error => {

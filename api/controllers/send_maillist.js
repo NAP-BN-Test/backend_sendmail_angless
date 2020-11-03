@@ -138,7 +138,7 @@ module.exports = {
                     let Subject = item.Subject ? item.Subject : '';
                     var arrayEmail = convertStringToListObject(item.Email)
                     for (var i = 0; i < arrayEmail.length; i++) {
-                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.CampaignID}&type=Mailmerge&idGetInfo=${body.userID}`;
+                        let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.CampaignID}&type=Mailmerge&idGetInfo=${body.userID}&email=${arrayEmail[i].name}`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                         let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
