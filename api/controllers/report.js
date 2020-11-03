@@ -23,6 +23,8 @@ var mModules = require('../constants/modules');
 var mCompany = require('../tables/company');
 const { MAIL_RESPONSE_TYPE } = require('../constants/constant');
 var mailmergerCampaingn = require('../controllers/mailmerge-campaign');
+var mCheckMail = require('../controllers/check-mail');
+
 async function getAllDateAndCountSend(db, typeSearch, type, typesend) {
     var array = [];
     if (typesend === 'Maillist') {
@@ -817,7 +819,22 @@ module.exports = {
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
                 var totalEmail = 0;
                 let arraydate = []
+
+                var nearestSend = await mMailResponse(db).findOne(
+                    {
+                        order: [
+                            Sequelize.literal('max(TimeCreate) DESC'),
+                        ],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo', 'Email'],
+                    }, {
+                    where: {
+                        MailCampainID: body.campainID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Mailmerge',
+                    }
+                });
                 information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID);
+                var arrayTableSort = [];
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
                     var totalType = await mMailResponse(db).count({
                         where: {
@@ -827,6 +844,19 @@ module.exports = {
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.SEND, 'MailMerge');
+                    information.forEach(async item => {
+                        var arrayEmail = convertStringToListObject(item.Email)
+                        totalEmail += arrayEmail.length
+                        if (item)
+                            arrayEmail.forEach(email => {
+                                arrayTableSort.push({
+                                    email: email.name,
+                                    mailListID: -1,
+                                    time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                                    value: totalType ? totalType : 0
+                                })
+                            })
+                    })
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
                     var totalType = await mMailResponse(db).count({
@@ -844,7 +874,7 @@ module.exports = {
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'MailMerge');
                 }
 
-                if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
+                if (body.mailType == MAIL_RESPONSE_TYPE.INVALID) {
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MailCampainID: body.campainID,
@@ -853,13 +883,53 @@ module.exports = {
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'MailMerge');
+                    var listEmail = await mMailResponse(db).findAll({
+                        where: {
+                            MailCampainID: body.campainID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            TypeSend: 'Mailmerge',
+                        }
+                    });
+                    listEmail.forEach(item => {
+                        arrayTableSort.push({
+                            email: item.Email,
+                            mailListID: -1,
+                            time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                            value: totalType ? totalType : 0
+                        })
+                    })
+                }
+                if (body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MailCampainID: body.campainID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TypeSend: 'Mailmerge',
+                        }
+                    });
+                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'MailMerge');
+                    var listEmail = await mMailResponse(db).findAll({
+                        where: {
+                            MailCampainID: body.campainID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TypeSend: 'Mailmerge',
+                        }
+                    });
+                    listEmail.forEach(item => {
+                        arrayTableSort.push({
+                            email: item.Email,
+                            mailListID: -1,
+                            time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                            value: totalType ? totalType : 0
+                        })
+                    })
                 }
                 var nearestSend = await mMailResponse(db).findOne(
                     {
                         order: [
                             Sequelize.literal('max(TimeCreate) DESC'),
                         ],
-                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo'],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo', 'Email'],
                     }, {
                     where: {
                         MailCampainID: body.campainID,
@@ -867,35 +937,7 @@ module.exports = {
                         TypeSend: 'Mailmerge',
                     }
                 });
-                var arrayTableSort = [];
-                information.forEach(async item => {
-                    var arrayEmail = convertStringToListObject(item.Email)
-                    totalEmail += arrayEmail.length
-                    if (item)
-                        arrayEmail.forEach(email => {
-                            arrayTableSort.push({
-                                email: email.name,
-                                mailListID: -1,
-                                time: mModules.toDatetimeDay(nearestSend.TimeCreate),
-                                value: totalType ? totalType : 0
-                            })
-                        })
-                })
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
-
-                var nearestSend = await mMailResponse(db).findOne(
-                    {
-                        order: [
-                            Sequelize.literal('max(TimeCreate) DESC'),
-                        ],
-                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo'],
-                    }, {
-                    where: {
-                        MailCampainID: body.campainID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
-                        TypeSend: 'Mailmerge',
-                    }
-                });
                 var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
                 var obj = {
                     totalEmail,
@@ -937,6 +979,21 @@ module.exports = {
                     where: { MailListID: body.mailListID }
                 });
                 let arraydate = []
+                var arrayTableSort = [];
+                var nearestSend = await mMailResponse(db).findOne(
+                    {
+                        order: [
+                            Sequelize.literal('max(TimeCreate) DESC'),
+                        ],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo', 'Email'],
+                    }, {
+                    where: {
+                        MaillistID: body.mailListID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Maillist',
+
+                    }
+                });
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
                     var totalType = await mMailResponse(db).count({
                         where: {
@@ -946,6 +1003,20 @@ module.exports = {
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.SEND, 'Maillist');
+                    let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: body.mailListID } })
+                    for (var i = 0; i < listCompany.length; i++) {
+                        await mCompany(db).findOne({ where: { ID: listCompany[i].CompanyID } }).then(async data => {
+                            let listEmail = convertStringToListObject(data.Email)
+                            for (var j = 0; j < listEmail.length; j++) {
+                                arrayTableSort.push({
+                                    email: listEmail[i].name,
+                                    mailListID: -1,
+                                    time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                                    value: totalType ? totalType : 0
+                                })
+                            }
+                        })
+                    }
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
                     var totalType = await mMailResponse(db).count({
@@ -962,7 +1033,7 @@ module.exports = {
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'Maillist');
                 }
 
-                if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
+                if (body.mailType == MAIL_RESPONSE_TYPE.INVALID) {
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MaillistID: body.mailListID,
@@ -971,24 +1042,49 @@ module.exports = {
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'Maillist');
+                    var listEmail = await mMailResponse(db).findAll({
+                        where: {
+                            MaillistID: body.mailListID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            TypeSend: 'Maillist',
+                        }
+                    });
+                    listEmail.forEach(item => {
+                        arrayTableSort.push({
+                            email: item.Email,
+                            mailListID: -1,
+                            time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                            value: totalType ? totalType : 0
+                        })
+                    })
+                }
+                if (body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MaillistID: body.mailListID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            TypeSend: 'Maillist',
+                        }
+                    });
+                    arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'Maillist');
+                    var listEmail = await mMailResponse(db).findAll({
+                        where: {
+                            MaillistID: body.mailListID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TypeSend: 'Maillist',
+                        }
+                    });
+                    listEmail.forEach(item => {
+                        arrayTableSort.push({
+                            email: item.Email,
+                            mailListID: -1,
+                            time: mModules.toDatetimeDay(nearestSend.TimeCreate),
+                            value: totalType ? totalType : 0
+                        })
+                    })
                 }
 
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
-
-                var nearestSend = await mMailResponse(db).findOne(
-                    {
-                        order: [
-                            Sequelize.literal('max(TimeCreate) DESC'),
-                        ],
-                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo'],
-                    }, {
-                    where: {
-                        MaillistID: body.mailListID,
-                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
-                        TypeSend: 'Maillist',
-
-                    }
-                });
                 var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
                 var obj = {
                     totalEmail,
@@ -999,18 +1095,6 @@ module.exports = {
                     mainReason
                 }
                 var array = await handleArrayReturn(arraydate);
-                var arrayTableSort = [];
-                let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: body.mailListID } })
-                for (var i = 0; i < listCompany.length; i++) {
-                    await mCompany(db).findOne({ where: { ID: listCompany[i].CompanyID } }).then(data => {
-                        arrayTableSort.push({
-                            email: data.Email,
-                            mailListID: -1,
-                            time: mModules.toDatetimeDay(nearestSend.TimeCreate),
-                            value: totalType ? totalType : 0
-                        })
-                    })
-                }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -1110,7 +1194,7 @@ module.exports = {
                     order: [
                         Sequelize.literal('max(TimeCreate) DESC'),
                     ],
-                    group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate', 'TypeSend', 'MaillistID', 'IDGetInfo'],
+                    group: ['CompanyID', 'Reason', 'ID', 'Type', 'MailCampainID', 'MailListDetailID', 'TimeCreate', 'TypeSend', 'MaillistID', 'IDGetInfo', 'Email'],
                     where: { IDGetInfo: body.userID }
                 });
                 var totalMailCampainSend = 0;
@@ -1247,7 +1331,7 @@ module.exports = {
                         order: [
                             Sequelize.literal('max(TimeCreate) DESC'),
                         ],
-                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo'],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo', 'Email'],
                     }, {
                     where: {
                         IDGetInfo: body.userID,

@@ -3,7 +3,7 @@ module.exports = {
         return new Promise(res => {
             var request = require('request')
             // a69834eab18e99ec484e9410a47bce5b key hết hạn
-            var kickbox = require('kickbox').client('live_c4798dd761296623a23ac412e2cb05e5f3b2dcb4ee211e9d3bb5d2643f9c7104').kickbox();
+            var kickbox = require('kickbox').client('live_889b6846d3bfab1c3a8d11eb09ed061af51c2b0cb6ecebd2832a612bca8665ee').kickbox();
 
             kickbox.verify(email.trim(), function (err, response) {
                 // Let's see some results

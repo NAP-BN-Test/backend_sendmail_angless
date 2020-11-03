@@ -33,6 +33,20 @@ var mUser = require('../tables/user');
 
 var mModules = require('../constants/modules');
 
+function convertStringToListObject(string) {
+    let result = [];
+    let resultArray = [];
+    if (string) {
+        result = string.split(";")
+        result.forEach(item => {
+            let resultObj = {};
+            resultObj.name = item;
+            resultArray.push(resultObj);
+        })
+    }
+    return resultArray;
+}
+
 function handleClickLink(body, mailListDetailID) {
     var bodyHtml = "";
 
@@ -111,43 +125,50 @@ async function resetJob(db) {
                     let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: mMailListID[j] } })
                     for (var e = 0; e < listCompany.length; e++) {
                         let company = await mCompany(db).findOne({ where: { ID: listCompany[e].CompanyID } })
-                        var job = schedule.scheduleJob(timeSend, async function () {
-                            let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}`;
-                            let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                            let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                        var arrayEmail = convertStringToListObject(company.Email);
+                        for (var f = 0; f < arrayEmail.length; f++) {
+                            let emailReceived = arrayEmail[f].name;
+                            var job = schedule.scheduleJob(timeSend, async function () {
+                                let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}`;
+                                let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
+                                let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
 
-                            let tokenUnsubscribe = `email=${company.Email}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
-                            let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
-                            let bodyHtml = handleClickLink(body, company.ID);
+                                let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
+                                let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
+                                let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                                let bodyHtml = handleClickLink(body, company.ID);
 
-                            bodyHtml = httpTrack + bodyHtml;
-                            bodyHtml = bodyHtml + unSubscribe;
-                            bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
-                            mCheckMail.checkEmail(company.Email).then(async (checkMailRes) => {
-                                if (checkMailRes == false) {
-                                    await mMailResponse(db).create({
-                                        TimeCreate: now,
-                                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
-                                        TypeSend: 'Maillist',
-                                        MaillistID: mailListID,
-                                        IDGetInfo: body.userID
-                                    })
-                                }
-                            })
-                            let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
-                            await mAmazon.sendEmail(emailSend.Email, company.Email, body.subject, bodyHtml).then(async (sendMailRes) => {
-                                if (sendMailRes)
-                                    console.log(sendMailRes);
-                                // await mMailResponse(db).create({
-                                //     MailCampainID: body.campainID,
-                                //     CompanyID: company.ID,
-                                //     TimeCreate: now,
-                                //     Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                                // });
+                                bodyHtml = httpTrack + bodyHtml;
+                                bodyHtml = bodyHtml + unSubscribe;
+                                bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
+                                let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+                                await mCheckMail.checkEmail(emailReceived).then(async (checkMailRes) => {
+                                    if (checkMailRes == false) {
+                                        await mMailResponse(db).create({
+                                            TimeCreate: now,
+                                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                            TypeSend: 'Maillist',
+                                            MaillistID: mailListID,
+                                            IDGetInfo: body.userID,
+                                            Email: emailReceived,
+                                        })
+                                    }
+                                })
+                                await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {
+                                    if (sendMailRes) {
+                                        console.log(sendMailRes);
+                                    }
+                                    // await mMailResponse(db).create({
+                                    //     MailCampainID: body.campainID,
+                                    //     CompanyID: company.ID,
+                                    //     TimeCreate: now,
+                                    //     Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                                    // });
+                                });
+
                             });
-
-                        });
+                            console.log(job);
+                        }
                     }
                 }
             }
@@ -1131,6 +1152,7 @@ module.exports = {
 
     updateMailCampain: async function (req, res) {
         let body = req.body;
+        console.log(body.body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let update = [];

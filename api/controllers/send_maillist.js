@@ -155,7 +155,8 @@ module.exports = {
                                     TimeCreate: now,
                                     Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                                     TypeSend: 'Mailmerge',
-                                    IDGetInfo: body.userID
+                                    IDGetInfo: body.userID,
+                                    Email: arrayEmail[i].name,
                                 });
                             }
                         })
