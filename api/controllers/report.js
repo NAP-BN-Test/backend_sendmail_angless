@@ -478,24 +478,44 @@ function convertStringToListObject(string) {
     return resultArray;
 }
 
-async function handleEmailOpen(db, mailListID) {
-    var listEmailOpen = await mMailResponse(db).findAll({
-        where: {
-            MaillistID: mailListID,
-            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-            TypeSend: 'Maillist',
-        }
-    });
-    var listEmailOpen = [];
-    listEmailOpen.forEach(item => {
-        listEmailOpen.push(item.Email);
-    })
+async function handleEmailOpen(db, mailListID, type) {
     var listEmailOpenHandled = [];
-    listEmailOpen.forEach(element => {
-        if (!checkDuplicate(totalList, element)) {
-            listEmailOpenHandled.push(element);
-        }
-    })
+    if (type = 'Maillist') {
+        var mailResponse = await mMailResponse(db).findAll({
+            where: {
+                MaillistID: mailListID,
+                Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                TypeSend: 'Maillist',
+            }
+        });
+        var listEmailOpen = [];
+        mailResponse.forEach(item => {
+            listEmailOpen.push(item.Email);
+        })
+        listEmailOpen.forEach(element => {
+            if (!checkDuplicate(listEmailOpenHandled, element)) {
+                listEmailOpenHandled.push(element);
+            }
+        })
+    } else {
+        var mailResponse = await mMailResponse(db).findAll({
+            where: {
+                MailCampainID: body.campainID,
+                Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                TypeSend: 'Mailmerge',
+            }
+        });
+        var listEmailOpen = [];
+        mailResponse.forEach(item => {
+            listEmailOpen.push(item.Email);
+        })
+        listEmailOpen.forEach(element => {
+            if (!checkDuplicate(listEmailOpenHandled, element)) {
+                listEmailOpenHandled.push(element);
+            }
+        })
+    }
+
     return listEmailOpenHandled;
 }
 module.exports = {
@@ -702,6 +722,7 @@ module.exports = {
                         TypeSend: 'Mailmerge',
                     }
                 })
+                var totalOpenDistinct = await handleEmailOpen(db, body.campainID, 'Mailmerge');
                 var obj = {
                     name: campainData.Name,
                     subject: campainData.Subject,
@@ -715,7 +736,7 @@ module.exports = {
                     totalInvalid,
                     totalUnsubscribe,
 
-                    percentType: parseFloat((totalOpenDistinct / totalEmail) > 1 ? 1 : (totalOpenDistinct / totalEmail) * 100).toFixed(0) + '%',
+                    percentType: parseFloat((totalOpenDistinct.length / totalEmail) * 100).toFixed(0) + '%',
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -802,6 +823,7 @@ module.exports = {
                         TypeSend: 'Maillist',
                     },
                 });
+                var totalOpenDistinct = await handleEmailOpen(db, body.mailListID, 'Maillist');
                 var obj = {
                     name: mailListData.Name,
                     totalEmail,
@@ -812,7 +834,7 @@ module.exports = {
                     totalInvalid,
                     totalUnsubscribe,
 
-                    percentType: parseFloat((totalOpenDistinct / totalEmail) > 1 ? 1 : (totalOpenDistinct / totalEmail) * 100).toFixed(0) + '%',
+                    percentType: parseFloat((totalOpenDistinct.length / totalEmail) * 100).toFixed(0) + '%',
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -978,11 +1000,12 @@ module.exports = {
                 });
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
                 var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
+                var listEmailOpenHandled = await handleEmailOpen(db, body.campainID, 'Mailmerge')
                 var obj = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: (parseFloat((totalType / totalEmail) > 1 ? 1 : (totalType / totalEmail)) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: ((listEmailOpenHandled.length / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
@@ -1056,7 +1079,7 @@ module.exports = {
                             let listEmail = convertStringToListObject(data.Email)
                             for (var j = 0; j < listEmail.length; j++) {
                                 arrayTableSort.push({
-                                    email: listEmail[i].name,
+                                    email: listEmail[j].name,
                                     mailListID: -1,
                                     time: mModules.toDatetimeDay(nearestSend.TimeCreate),
                                     value: totalType ? totalType : 0
@@ -1148,12 +1171,12 @@ module.exports = {
                 }
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
                 var mainReason = reason ? reason : 'Không xác định';
-                var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID);
+                var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID, 'Maillist');
                 var obj = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: ((listEmailOpenHandled.length / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: ((listEmailOpenHandled.length / totalType) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
