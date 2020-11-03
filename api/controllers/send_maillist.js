@@ -145,19 +145,36 @@ module.exports = {
                         let tokenUnsubscribe = `email=${arrayEmail[i].name}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.CampaignID}&idGetInfo=${body.userID}&type=Mailmerge`;
                         let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
                         let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                        console.log(tokenUnsubscribe);
                         bodyHtml = httpTrack + bodyHtml;
                         bodyHtml = bodyHtml + unSubscribe;
                         let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
                         mCheckMail.checkEmail(arrayEmail[i].name).then(async (checkMailRes) => {
                             if (checkMailRes == false) {
-                                await mMailResponse(db).create({
-                                    MailCampainID: body.CampaignID,
-                                    TimeCreate: now,
-                                    Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
-                                    TypeSend: 'Mailmerge',
-                                    IDGetInfo: body.userID,
-                                    Email: arrayEmail[i].name,
-                                });
+                                var responeExits = await mMailResponse(db).findOne({
+                                    where: {
+                                        MailCampainID: body.CampaignID,
+                                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                        TypeSend: 'Mailmerge',
+                                        IDGetInfo: body.userID,
+                                        Email: arrayEmail[i].name,
+                                    }
+                                })
+                                if (responeExits) {
+                                    await mMailResponse(db).update({
+                                        TimeCreate: now,
+                                    }, { where: { ID: responeExits.ID } })
+                                } else {
+                                    await mMailResponse(db).create({
+                                        MailCampainID: body.CampaignID,
+                                        TimeCreate: now,
+                                        Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                        TypeSend: 'Mailmerge',
+                                        IDGetInfo: body.userID,
+                                        Email: arrayEmail[i].name,
+                                    });
+                                }
+
                             }
                         })
                         await mAmazon.sendEmail(emailSend.Email, arrayEmail[i].name, Subject, bodyHtml).then(async response => {

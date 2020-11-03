@@ -144,14 +144,29 @@ async function resetJob(db) {
                                 let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
                                 await mCheckMail.checkEmail(emailReceived).then(async (checkMailRes) => {
                                     if (checkMailRes == false) {
-                                        await mMailResponse(db).create({
-                                            TimeCreate: now,
-                                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
-                                            TypeSend: 'Maillist',
-                                            MaillistID: mailListID,
-                                            IDGetInfo: body.userID,
-                                            Email: emailReceived,
+                                        var responeExits = await mMailResponse(db).findOne({
+                                            where: {
+                                                Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                                TypeSend: 'Maillist',
+                                                MaillistID: mailListID,
+                                                IDGetInfo: body.userID,
+                                                Email: emailReceived,
+                                            }
                                         })
+                                        if (responeExits) {
+                                            await mMailResponse(db).update({
+                                                TimeCreate: now,
+                                            }, { where: { ID: responeExits.ID } })
+                                        } else {
+                                            await mMailResponse(db).create({
+                                                TimeCreate: now,
+                                                Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                                TypeSend: 'Maillist',
+                                                MaillistID: mailListID,
+                                                IDGetInfo: body.userID,
+                                                Email: emailReceived,
+                                            })
+                                        }
                                     }
                                 })
                                 await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {

@@ -18,25 +18,55 @@ module.exports = {
             try {
                 let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
                 if (body.typeSend === 'Maillist') {
-                    await mMailResponse(db).create({
-                        TimeCreate: now,
-                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
-                        TypeSend: body.typeSend,
-                        MaillistID: body.campainID,
-                        IDGetInfo: body.idGetInfo,
-                        Email: body.email,
-                        Reason: body.reason,
+                    var responeExits = await mMailResponse(db).findOne({
+                        where: {
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TypeSend: body.typeSend,
+                            MaillistID: body.campainID,
+                            IDGetInfo: body.idGetInfo,
+                            Email: body.email,
+                        }
                     })
+                    if (responeExits) {
+                        await mMailResponse(db).update({
+                            Reason: body.reason,
+                        }, { where: { ID: responeExits.ID } })
+                    } else {
+                        await mMailResponse(db).create({
+                            TimeCreate: now,
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TypeSend: body.typeSend,
+                            MaillistID: body.campainID,
+                            IDGetInfo: body.idGetInfo,
+                            Email: body.email,
+                            Reason: body.reason,
+                        })
+                    }
                 } else {
-                    await mMailResponse(db).create({
-                        TimeCreate: now,
-                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
-                        TypeSend: body.typeSend,
-                        MailCampainID: body.campainID,
-                        IDGetInfo: body.idGetInfo,
-                        Email: body.email,
-                        Reason: body.reason,
+                    var responeExits = await mMailResponse(db).findOne({
+                        where: {
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TypeSend: body.typeSend,
+                            MailCampainID: body.campainID,
+                            IDGetInfo: body.idGetInfo,
+                            Email: body.email,
+                        }
                     })
+                    if (responeExits) {
+                        await mMailResponse(db).update({
+                            Reason: body.reason,
+                        }, { where: { ID: responeExits.ID } })
+                    } else {
+                        await mMailResponse(db).create({
+                            TimeCreate: now,
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TypeSend: body.typeSend,
+                            MailCampainID: body.campainID,
+                            IDGetInfo: body.idGetInfo,
+                            Email: body.email,
+                            Reason: body.reason,
+                        })
+                    }
                 }
             } catch (error) {
                 console.log(error);

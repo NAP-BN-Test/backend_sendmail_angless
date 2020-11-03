@@ -478,13 +478,13 @@ function convertStringToListObject(string) {
     return resultArray;
 }
 
-async function handleEmailOpen(db, mailListID, type) {
+async function handleEmailOpen(db, mailListID, type, typeSend) {
     var listEmailOpenHandled = [];
-    if (type = 'Maillist') {
+    if (type === 'Maillist') {
         var mailResponse = await mMailResponse(db).findAll({
             where: {
                 MaillistID: mailListID,
-                Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                Type: typeSend,
                 TypeSend: 'Maillist',
             }
         });
@@ -497,11 +497,12 @@ async function handleEmailOpen(db, mailListID, type) {
                 listEmailOpenHandled.push(element);
             }
         })
-    } else {
+    }
+    else if (type === 'Mailmerge') {
         var mailResponse = await mMailResponse(db).findAll({
             where: {
-                MailCampainID: body.campainID,
-                Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                MailCampainID: mailListID,
+                Type: typeSend,
                 TypeSend: 'Mailmerge',
             }
         });
@@ -515,7 +516,24 @@ async function handleEmailOpen(db, mailListID, type) {
             }
         })
     }
-
+    else {
+        var listEmailOpen = [];
+        await mMailResponse(db).findAll({
+            where: {
+                IDGetInfo: mailListID,
+                Type: typeSend,
+            }
+        }).then(data => {
+            data.forEach(item => {
+                listEmailOpen.push(item.Email);
+            })
+        });
+        listEmailOpen.forEach(element => {
+            if (!checkDuplicate(listEmailOpenHandled, element)) {
+                listEmailOpenHandled.push(element);
+            }
+        })
+    }
     return listEmailOpenHandled;
 }
 module.exports = {
@@ -722,7 +740,7 @@ module.exports = {
                         TypeSend: 'Mailmerge',
                     }
                 })
-                var totalOpenDistinct = await handleEmailOpen(db, body.campainID, 'Mailmerge');
+                var totalOpenDistinct = await handleEmailOpen(db, body.campainID, 'Mailmerge', Constant.MAIL_RESPONSE_TYPE.OPEN);
                 var obj = {
                     name: campainData.Name,
                     subject: campainData.Subject,
@@ -773,9 +791,16 @@ module.exports = {
                     }]
                 });
 
-                var totalEmail = await mCompanyMailList(db).count({
-                    where: { MailListID: body.mailListID }
-                });
+                var totalEmail = 0;
+                let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: body.mailListID } })
+                for (var i = 0; i < listCompany.length; i++) {
+                    await mCompany(db).findOne({ where: { ID: listCompany[i].CompanyID } }).then(async data => {
+                        let listEmail = convertStringToListObject(data.Email)
+                        for (var j = 0; j < listEmail.length; j++) {
+                            totalEmail += 1;
+                        }
+                    })
+                }
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' })
 
@@ -823,7 +848,7 @@ module.exports = {
                         TypeSend: 'Maillist',
                     },
                 });
-                var totalOpenDistinct = await handleEmailOpen(db, body.mailListID, 'Maillist');
+                var totalOpenDistinct = await handleEmailOpen(db, body.mailListID, 'Maillist', Constant.MAIL_RESPONSE_TYPE.OPEN);
                 var obj = {
                     name: mailListData.Name,
                     totalEmail,
@@ -882,7 +907,9 @@ module.exports = {
                     totalEmail += arrayEmail.length
                 })
                 var arrayTableSort = [];
+                var reason;
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
+                    var listEmailOpenHandled = await handleEmailOpen(db, body.campainID, 'Mailmerge', Constant.MAIL_RESPONSE_TYPE.SEND)
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MailCampainID: body.campainID,
@@ -905,6 +932,8 @@ module.exports = {
                     })
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
+                    var listEmailOpenHandled = await handleEmailOpen(db, body.campainID, 'Mailmerge', Constant.MAIL_RESPONSE_TYPE.OPEN)
+
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MailCampainID: body.campainID,
@@ -931,11 +960,14 @@ module.exports = {
 
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
+                    var listEmailOpenHandled = 0;
                     var totalType = 0
-                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'MailMerge');
+                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.CLICK_LINK, 'MailMerge');
                 }
 
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID) {
+                    var listEmailOpenHandled = await handleEmailOpen(db, body.campainID, 'Mailmerge', Constant.MAIL_RESPONSE_TYPE.INVALID)
+
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MailCampainID: body.campainID,
@@ -961,6 +993,7 @@ module.exports = {
                     })
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
+                    var listEmailOpenHandled = await handleEmailOpen(db, body.campainID, 'Mailmerge', Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE)
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MailCampainID: body.campainID,
@@ -968,7 +1001,7 @@ module.exports = {
                             TypeSend: 'Mailmerge',
                         }
                     });
-                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'MailMerge');
+                    arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE, 'MailMerge');
                     var listEmail = await mMailResponse(db).findAll({
                         where: {
                             MailCampainID: body.campainID,
@@ -977,11 +1010,13 @@ module.exports = {
                         }
                     });
                     listEmail.forEach(item => {
+                        reason = item.Reason;
                         arrayTableSort.push({
                             email: item.Email,
                             mailListID: -1,
                             time: mModules.toDatetimeDay(nearestSend.TimeCreate),
-                            value: totalType ? totalType : 0
+                            value: totalType ? totalType : 0,
+                            reason: item.Reason,
                         })
                     })
                 }
@@ -999,8 +1034,7 @@ module.exports = {
                     }
                 });
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
-                var mainReason = nearestSend.Reason ? nearestSend.Reason : 'Không xác định';
-                var listEmailOpenHandled = await handleEmailOpen(db, body.campainID, 'Mailmerge')
+                var mainReason = reason ? reason : 'Không xác định';
                 var obj = {
                     totalEmail,
                     totalType,
@@ -1065,6 +1099,7 @@ module.exports = {
                     }
                 });
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
+                    var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID, 'Maillist', Constant.MAIL_RESPONSE_TYPE.SEND);
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MaillistID: body.mailListID,
@@ -1089,6 +1124,7 @@ module.exports = {
                     }
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
+                    var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID, 'Maillist', Constant.MAIL_RESPONSE_TYPE.OPEN);
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MaillistID: body.mailListID,
@@ -1114,11 +1150,15 @@ module.exports = {
                     })
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.CLICK_LINK) {
+                    var listEmailOpenHandled = 0;
+
                     var totalType = 0
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'Maillist');
                 }
 
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID) {
+                    var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID, 'Maillist', Constant.MAIL_RESPONSE_TYPE.INVALID);
+
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MaillistID: body.mailListID,
@@ -1144,6 +1184,8 @@ module.exports = {
                     })
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
+                    var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID, 'Maillist', Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE);
+
                     var totalType = await mMailResponse(db).count({
                         where: {
                             MaillistID: body.mailListID,
@@ -1171,7 +1213,6 @@ module.exports = {
                 }
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
                 var mainReason = reason ? reason : 'Không xác định';
-                var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID, 'Maillist');
                 var obj = {
                     totalEmail,
                     totalType,
@@ -1336,6 +1377,7 @@ module.exports = {
                 var listIDMailList = [];
                 var arraydate = [];
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
+                    var totalOpenDistinct = await handleEmailOpen(db, body.userID, 'user', Constant.MAIL_RESPONSE_TYPE.SEND);
                     var totalType = await mMailResponse(db).count({
                         where: {
                             IDGetInfo: body.userID,
@@ -1345,6 +1387,7 @@ module.exports = {
                     arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.SEND, 'user');
                 }
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
+                    var totalOpenDistinct = await handleEmailOpen(db, body.userID, 'user', Constant.MAIL_RESPONSE_TYPE.OPEN);
                     var totalType = await mMailResponse(db).count({
                         where: {
                             IDGetInfo: body.userID,
@@ -1358,7 +1401,8 @@ module.exports = {
                     arraydate = []
                 }
 
-                if (body.mailType == MAIL_RESPONSE_TYPE.INVALID || body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
+                if (body.mailType == MAIL_RESPONSE_TYPE.INVALID) {
+                    var totalOpenDistinct = await handleEmailOpen(db, body.userID, 'user', Constant.MAIL_RESPONSE_TYPE.INVALID);
                     var totalType = await mMailResponse(db).count({
                         where: {
                             IDGetInfo: body.userID,
@@ -1366,6 +1410,16 @@ module.exports = {
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'user');
+                }
+                if (body.mailType == MAIL_RESPONSE_TYPE.UNSUBSCRIBE) {
+                    var totalOpenDistinct = await handleEmailOpen(db, body.userID, 'user', Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE);
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            IDGetInfo: body.userID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                        }
+                    });
+                    arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE, 'user');
                 }
                 await mMailCampain(db).findAll({
                     where: { OwnerID: body.userID },
@@ -1378,9 +1432,18 @@ module.exports = {
                     }
                 })
                 // Tổng số mail list
-                var totalEmail = await mCompanyMailList(db).count({
-                    where: { MailListID: { [Op.in]: listIDMailList } }
-                });
+                var totalEmail = 0;
+                for (var j = 0; j < listIDMailList.length; j++) {
+                    let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: listIDMailList[j] } })
+                    for (var i = 0; i < listCompany.length; i++) {
+                        await mCompany(db).findOne({ where: { ID: listCompany[i].CompanyID } }).then(async data => {
+                            let listEmail = convertStringToListObject(data.Email)
+                            for (var j = 0; j < listEmail.length; j++) {
+                                totalEmail += 1;
+                            }
+                        })
+                    }
+                }
                 var arrayTableSort = [];
                 var listCompanyID = [];
                 // tổng số mail merge
@@ -1450,7 +1513,7 @@ module.exports = {
                     totalEmail,
                     totalType,
                     totalTypeTwice,
-                    advangeType: (parseFloat((totalType / totalEmail) > 1 ? 1 : (totalType / totalEmail)) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
+                    advangeType: (parseFloat(totalOpenDistinct.length / totalEmail) * 100).toString() + '%', // tỉ lệ là số mail response / tổng số email của chiến dịch
                     nearestSend: nearestSend ? nearestSend.TimeCreate : null,
                     mainReason
                 }
