@@ -13,7 +13,6 @@ var mMailListDetail = require('../tables/mail-list-detail');
 module.exports = {
     unSubscribe: (req, res) => {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -68,6 +67,7 @@ module.exports = {
                         })
                     }
                 }
+                res.json('Success');
             } catch (error) {
                 console.log(error);
                 res.json(Result.SYS_ERROR_RESULT)

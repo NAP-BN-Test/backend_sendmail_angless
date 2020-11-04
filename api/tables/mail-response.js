@@ -17,6 +17,7 @@ module.exports = function (db) {
         MaillistID: Sequelize.BIGINT,
         IDGetInfo: Sequelize.BIGINT,
         Email: Sequelize.STRING,
+        TickSendMail: Sequelize.STRING,
     });
 
     return table;

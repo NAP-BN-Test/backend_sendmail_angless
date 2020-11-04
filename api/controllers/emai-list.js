@@ -129,15 +129,13 @@ async function resetJob(db) {
                         for (var f = 0; f < arrayEmail.length; f++) {
                             let emailReceived = arrayEmail[f].name;
                             var job = schedule.scheduleJob(timeSend, async function () {
-                                let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}`;
+                                let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
                                 let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                                 let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
-
                                 let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                                 let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
                                 let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                                 let bodyHtml = handleClickLink(body, company.ID);
-
                                 bodyHtml = httpTrack + bodyHtml;
                                 bodyHtml = bodyHtml + unSubscribe;
                                 bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
@@ -1023,7 +1021,7 @@ module.exports = {
     },
     addMailResponse: async function (req, res) {
         let query = req._parsedUrl.query;
-        let queryDecrypt = mModules.decryptKey(query.replace("token=", ""));;
+        let queryDecrypt = mModules.decryptKey(query.replace("token=", ""));
         let params = queryDecrypt.split('&');
         let ip = params[0].split('=')[1];
         let dbName = params[1].split('=')[1];
@@ -1031,25 +1029,60 @@ module.exports = {
         let type = params[3].split('=')[1];
         let idGetInfo = params[4].split('=')[1];
         let email = params[5].split('=')[1];
+        let tickSendMail = params[6].split('=')[1];
         database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
             if (type === 'Maillist') {
-                await mMailResponse(db).create({
-                    TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                    Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                    TypeSend: type ? type : '',
-                    MaillistID: idCampaign,
-                    IDGetInfo: idGetInfo,
-                    Email: email,
+                var responeExits = await mMailResponse(db).findOne({
+                    where: {
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: type ? type : '',
+                        MaillistID: idCampaign,
+                        IDGetInfo: idGetInfo,
+                        Email: email,
+                        TickSendMail: tickSendMail,
+                    }
                 })
+                if (responeExits) {
+                    await mMailResponse(db).update({
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                    }, { where: { ID: responeExits.ID } })
+                } else {
+                    await mMailResponse(db).create({
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: type ? type : '',
+                        MaillistID: idCampaign,
+                        IDGetInfo: idGetInfo,
+                        Email: email,
+                        TickSendMail: tickSendMail,
+                    })
+                }
             } else {
-                await mMailResponse(db).create({
-                    TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                    Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                    TypeSend: type ? type : '',
-                    MailCampainID: idCampaign,
-                    IDGetInfo: idGetInfo,
-                    Email: email,
+                var responeExits = await mMailResponse(db).findOne({
+                    where: {
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: type ? type : '',
+                        MailCampainID: idCampaign,
+                        IDGetInfo: idGetInfo,
+                        Email: email,
+                        TickSendMail: tickSendMail,
+                    }
                 })
+                if (responeExits) {
+                    await mMailResponse(db).update({
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                    }, { where: { ID: responeExits.ID } })
+                } else {
+                    await mMailResponse(db).create({
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                        TypeSend: type ? type : '',
+                        MailCampainID: idCampaign,
+                        IDGetInfo: idGetInfo,
+                        Email: email,
+                        TickSendMail: tickSendMail,
+                    })
+                }
             }
         }, error => {
             res.json(error)
