@@ -1035,11 +1035,10 @@ module.exports = {
                 var responeExits = await mMailResponse(db).findOne({
                     where: {
                         Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                        TypeSend: type ? type : '',
                         MaillistID: idCampaign,
                         IDGetInfo: idGetInfo,
                         Email: email,
-                        TickSendMail: tickSendMail,
+                        TickSendMail: tickSendMail.toString(),
                     }
                 })
                 if (responeExits) {
@@ -1054,18 +1053,17 @@ module.exports = {
                         MaillistID: idCampaign,
                         IDGetInfo: idGetInfo,
                         Email: email,
-                        TickSendMail: tickSendMail,
+                        TickSendMail: tickSendMail.toString(),
                     })
                 }
             } else {
                 var responeExits = await mMailResponse(db).findOne({
                     where: {
                         Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                        TypeSend: type ? type : '',
                         MailCampainID: idCampaign,
                         IDGetInfo: idGetInfo,
                         Email: email,
-                        TickSendMail: tickSendMail,
+                        TickSendMail: tickSendMail.toString(),
                     }
                 })
                 if (responeExits) {
@@ -1080,7 +1078,7 @@ module.exports = {
                         MailCampainID: idCampaign,
                         IDGetInfo: idGetInfo,
                         Email: email,
-                        TickSendMail: tickSendMail,
+                        TickSendMail: tickSendMail.toString(),
                     })
                 }
             }
