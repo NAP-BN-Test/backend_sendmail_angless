@@ -242,6 +242,47 @@ async function addGroupToCampaign(listID, idCampaign, db) {
 }
 const axios = require('axios');
 
+async function deleteImage(linkImage) {
+    var file = linkImage.replace("http://118.27.192.106:1357/ageless_sendmail/", "")
+    require("fs").unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
+        if (err) {
+            console.log(err);
+        }
+    });
+}
+async function getListLinkImage(db, idCampaign) {
+    try {
+        var mailCampaign = await mMailCampain(db).findOne({
+            where: { ID: idCampaign }
+        })
+        var keyField = []
+        if (mailCampaign) {
+            let body = mailCampaign.Body;
+            const re = RegExp('<img src="(.*?)">', 'g');
+            while ((matches = re.exec(body)) !== null) {
+                keyField.push(matches[1]);
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+    return keyField;
+}
+function checkDuplicate(array, elm) {
+    var check = false;
+    array.forEach(item => {
+        if (item === elm) check = true;
+    })
+    return check;
+}
+function deleteImageResidual(listLink, listLinkNew) {
+    for (var i = 0; i < listLink.length; i++) {
+        if (!checkDuplicate(listLinkNew, listLink[i])) {
+            deleteImage(listLink[i]);
+            console.log(listLink[i]);
+        }
+    }
+}
 module.exports = {
     resetJob,
     getCompanyIDFromCampaignID,
@@ -1223,7 +1264,9 @@ module.exports = {
                     update.push({ key: 'TimeSend', value: time });
                 }
                 if (body.Type == 'MailList') {
+
                     if (body.body || body.body === '') {
+                        var listLink = await getListLinkImage(db, body.campainID);
                         let text = body.body;
                         text = text.replace(/%20/g, ' ')
                         const re = RegExp('<img src="(.*?)">', 'g');
@@ -1232,16 +1275,24 @@ module.exports = {
                         var datetime = new Date();
                         nameMiddle = Date.parse(datetime);
                         var dir = DIR + 'photo-' + nameMiddle + '.jpg';
+                        var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
+                        var listLinkNew = [];
                         while ((matches = re.exec(text)) !== null) {
-                            text = text.replace(matches[1], dir);
-                            keyField.push(matches[1].replace(/ /g, '+'));
+                            if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
+                                text = text.replace(matches[1], linkImage);
+                                listLinkNew.push(matches[1]);
+                                keyField.push(matches[1].replace(/ /g, '+'));
+                            }
                         }
-                        var base64Data = keyField[0].replace('data:image/jpeg;base64,', "");
-                        var buf = new Buffer.from(base64Data, "base64");
-                        require("fs").writeFile(dir, buf, function (err) {
-                            if (err) console.log(err + '');
-                        });
-                        console.log(text);
+
+                        await deleteImageResidual(listLink, listLinkNew);
+                        if (keyField.length > 0) {
+                            var base64Data = keyField[0].replace('data:image/jpeg;base64,', "");
+                            var buf = new Buffer.from(base64Data, "base64");
+                            require("fs").writeFile(dir, buf, function (err) {
+                                if (err) console.log(err + '');
+                            });
+                        }
                         update.push({ key: 'Body', value: text });
                     }
                     if (body.mailListID || body.mailListID === '') {
