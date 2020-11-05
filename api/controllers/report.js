@@ -873,7 +873,6 @@ module.exports = {
     // mailmerge
     getReportByCampainMailType: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var mailResponse = mMailResponse(db);
@@ -1025,7 +1024,7 @@ module.exports = {
                             TypeSend: 'Mailmerge',
                         }
                     });
-                    advangeType = (Math.round(((totalType / (totalEmail*totalEmailSend)) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
+                    advangeType = (Math.round(((totalType / (totalEmail * totalEmailSend)) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
 
                 }
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
@@ -1208,7 +1207,7 @@ module.exports = {
                             TypeSend: 'Maillist',
                         }
                     });
-                    advangeType = (Math.round(((totalType / (totalEmail*totalEmailSend)) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
+                    advangeType = (Math.round(((totalType / (totalEmail * totalEmailSend)) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
                 }
                 var totalTypeTwice = 0; // tổng số loại mail response thao tác trên 2 lần
                 var mainReason = reason ? reason : 'Không xác định';
@@ -1614,7 +1613,7 @@ module.exports = {
                             value: 1,
                         })
                     })
-                    advangeType = (Math.round(((totalType / (totalEmail*totalSenD)) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
+                    advangeType = (Math.round(((totalType / (totalEmail * totalSenD)) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
                 }
                 var obj = {
                     totalEmail,

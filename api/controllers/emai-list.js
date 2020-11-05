@@ -240,6 +240,7 @@ async function addGroupToCampaign(listID, idCampaign, db) {
         })
     }
 }
+const axios = require('axios');
 
 module.exports = {
     resetJob,
@@ -1201,7 +1202,6 @@ module.exports = {
 
     updateMailCampain: async function (req, res) {
         let body = req.body;
-        console.log(body.body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let update = [];
@@ -1222,10 +1222,28 @@ module.exports = {
                     console.log(time);
                     update.push({ key: 'TimeSend', value: time });
                 }
-                if (body.body || body.body === '') {
-                    update.push({ key: 'Body', value: body.body });
-                }
                 if (body.Type == 'MailList') {
+                    if (body.body || body.body === '') {
+                        let text = body.body;
+                        text = text.replace(/%20/g, ' ')
+                        const re = RegExp('<img src="(.*?)">', 'g');
+                        const keyField = []
+                        const DIR = 'D:/images_services/ageless_sendmail/';
+                        var datetime = new Date();
+                        nameMiddle = Date.parse(datetime);
+                        var dir = DIR + 'photo-' + nameMiddle + '.jpg';
+                        while ((matches = re.exec(text)) !== null) {
+                            text = text.replace(matches[1], dir);
+                            keyField.push(matches[1].replace(/ /g, '+'));
+                        }
+                        var base64Data = keyField[0].replace('data:image/jpeg;base64,', "");
+                        var buf = new Buffer.from(base64Data, "base64");
+                        require("fs").writeFile(dir, buf, function (err) {
+                            if (err) console.log(err + '');
+                        });
+                        console.log(text);
+                        update.push({ key: 'Body', value: text });
+                    }
                     if (body.mailListID || body.mailListID === '') {
                         let listID = JSON.parse(body.mailListID)
                         await mMailListCampaign(db).destroy({
@@ -1241,6 +1259,9 @@ module.exports = {
                         }
                     }
                 } else {
+                    if (body.body || body.body === '') {
+                        update.push({ key: 'Body', value: body.body });
+                    }
                     if (body.idGroup1 || body.idGroup1 === '') {
                         await mCampaignGroups(db).update({
                             IDGroup: body.idGroup1
