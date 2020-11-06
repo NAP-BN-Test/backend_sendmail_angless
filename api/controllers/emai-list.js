@@ -241,8 +241,10 @@ async function addGroupToCampaign(listID, idCampaign, db) {
     }
 }
 const axios = require('axios');
+const { LOGIN_FAIL } = require('../constants/result');
 
 async function deleteImage(linkImage) {
+    console.log(linkImage);
     var file = linkImage.replace("http://118.27.192.106:1357/ageless_sendmail/", "")
     require("fs").unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
         if (err) {
@@ -275,11 +277,12 @@ function checkDuplicate(array, elm) {
     })
     return check;
 }
-function deleteImageResidual(listLink, listLinkNew) {
+async function deleteImageResidual(listLink, listLinkNew) {
+    console.log(listLink);
+    console.log(listLinkNew);
     for (var i = 0; i < listLink.length; i++) {
         if (!checkDuplicate(listLinkNew, listLink[i])) {
-            deleteImage(listLink[i]);
-            console.log(listLink[i]);
+            await deleteImage(listLink[i]);
         }
     }
 }
@@ -1268,8 +1271,8 @@ module.exports = {
                     if (body.body || body.body === '') {
                         var listLink = await getListLinkImage(db, body.campainID);
                         let text = body.body;
-                        text = text.replace(/%20/g, ' ')
-                        const re = RegExp('<img src="(.*?)">', 'g');
+                        text = text.replace(/%20/g, ' ');
+                        const re = RegExp('<img src="(.*?)"></figure>', 'g');
                         const keyField = []
                         const DIR = 'D:/images_services/ageless_sendmail/';
                         var datetime = new Date();
@@ -1277,15 +1280,23 @@ module.exports = {
                         var dir = DIR + 'photo-' + nameMiddle + '.jpg';
                         var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
                         var listLinkNew = [];
+
                         while ((matches = re.exec(text)) !== null) {
                             if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
                                 text = text.replace(matches[1], linkImage);
-                                listLinkNew.push(matches[1]);
                                 keyField.push(matches[1].replace(/ /g, '+'));
                             }
                         }
-
-                        await deleteImageResidual(listLink, listLinkNew);
+                        // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
+                        while ((matches = re.exec(text)) !== null) {
+                            console.log('kldsfasjflsadfj');
+                            if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
+                                listLinkNew.push(linkImage);
+                            }
+                            else {
+                                listLinkNew.push(matches[1]);
+                            }
+                        }
                         if (keyField.length > 0) {
                             var base64Data = keyField[0].replace('data:image/jpeg;base64,', "");
                             var buf = new Buffer.from(base64Data, "base64");
@@ -1294,6 +1305,7 @@ module.exports = {
                             });
                         }
                         update.push({ key: 'Body', value: text });
+                        await deleteImageResidual(listLink, listLinkNew);
                     }
                     if (body.mailListID || body.mailListID === '') {
                         let listID = JSON.parse(body.mailListID)
