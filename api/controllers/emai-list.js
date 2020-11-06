@@ -278,8 +278,6 @@ function checkDuplicate(array, elm) {
     return check;
 }
 async function deleteImageResidual(listLink, listLinkNew) {
-    console.log(listLink);
-    console.log(listLinkNew);
     for (var i = 0; i < listLink.length; i++) {
         if (!checkDuplicate(listLinkNew, listLink[i])) {
             await deleteImage(listLink[i]);
@@ -1280,23 +1278,26 @@ module.exports = {
                         var dir = DIR + 'photo-' + nameMiddle + '.jpg';
                         var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
                         var listLinkNew = [];
-
+                        var matchesList = [];
+                        var linkImageList = [];
                         while ((matches = re.exec(text)) !== null) {
                             if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
-                                text = text.replace(matches[1], linkImage);
+                                console.log(12345566);
+                                matchesList.push(matches[1]);
+                                linkImageList.push(linkImage);
                                 keyField.push(matches[1].replace(/ /g, '+'));
-                            }
-                        }
-                        // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
-                        while ((matches = re.exec(text)) !== null) {
-                            console.log('kldsfasjflsadfj');
-                            if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
                                 listLinkNew.push(linkImage);
                             }
                             else {
                                 listLinkNew.push(matches[1]);
                             }
                         }
+                        if (matchesList.length > 0) {
+                            for (var j = 0; j < matchesList.length; j++) {
+                                text = text.replace(matchesList[j], linkImageList[j]);
+                            }
+                        }
+                        // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
                         if (keyField.length > 0) {
                             var base64Data = keyField[0].replace('data:image/jpeg;base64,', "");
                             var buf = new Buffer.from(base64Data, "base64");
