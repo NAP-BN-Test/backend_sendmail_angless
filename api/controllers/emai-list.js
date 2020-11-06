@@ -954,10 +954,18 @@ module.exports = {
                 if (body.listID) {
                     let listID = JSON.parse(body.listID);
                     for (var i = 0; i < listID.length; i++) {
-                        await mCompanyMailList(db).create({
-                            CompanyID: listID[i],
-                            MailListID: body.mailListID,
+                        let check = await mCompanyMailList(db).findAll({
+                            where: {
+                                CompanyID: listID[i],
+                                MailListID: body.mailListID,
+                            }
                         })
+                        if (check.length <= 0) {
+                            await mCompanyMailList(db).create({
+                                CompanyID: listID[i],
+                                MailListID: body.mailListID,
+                            })
+                        }
                     }
                 }
                 res.json(Result.ACTION_SUCCESS);
@@ -1270,19 +1278,21 @@ module.exports = {
                         var listLink = await getListLinkImage(db, body.campainID);
                         let text = body.body;
                         text = text.replace(/%20/g, ' ');
-                        const re = RegExp('<img src="(.*?)"></figure>', 'g');
+                        const re = RegExp('<img src="(.*?)">', 'g');
                         const keyField = []
                         const DIR = 'D:/images_services/ageless_sendmail/';
                         var datetime = new Date();
-                        nameMiddle = Date.parse(datetime);
-                        var dir = DIR + 'photo-' + nameMiddle + '.jpg';
-                        var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
                         var listLinkNew = [];
                         var matchesList = [];
                         var linkImageList = [];
+                        var dirList = [];
                         while ((matches = re.exec(text)) !== null) {
+                            var numberRandom = Math.floor(Math.random() * 1000000);
+                            nameMiddle = Date.parse(datetime) + numberRandom.toString();
+                            var dir = DIR + 'photo-' + nameMiddle + '.jpg';
+                            var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
                             if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
-                                console.log(12345566);
+                                dirList.push(dir);
                                 matchesList.push(matches[1]);
                                 linkImageList.push(linkImage);
                                 keyField.push(matches[1].replace(/ /g, '+'));
@@ -1295,16 +1305,15 @@ module.exports = {
                         if (matchesList.length > 0) {
                             for (var j = 0; j < matchesList.length; j++) {
                                 text = text.replace(matchesList[j], linkImageList[j]);
+                                var base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
+                                base64Data = base64Data.replace(/ /g, '+');
+                                var buf = new Buffer.from(base64Data, "base64");
+                                require("fs").writeFile(dirList[j], buf, function (err) {
+                                    if (err) console.log(err + '');
+                                });
                             }
                         }
                         // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
-                        if (keyField.length > 0) {
-                            var base64Data = keyField[0].replace('data:image/jpeg;base64,', "");
-                            var buf = new Buffer.from(base64Data, "base64");
-                            require("fs").writeFile(dir, buf, function (err) {
-                                if (err) console.log(err + '');
-                            });
-                        }
                         update.push({ key: 'Body', value: text });
                         await deleteImageResidual(listLink, listLinkNew);
                     }

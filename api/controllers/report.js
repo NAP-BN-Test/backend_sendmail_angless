@@ -662,17 +662,18 @@ module.exports = {
                     var arrayEmail = convertStringToListObject(item.Email)
                     totalEmail += arrayEmail.length
                 })
-                var nearestSend = await mMailResponse(db).findOne({
+                var nearestSend = await mMailResponse(db).findOne(
+                    {
+                        order: [
+                            Sequelize.literal('max(TimeCreate) DESC'),
+                        ],
+                        group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo', 'Email', 'TickSendMail'],
+                    }, {
                     where: {
                         MailCampainID: body.campainID,
                         Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                         TypeSend: 'Mailmerge',
-                    },
-                    order: [
-                        ['TimeCreate', 'DESC']
-                    ],
-                    attributes: ['TimeCreate'],
-                    raw: true
+                    }
                 });
                 var startSend = await mMailResponse(db).findOne({
                     where: {
@@ -819,13 +820,11 @@ module.exports = {
                         where: { MailListID: body.mailListID }
                     }
                 });
-                var totalUnsubscribe = await mailResponse.count({
+                var totalUnsubscribe = await mMailResponse(db).count({
                     where: {
-                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE
-                    },
-                    include: {
-                        model: mMailListDetail(db),
-                        where: { MailListID: body.mailListID }
+                        MaillistID: body.mailListID,
+                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                        TypeSend: 'Maillist',
                     }
                 });
                 var totalInvalid = await mailResponse.count({
