@@ -112,7 +112,7 @@ module.exports = {
                 })
             }
 
-            information = await mailmergerCampaingn.getAdditionalInfomation(db, body.CampaignID);
+            information = await mailmergerCampaingn.getAdditionalInfomation(db, body.CampaignID, 1, 10000);
             await mMailCampain(db).update({
                 StatusCampaign: true,
             }, {

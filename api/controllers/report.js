@@ -53,7 +53,7 @@ async function getAllDateAndCountSend(db, typeSearch, type, typesend) {
         });
     }
     response.forEach(item => {
-        array.push(mModules.toDatetimeDay(moment(item.TimeCreate).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS')))
+        array.push(mModules.toDatetimeDay(moment(item.TimeCreate).subtract(14, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS')))
     })
     return array
 }
@@ -657,7 +657,14 @@ module.exports = {
                     }]
                 });
                 var totalEmail = 0;
-                information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID);
+                let page = 1;
+                let itemPerPage = 10;
+                if (body.page)
+                    page = body.page;
+                if (body.itemPerPage)
+                    itemPerPage = body.itemPerPage;
+                information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID, page, itemPerPage);
+                console.log(information[0].Email);
                 information.forEach(async item => {
                     var arrayEmail = convertStringToListObject(item.Email)
                     totalEmail += arrayEmail.length
@@ -892,7 +899,13 @@ module.exports = {
                         TypeSend: 'Mailmerge',
                     }
                 });
-                information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID);
+                let page = 1;
+                let itemPerPage = 10;
+                if (body.page)
+                    page = body.page;
+                if (body.itemPerPage)
+                    itemPerPage = body.itemPerPage;
+                information = await mailmergerCampaingn.getAdditionalInfomation(db, body.campainID, page, itemPerPage);
                 information.forEach(async item => {
                     var arrayEmail = convertStringToListObject(item.Email)
                     totalEmail += arrayEmail.length
@@ -944,7 +957,9 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                             TypeSend: 'Mailmerge',
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         arrayTableSort.push({
@@ -970,7 +985,9 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
                             TypeSend: 'Mailmerge',
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         reason = item.Reason;
@@ -1006,7 +1023,9 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                             TypeSend: 'Mailmerge',
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         arrayTableSort.push({
@@ -1139,7 +1158,9 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                             TypeSend: 'Maillist',
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         arrayTableSort.push({
@@ -1166,7 +1187,9 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
                             TypeSend: 'Maillist',
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         reason = item.Reason;
@@ -1189,7 +1212,9 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                             TypeSend: 'Maillist',
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         arrayTableSort.push({
@@ -1444,7 +1469,11 @@ module.exports = {
                             TypeSend: 'Mailmerge',
                         }
                     });
-                    await mAdditionalInformation(db).findAll({ where: { UserID: body.userID } }).then(data => {
+                    await mAdditionalInformation(db).findAll({
+                        where: { UserID: body.userID },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
+                    }).then(data => {
                         data.forEach(item => {
                             var listMail = convertStringToListObject(item.Email);
                             listMail.forEach(element => {
@@ -1500,7 +1529,9 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         arrayTableSort.push({
@@ -1529,7 +1560,9 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         arrayTableSort.push({
@@ -1553,7 +1586,9 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         reason = item.Reason;
@@ -1602,7 +1637,9 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
-                        }
+                        },
+                        offset: itemPerPage * (page - 1),
+                        limit: itemPerPage
                     });
                     listEmail.forEach(item => {
                         arrayTableSort.push({

@@ -28,7 +28,7 @@ var mAmazon = require('../controllers/amazon');
 var mCheckMail = require('../controllers/check-mail');
 var cUser = require('../controllers/user');
 var mMailResponse = require('../tables/mail-response');
-
+const Sequelize = require('sequelize');
 var mUser = require('../tables/user');
 
 var mModules = require('../constants/modules');
@@ -738,13 +738,26 @@ module.exports = {
                         var numberAddressBook = await mAdditionalInformation(db).count({
                             where: { CampaignID: mailCampainData[i].ID }
                         });
+                        var nearestSend = await mMailResponse(db).findOne(
+                            {
+                                order: [
+                                    Sequelize.literal('max(TimeCreate) DESC'),
+                                ],
+                                group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo', 'Email', 'TickSendMail'],
+                            }, {
+                            where: {
+                                MailCampainID: mailCampainData[i].ID,
+                                Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                                TypeSend: 'Mailmerge',
+                            }
+                        });
                         array.push({
                             id: Number(mailCampainData[i].ID),
                             name: mailCampainData[i].Name,
                             subject: mailCampainData[i].Subject,
                             owner: mailCampainData[i].User ? mailCampainData[i].User.Name : '',
                             createTime: mModules.toDatetime(mailCampainData[i].TimeCreate),
-                            nearestSend: '2020-05-30 14:00',
+                            nearestSend: mModules.toDatetime(nearestSend.TimeCreate),
                             TemplateName: mailCampainData[i].Template ? mailCampainData[i].Template.Name : '',
                             TemplateReminderName: mailCampainData[i].TemplateRemider ? mailCampainData[i].TemplateRemider.Name : '',
                             NumberAddressBook: numberAddressBook,

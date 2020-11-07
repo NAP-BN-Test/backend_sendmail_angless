@@ -24,7 +24,7 @@ function getInfoFromMailListDetail(db, MailListID) {
     return MailListDetail
 }
 
-async function getAdditionalInfomation(db, CampaignID) {
+async function getAdditionalInfomation(db, CampaignID, page, itemPerPage) {
     let AdditionalInformation = mAdditionalInformation(db);
 
     AdditionalInformation.belongsTo(mUser(db), { foreignKey: 'UserID', sourceKey: 'UserID', as: 'User' });
@@ -38,7 +38,9 @@ async function getAdditionalInfomation(db, CampaignID) {
         ],
         where: {
             CampaignID: CampaignID,
-        }
+        },
+        offset: itemPerPage * (page - 1),
+        limit: itemPerPage
     }).then(result => {
         if (result) {
             result.forEach(data => {
@@ -324,7 +326,7 @@ module.exports = {
                     if (item.dataValues.DataID)
                         ListDataId.push(item.dataValues.DataID);
                 })
-                information = await getAdditionalInfomation(db, ListDataId);
+                information = await getAdditionalInfomation(db, ListDataId, 1, 10000);
                 let result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
