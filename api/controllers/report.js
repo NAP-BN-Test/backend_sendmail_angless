@@ -760,7 +760,6 @@ module.exports = {
                     totalClickLink,
                     totalInvalid,
                     totalUnsubscribe,
-
                     percentType: (Math.round(((totalOpenDistinct / (totalEmail * totalSend)) * 100) * 100 + Number.EPSILON) / 100).toString() + '%',
                 }
                 var result = {
@@ -881,6 +880,12 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
+                var mWhere = {};
+                // if (body.timeFrom) {
+                //     mWhere = {
+                //         TimeCreate: { [Op.between]: [mModules.toDatetime(body.timeFrom), mModules.toDatetime(body.timeTo)] },   
+                //     }
+                // }
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
                 var totalEmail = 0;
@@ -919,6 +924,7 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                             TypeSend: 'Mailmerge',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.SEND, 'MailMerge');
@@ -949,6 +955,7 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                             TypeSend: 'Mailmerge',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'MailMerge');
@@ -957,6 +964,7 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                             TypeSend: 'Mailmerge',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -977,6 +985,7 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
                             TypeSend: 'Mailmerge',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE, 'MailMerge');
@@ -985,6 +994,7 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
                             TypeSend: 'Mailmerge',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -1011,6 +1021,7 @@ module.exports = {
                         MailCampainID: body.campainID,
                         Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                         TypeSend: 'Mailmerge',
+                        TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                     }
                 });
                 var advangeType = (Math.round(((totalType / totalEmail) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
@@ -1023,6 +1034,7 @@ module.exports = {
                             MailCampainID: body.campainID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                             TypeSend: 'Mailmerge',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -1081,6 +1093,12 @@ module.exports = {
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
+                let page = 1;
+                let itemPerPage = 10;
+                if (body.page)
+                    page = body.page;
+                if (body.itemPerPage)
+                    itemPerPage = body.itemPerPage;
                 var mailResponse = mMailResponse(db);
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
                 var totalEmail = 0;
@@ -1107,7 +1125,7 @@ module.exports = {
                         MaillistID: body.mailListID,
                         Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                         TypeSend: 'Maillist',
-
+                        TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                     }
                 });
                 if (body.mailType == MAIL_RESPONSE_TYPE.SEND) {
@@ -1117,6 +1135,7 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                             TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.SEND, 'Maillist');
@@ -1150,6 +1169,7 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                             TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'Maillist');
@@ -1158,6 +1178,7 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                             TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -1179,6 +1200,7 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
                             TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE, 'Maillist');
@@ -1187,6 +1209,7 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
                             TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -1212,6 +1235,7 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
                             TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -1229,6 +1253,7 @@ module.exports = {
                             MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                             TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     advangeType = (Math.round(((totalType / (totalEmail * totalEmailSend)) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
@@ -1421,6 +1446,12 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
+                let page = 1;
+                let itemPerPage = 10;
+                if (body.page)
+                    page = body.page;
+                if (body.itemPerPage)
+                    itemPerPage = body.itemPerPage;
                 var mailResponse = mMailResponse(db);
                 var arrayTableSort = [];
                 mailResponse.belongsTo(mMailListDetail(db), { foreignKey: 'MailListDetailID' });
@@ -1434,6 +1465,7 @@ module.exports = {
                     where: {
                         IDGetInfo: body.userID,
                         Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                     }
                 });
                 var arraydate = [];
@@ -1456,6 +1488,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     totalSenD = totalType;
@@ -1467,6 +1500,7 @@ module.exports = {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                             TypeSend: 'Mailmerge',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     await mAdditionalInformation(db).findAll({
@@ -1498,6 +1532,7 @@ module.exports = {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.SEND,
                             TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     await mCompany(db).findAll({
@@ -1522,6 +1557,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'user');
@@ -1529,6 +1565,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -1553,6 +1590,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.INVALID, 'user');
@@ -1560,6 +1598,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -1579,6 +1618,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE, 'user');
@@ -1586,6 +1626,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage
@@ -1630,6 +1671,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         }
                     });
                     arraydate = await getAllDateAndCountSend(db, body.userID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'user');
@@ -1637,6 +1679,7 @@ module.exports = {
                         where: {
                             IDGetInfo: body.userID,
                             Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
                         },
                         offset: itemPerPage * (page - 1),
                         limit: itemPerPage

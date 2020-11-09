@@ -756,7 +756,7 @@ module.exports = {
                             name: mailCampainData[i].Name,
                             subject: mailCampainData[i].Subject,
                             owner: mailCampainData[i].User ? mailCampainData[i].User.Name : '',
-                            createTime: mModules.toDatetime(mailCampainData[i].TimeCreate),
+                            createTime: moment(nearestSend.TimeCreate).subtract(7, 'hours').format('DD/MM/YYYY HH:mm'),
                             nearestSend: mModules.toDatetime(nearestSend.TimeCreate),
                             TemplateName: mailCampainData[i].Template ? mailCampainData[i].Template.Name : '',
                             TemplateReminderName: mailCampainData[i].TemplateRemider ? mailCampainData[i].TemplateRemider.Name : '',
