@@ -78,18 +78,24 @@ app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (re
             success: false
         });
     } else {
-        database.checkServerInvalid('118.27.192.106', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
-            try {
-                await mMailCampaign(db).findAll({ where: { ID: req.id } }).then(async data => {
-                    await mMailCampaign(db).update({
-                        listLink: data.listLink ? data.listLink : '' + ', http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile
-                    }, { where: { ID: data.id } })
-                })
-            } catch (error) {
-                console.log(error);
-                res.json(Result.SYS_ERROR_RESULT)
-            }
+        console.log('http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile);
+        return res.send({
+            link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+            success: true
         })
+        // database.checkServerInvalid('localhost', 'LOGISTIC_CRM_SEND', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+        //     try {
+        //         await mMailCampaign(db).findAll({ where: { ID: req.id } }).then(async data => {
+        //             await mMailCampaign(db).update({
+        //                 listLink: data.listLink ? data.listLink : '' + ', http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile
+        //             }, { where: { ID: data.id } })
+        //         })
+        //         res.send({ success: true })
+        //     } catch (error) {
+        //         console.log(error);
+        //         res.json(Result.SYS_ERROR_RESULT)
+        //     }
+        // })
     }
 });
 
