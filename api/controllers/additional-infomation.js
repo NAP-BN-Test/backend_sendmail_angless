@@ -527,20 +527,9 @@ module.exports = {
     deleteImage: (req, res) => {
         // delete a file
         var body = req.body;
-        var file = body.nameImage.replace("http://118.27.192.106:1357/ageless_sendmail/", "")
-        fs.unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
-            if (err) {
-                var result = {
-                    status: Constant.STATUS.FAIL,
-                    message: 'Image not exist.',
-                }
-                res.json(result)
-            }
-            var result = {
-                status: Constant.STATUS.SUCCESS,
-                message: 'Image is deleted.',
-            }
-            res.json(result)
-        });
+        // var file = body.nameImage.replace("http://118.27.192.106:1357/ageless_sendmail/", "")
+        // fs.unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
+        //     if (err) console.log(err);
+        // });
     },
 }

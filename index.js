@@ -11,45 +11,88 @@ const bodyParser = require('body-parser')
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+app.use(session({
+    name: 'user_sid',
+    secret: '00a2152372fa8e0e62edbb45dd82831a',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        expires: 600000,
+        maxAge: 3000000,
+        sameSite: true,
+        secure: true,
+        httpOnly: true
+    }
+}))
+
+app.use(cors())
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }))
+app.use(bodyParser.json({ limit: '100mb' }))
 
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin,X-Requested-With,content-type,text/plain');
     res.setHeader('Access-Control-Allow-Credentials', true);
     next();
 });
 var nameMiddle;
 async function getDateInt(req, res, next) {
     var datetime = new Date();
-    nameMiddle = Date.parse(datetime);
+    nameMiddle = Date.parse(datetime) + Math.floor(Math.random() * 1000000);
     next();
 }
+var pathFile;
 let storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, DIR);
     },
     filename: (req, file, cb) => {
-        cb(null, file.fieldname + '-' + nameMiddle + '.jpg');
+        pathFile = path.extname(file.originalname)
+        cb(null, file.fieldname + '-' + nameMiddle + pathFile);
     }
 });
 let upload = multer({ storage: storage });
 const DIR = 'D:/images_services/ageless_sendmail';
 
-app.post('/api/upload', getDateInt, upload.single('photo'), function (req, res) {
-    if (!req.file) {
+app.post('/api/upload', getDateInt, upload.array('photo', 12), function (req, res) {
+    console.log('abcdefghiklmnovs');
+    if (!req.files) {
         console.log("No file received");
         return res.send({
             success: false
         });
     } else {
+        console.log('http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile);
         return res.send({
-            link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg',
+            link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
             success: true
         })
     }
 });
-// set time 
+var mMailCampaign = require('./api/tables/mail-campain');
+app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (req, res) {
+    if (!req.files) {
+        console.log("No file received");
+        return res.send({
+            success: false
+        });
+    } else {
+        database.checkServerInvalid('118.27.192.106', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+            try {
+                await mMailCampaign(db).findAll({ where: { ID: req.id } }).then(async data => {
+                    await mMailCampaign(db).update({
+                        listLink: data.listLink ? data.listLink : '' + ', http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile
+                    }, { where: { ID: data.id } })
+                })
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+        })
+    }
+});
+
 const rateLimit = require("express-rate-limit");
 const someApiLimiter = rateLimit({
     windowMs: 2000,
@@ -82,24 +125,6 @@ app.get('/crm/open_mail', someApiLimiter, emailList.addMailResponse);
 //     });
 // })
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-app.use(session({
-    name: 'user_sid',
-    secret: '00a2152372fa8e0e62edbb45dd82831a',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        expires: 600000,
-        maxAge: 3000000,
-        sameSite: true,
-        secure: true,
-        httpOnly: true
-    }
-}))
-
-app.use(cors())
-app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }))
-app.use(bodyParser.json({ limit: '100mb' }))
-
 
 let routes = require('./api/router') //importing route
 routes(app)

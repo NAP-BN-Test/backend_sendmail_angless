@@ -878,6 +878,7 @@ module.exports = {
     // mailmerge
     getReportByCampainMailType: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var mWhere = {};
@@ -948,6 +949,7 @@ module.exports = {
                 }
 
                 if (body.mailType == MAIL_RESPONSE_TYPE.INVALID) {
+                    console.log(moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm'));
                     var listEmailOpenHandled = await handleEmailOpen(db, body.campainID, 'Mailmerge', Constant.MAIL_RESPONSE_TYPE.INVALID)
 
                     var totalType = await mMailResponse(db).count({

@@ -285,6 +285,7 @@ async function deleteImageResidual(listLink, listLinkNew) {
     }
 }
 module.exports = {
+    deleteImageResidual,
     resetJob,
     getCompanyIDFromCampaignID,
     deleteCampaign,
@@ -1175,6 +1176,7 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
+        body.body = body.body.replace(/%20/g, ' ');
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1286,7 +1288,6 @@ module.exports = {
                     update.push({ key: 'TimeSend', value: time });
                 }
                 if (body.Type == 'MailList') {
-
                     if (body.body || body.body === '') {
                         var listLink = await getListLinkImage(db, body.campainID);
                         let text = body.body;
