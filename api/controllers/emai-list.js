@@ -1176,7 +1176,6 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
-        console.log(body);
         body.body = body.body.replace(/%20/g, ' ');
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1205,7 +1204,7 @@ module.exports = {
                             nameMiddle = Date.parse(datetime) + numberRandom.toString();
                             var dir = DIR + 'photo-' + nameMiddle + '.jpg';
                             var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
-                            if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
+                            if (matches[1].indexOf('http://118.27.192.106:1357/ageless_sendmail/photo-') == -1) {
                                 dirList.push(dir);
                                 matchesList.push(matches[1]);
                                 linkImageList.push(linkImage);
@@ -1327,7 +1326,6 @@ module.exports = {
 
     updateMailCampain: async function (req, res) {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let update = [];
@@ -1366,7 +1364,7 @@ module.exports = {
                             nameMiddle = Date.parse(datetime) + numberRandom.toString();
                             var dir = DIR + 'photo-' + nameMiddle + '.jpg';
                             var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
-                            if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
+                            if (matches[1].indexOf('http://118.27.192.106:1357/ageless_sendmail/photo-') == -1) {
                                 dirList.push(dir);
                                 matchesList.push(matches[1]);
                                 linkImageList.push(linkImage);

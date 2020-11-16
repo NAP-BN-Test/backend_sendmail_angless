@@ -1061,6 +1061,7 @@ module.exports = {
 
     searchCompanyToAddressbook: (req, res) => {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let company = mCompany(db);
@@ -1332,7 +1333,7 @@ module.exports = {
                     }
                 }
                 var page = 1;
-                var itemPerPage = 100000;
+                var itemPerPage = 10;
                 if (body.page) {
                     page = body.page;
                     if (body.itemPerPage) {
@@ -1356,7 +1357,6 @@ module.exports = {
                     offset: Number(itemPerPage) * (Number(page) - 1),
                     limit: Number(itemPerPage)
                 });
-
                 var array = [];
                 var all = await company.count({ where: whereOjb });
                 data.forEach(elm => {

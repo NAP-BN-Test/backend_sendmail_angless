@@ -42,6 +42,7 @@ async function getDateInt(req, res, next) {
     nameMiddle = Date.parse(datetime) + Math.floor(Math.random() * 1000000);
     next();
 }
+// ------------------------------------------------------------------------------------------------------
 var pathFile;
 let storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -70,17 +71,28 @@ app.post('/api/upload', getDateInt, upload.array('photo', 12), function (req, re
         })
     }
 });
-var mMailCampaign = require('./api/tables/mail-campain');
-app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (req, res) {
+// -------------------------------------------------------------------------------------------------------------------------
+var middle;
+let storages = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, DIR);
+    },
+    filename: (req, file, cb) => {
+        pathFile = path.extname(file.originalname);
+        middle = file.originalname.split('.')[0];
+        cb(null, middle + '-' + nameMiddle + pathFile);
+    }
+});
+let uploads = multer({ storage: storages });
+app.post('/api/upload_file', getDateInt, uploads.array('photo', 12), function (req, res) {
     if (!req.files) {
         console.log("No file received");
         return res.send({
             success: false
         });
     } else {
-        console.log('http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile);
         return res.send({
-            link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+            link: 'http://118.27.192.106:1357/ageless_sendmail/' + middle + '-' + nameMiddle + pathFile,
             success: true
         })
     }
