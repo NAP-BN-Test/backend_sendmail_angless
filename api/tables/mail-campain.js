@@ -23,6 +23,7 @@ module.exports = function (db) {
         StatusCampaign: Sequelize.BOOLEAN,
         IDGroup1: Sequelize.BIGINT,
         TimeSend: Sequelize.NOW,
+        Active: Sequelize.BOOLEAN,
     });
 
     return table;

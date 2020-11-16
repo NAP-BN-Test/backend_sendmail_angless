@@ -147,6 +147,7 @@ module.exports = {
     },
     addAdditionalInformation: (req, res) => {
         let body = req.body;
+        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -181,10 +182,10 @@ module.exports = {
                 Applicant: body.Applicant ? body.Applicant : null,
                 ApplicationNo: body.ApplicationNo ? body.ApplicationNo : null,
                 ClassA: body.ClassA ? body.ClassA : null,
-                FilingDate: body.FilingDate ? body.FilingDate : null,
-                // DateSend: body.DateSend ? body.DateSend : null,
+                FilingDate: body.FilingDate ? body.FilingDate = '' : null,
+                // DateSend: body.DateSend = '' ? body.DateSend : null,
                 Result: body.Result ? body.Result : null,
-                // DateReminder: body.DateReminder ? body.DateReminder : null,
+                // DateReminder: body.DateReminder = '' ? body.DateReminder : null,
                 PriorTrademark: body.PriorTrademark ? body.PriorTrademark : null,
                 Owner: body.Owner,
                 RegNo: body.RegNo ? body.RegNo : null,
@@ -239,7 +240,7 @@ module.exports = {
                 await mMailListDetail(db).create({
                     Email: data.Email ? data.Email : null,
                     OwnerID: data.UserID ? data.UserID : null,
-                    TimeCreate: mModules.toDatetime(data.TimeCreate),
+                    TimeCreate: now,
                     MailListID: body.MailListID,
                     Name: data.OurRef ? data.OurRef : null,
                     DataID: data.ID,

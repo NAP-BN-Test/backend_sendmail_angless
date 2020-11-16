@@ -101,8 +101,8 @@ async function resetJob(db) {
             where: {
                 [Op.and]: [
                     { TimeSend: { [Op.ne]: null } },
+                    { Active: true },
                     { ResBody: { [Op.ne]: null } }
-
                 ]
             }
         })
@@ -1176,6 +1176,7 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
+        console.log(body);
         body.body = body.body.replace(/%20/g, ' ');
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1186,13 +1187,72 @@ module.exports = {
                     res.json(Result.ACTION_SUCCESS);
                 } else {
                     // update time send mail--------------------------------------------------------------------------------------------------------------------------
+                    var text = '';
+                    if (body.body || body.body === '') {
+                        var listLink = await getListLinkImage(db, body.campainID);
+                        text = body.body;
+                        text = text.replace(/%20/g, ' ');
+                        const re = RegExp('<img src="(.*?)">', 'g');
+                        const keyField = []
+                        const DIR = 'D:/images_services/ageless_sendmail/';
+                        var datetime = new Date();
+                        var listLinkNew = [];
+                        var matchesList = [];
+                        var linkImageList = [];
+                        var dirList = [];
+                        while ((matches = re.exec(text)) !== null) {
+                            var numberRandom = Math.floor(Math.random() * 1000000);
+                            nameMiddle = Date.parse(datetime) + numberRandom.toString();
+                            var dir = DIR + 'photo-' + nameMiddle + '.jpg';
+                            var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
+                            if (matches[1].indexOf('http://118.27.192.106:1357') == -1) {
+                                dirList.push(dir);
+                                matchesList.push(matches[1]);
+                                linkImageList.push(linkImage);
+                                keyField.push(matches[1].replace(/ /g, '+'));
+                                listLinkNew.push(linkImage);
+                            }
+                            else {
+                                listLinkNew.push(matches[1]);
+                            }
+                        }
+                        if (matchesList.length > 0) {
+                            for (var j = 0; j < matchesList.length; j++) {
+                                text = text.replace(matchesList[j], linkImageList[j]);
+                                var base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
+                                base64Data = base64Data.replace(/ /g, '+');
+                                var buf = new Buffer.from(base64Data, "base64");
+                                require("fs").writeFile(dirList[j], buf, function (err) {
+                                    if (err) console.log(err + '');
+                                });
+                            }
+                        }
+                        await deleteImageResidual(listLink, listLinkNew);
+                    }
                     await mMailCampain(db).update({
                         TimeSend: timeSend,
+                        Body: text,
+                        Name: body.name ? body.name : '',
+                        Subject: body.subject ? body.subject : '',
+                        Active: true,
                         ResBody: JSON.stringify(body),
                     }, {
                         where: { ID: body.campainID }
                     })
-
+                    if (body.mailListID || body.mailListID === '') {
+                        let listID = JSON.parse(body.mailListID)
+                        await mMailListCampaign(db).destroy({
+                            where: {
+                                MailCampainID: body.campainID
+                            }
+                        })
+                        for (var i = 0; i < listID.length; i++) {
+                            await mMailListCampaign(db).create({
+                                MailListID: listID[i],
+                                MailCampainID: body.campainID,
+                            })
+                        }
+                    }
                     let campaign = await mMailListCampaign(db).findAll({
                         where: {
                             MailCampainID: body.campainID
@@ -1267,6 +1327,7 @@ module.exports = {
 
     updateMailCampain: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let update = [];
@@ -1284,9 +1345,9 @@ module.exports = {
                 }
                 if (body.timeSend || body.timeSend === '') {
                     let time = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS')
-                    console.log(time);
                     update.push({ key: 'TimeSend', value: time });
                 }
+                update.push({ key: 'Active', value: false });
                 if (body.Type == 'MailList') {
                     if (body.body || body.body === '') {
                         var listLink = await getListLinkImage(db, body.campainID);
@@ -1330,20 +1391,6 @@ module.exports = {
                         // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
                         update.push({ key: 'Body', value: text });
                         await deleteImageResidual(listLink, listLinkNew);
-                    }
-                    if (body.mailListID || body.mailListID === '') {
-                        let listID = JSON.parse(body.mailListID)
-                        await mMailListCampaign(db).destroy({
-                            where: {
-                                MailCampainID: body.campainID
-                            }
-                        })
-                        for (var i = 0; i < listID.length; i++) {
-                            await mMailListCampaign(db).create({
-                                MailListID: listID[i],
-                                MailCampainID: body.campainID,
-                            })
-                        }
                     }
                 } else {
                     if (body.body || body.body === '') {
@@ -1437,5 +1484,4 @@ module.exports = {
             res.json(error)
         })
     },
-
 }
