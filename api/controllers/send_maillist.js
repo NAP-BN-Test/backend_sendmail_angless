@@ -121,23 +121,24 @@ module.exports = {
                 }
             })
             var bodyHtml;
-            information.forEach(async item => {
-                if (item.Result != 'None') {
+            for (var j = 0; j < information.length; j++) {
+                if (information[j].Result != 'None') {
                     if (body.typeSend == 'Send') {
                         await mAdditionalInformation(db).update({
                             DateSend: now,
                             Result: 'None'
-                        }, { where: { ID: item.ID } })
+                        }, { where: { ID: information[j].ID } })
                     }
                     else {
                         await mAdditionalInformation(db).update({
                             DateReminder: now,
-                        }, { where: { ID: item.ID } })
+                        }, { where: { ID: information[j].ID } })
                     }
-                    bodyHtml = await handlePushDataToBody(template.body, item.ID, db);
-                    let Subject = item.Subject ? item.Subject : '';
-                    var arrayEmail = convertStringToListObject(item.Email)
+                    bodyHtml = await handlePushDataToBody(template.body, information[j].ID, db);
+                    let Subject = information[j].Subject ? information[j].Subject : '';
+                    var arrayEmail = convertStringToListObject(information[j].Email)
                     for (var i = 0; i < arrayEmail.length; i++) {
+                        console.log(arrayEmail[i].name);
                         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.CampaignID}&type=Mailmerge&idGetInfo=${body.userID}&email=${arrayEmail[i].name}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                         let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
@@ -147,7 +148,25 @@ module.exports = {
                         bodyHtml = httpTrack + bodyHtml;
                         bodyHtml = bodyHtml + unSubscribe;
                         let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
-                        mCheckMail.checkEmail(arrayEmail[i].name).then(async (checkMailRes) => {
+                        let mailUn = await mMailResponse(db).findOne({
+                            where: {
+                                Email: arrayEmail[i].name,
+                                Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                                TypeSend: 'Mailmerge',
+                            }
+                        })
+                        if (!mailUn)
+                            mAmazon.sendEmail(emailSend.Email, arrayEmail[i].name, Subject, bodyHtml).then(async response => {
+                                if (response) {
+                                    await mAdditionalInformation(db).update({
+                                        Status: Constant.MAIL_RESPONSE_TYPE.SEND,
+                                        Result: 'None',
+                                    }, {
+                                        where: { ID: information[j].ID },
+                                    })
+                                }
+                            })
+                        mCheckMail.checkEmail(arrayEmail[i].name, db).then(async (checkMailRes) => {
                             if (checkMailRes == false) {
                                 var responeExits = await mMailResponse(db).findOne({
                                     where: {
@@ -175,19 +194,9 @@ module.exports = {
 
                             }
                         })
-                        await mAmazon.sendEmail(emailSend.Email, arrayEmail[i].name, Subject, bodyHtml).then(async response => {
-                            if (response) {
-                                await mAdditionalInformation(db).update({
-                                    Status: Constant.MAIL_RESPONSE_TYPE.SEND,
-                                    Result: 'None',
-                                }, {
-                                    where: { ID: item.ID },
-                                })
-                            }
-                        })
                     }
                 }
-            })
+            }
             res.json(Result.ACTION_SUCCESS);
         })
     },

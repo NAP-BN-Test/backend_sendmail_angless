@@ -58,12 +58,12 @@ function handleClickLink(body, mailListDetailID) {
 
         bodyHtml = listLink[0];
 
-        for (let i = 0; i < listLink.length; i++) {
-            if (i > 0) {
-                var content = "<a" + listLink[i].slice(0, 6) + `clicklink.namanphu.tech?token=${tokenClickLinkEncrypt}&url=` + listLink[i].slice(6);
-                bodyHtml = bodyHtml + content;
-            }
-        }
+        // for (let i = 0; i < listLink.length; i++) {
+        //     if (i > 0) {
+        //         var content = "<a" + listLink[i].slice(0, 6) + `clicklink.namanphu.tech?token=${tokenClickLinkEncrypt}&url=` + listLink[i].slice(6);
+        //         bodyHtml = bodyHtml + content;
+        //     }
+        // }
 
         return bodyHtml;
     } else return body.body;
@@ -135,12 +135,12 @@ async function resetJob(db) {
                                 let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                                 let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
                                 let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
-                                let bodyHtml = handleClickLink(body, company.ID);
+                                let bodyHtml = body.body;
                                 bodyHtml = httpTrack + bodyHtml;
                                 bodyHtml = bodyHtml + unSubscribe;
                                 bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
                                 let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
-                                await mCheckMail.checkEmail(emailReceived).then(async (checkMailRes) => {
+                                await mCheckMail.checkEmail(emailReceived, db).then(async (checkMailRes) => {
                                     if (checkMailRes == false) {
                                         var responeExits = await mMailResponse(db).findOne({
                                             where: {
@@ -167,17 +167,25 @@ async function resetJob(db) {
                                         }
                                     }
                                 })
-                                await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {
-                                    if (sendMailRes) {
-                                        console.log(sendMailRes);
+                                let mainUn = await mMailResponse(db).findOne({
+                                    where: {
+                                        Email: emailReceived,
+                                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                                        TypeSend: 'Maillist'
                                     }
-                                    // await mMailResponse(db).create({
-                                    //     MailCampainID: body.campainID,
-                                    //     CompanyID: company.ID,
-                                    //     TimeCreate: now,
-                                    //     Type: Constant.MAIL_RESPONSE_TYPE.SEND
-                                    // });
-                                });
+                                })
+                                if (!mainUn)
+                                    await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {
+                                        if (sendMailRes) {
+                                            console.log(sendMailRes);
+                                        }
+                                        // await mMailResponse(db).create({
+                                        //     MailCampainID: body.campainID,
+                                        //     CompanyID: company.ID,
+                                        //     TimeCreate: now,
+                                        //     Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                                        // });
+                                    });
 
                             });
                             console.log(job);
@@ -757,8 +765,8 @@ module.exports = {
                             name: mailCampainData[i].Name,
                             subject: mailCampainData[i].Subject,
                             owner: mailCampainData[i].User ? mailCampainData[i].User.Name : '',
-                            createTime: moment(nearestSend.TimeCreate).subtract(7, 'hours').format('DD/MM/YYYY HH:mm'),
-                            nearestSend: mModules.toDatetime(nearestSend.TimeCreate),
+                            createTime: moment(mailCampainData[i].TimeCreate).format('DD/MM/YYYY HH:mm'),
+                            nearestSend: mailCampainData[i].TimeSend ? moment(mailCampainData[i].TimeSend).subtract(7, 'hour').format('DD/MM/YYYY HH:mm') : null,
                             TemplateName: mailCampainData[i].Template ? mailCampainData[i].Template.Name : '',
                             TemplateReminderName: mailCampainData[i].TemplateRemider ? mailCampainData[i].TemplateRemider.Name : '',
                             NumberAddressBook: numberAddressBook,
@@ -1042,11 +1050,11 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                let now = moment().subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
+                let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
                 data = {
                     Name: body.name,
                     TimeCreate: now,
-                    TimeEnd: moment(body.endTime).format('YYYY-MM-DD HH:mm:ss.SSS'),
+                    TimeEnd: now,
                     OwnerID: Number(body.userID),
                     Type: body.Type
                 }
@@ -1228,6 +1236,7 @@ module.exports = {
                         }
                         await deleteImageResidual(listLink, listLinkNew);
                     }
+                    console.log(text);
                     await mMailCampain(db).update({
                         TimeSend: timeSend,
                         Body: text,

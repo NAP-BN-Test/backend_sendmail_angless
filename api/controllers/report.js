@@ -1029,7 +1029,14 @@ module.exports = {
                 var advangeType = (Math.round(((totalType / totalEmail) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
                     var listEmailOpenHandled = await handleEmailOpen(db, body.campainID, 'Mailmerge', Constant.MAIL_RESPONSE_TYPE.OPEN)
-                    var totalType = listEmailOpenHandled.length;
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MailCampainID: body.campainID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TypeSend: 'Mailmerge',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
+                        }
+                    });
                     arraydate = await getAllDateAndCountSend(db, body.campainID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'MailMerge');
                     var listEmail = await mMailResponse(db).findAll({
                         where: {
@@ -1230,7 +1237,14 @@ module.exports = {
                 var advangeType = (Math.round(((totalType / totalEmail) * 100) * 100 + Number.EPSILON) / 100).toString() + '%';
                 if (body.mailType == MAIL_RESPONSE_TYPE.OPEN) {
                     var listEmailOpenHandled = await handleEmailOpen(db, body.mailListID, 'Maillist', Constant.MAIL_RESPONSE_TYPE.OPEN);
-                    var totalType = listEmailOpenHandled.length;
+                    var totalType = await mMailResponse(db).count({
+                        where: {
+                            MaillistID: body.mailListID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.OPEN,
+                            TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
+                        }
+                    });
                     arraydate = await getAllDateAndCountSend(db, body.mailListID, Constant.MAIL_RESPONSE_TYPE.OPEN, 'Maillist');
                     var listEmail = await mMailResponse(db).findAll({
                         where: {

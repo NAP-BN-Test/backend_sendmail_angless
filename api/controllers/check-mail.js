@@ -1,22 +1,39 @@
 module.exports = {
-    checkEmail: function (email) { //take this list for dropdown
-        return new Promise(res => {
-            var request = require('request')
-            var post_options = {
-                url: `https://apilayer.net/api/check?access_key=a69834eab18e99ec484e9410a47bce5b&email=${email}`,
-                method: 'GET',
-                json: true
-            };
+    checkEmail: function (email, db) { //take this list for dropdown
+        return new Promise(async res => {
+            var request = require('request');
+            var mCheckMail = require('../tables/check-email');
+            var check = await mCheckMail(db).findOne({
+                where: {
+                    Email: email,
+                }
+            })
+            if (!check) {
+                var post_options = {
+                    url: `https://apilayer.net/api/check?access_key=ee84ec216d1ccb2f542da35667f17525&email=${email}`,
+                    method: 'GET',
+                    json: true
+                };
 
-            request.get(post_options, function (err, result, bodyrq) {
-                if (err) {
-                    console.log(err);
-                    res(false);
-                }
-                if (bodyrq) {
-                    res(bodyrq.smtp_check);
-                }
-            });
+                request.get(post_options, async function (err, result, bodyrq) {
+                    if (err) {
+                        console.log(err);
+                        res(false);
+                    }
+                    if (bodyrq) {
+                        await mCheckMail(db).create({
+                            Email: email,
+                            Type: bodyrq.smtp_check,
+                        })
+                        res(bodyrq.smtp_check);
+                    }
+                });
+            } else {
+                if (check.type)
+                    return true
+                else
+                    return false
+            }
         })
     },
 
