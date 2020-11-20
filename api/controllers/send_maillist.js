@@ -136,7 +136,8 @@ module.exports = {
                     }
                     bodyHtml = await handlePushDataToBody(template.body, information[j].ID, db);
                     let Subject = information[j].Subject ? information[j].Subject : '';
-                    var arrayEmail = convertStringToListObject(information[j].Email)
+                    var arrayEmail = convertStringToListObject(information[j].Email);
+                    var informationID = information[j].ID;
                     for (var i = 0; i < arrayEmail.length; i++) {
                         console.log(arrayEmail[i].name);
                         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.CampaignID}&type=Mailmerge&idGetInfo=${body.userID}&email=${arrayEmail[i].name}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
@@ -162,7 +163,7 @@ module.exports = {
                                         Status: Constant.MAIL_RESPONSE_TYPE.SEND,
                                         Result: 'None',
                                     }, {
-                                        where: { ID: information[j].ID },
+                                        where: { ID: informationID },
                                     })
                                 }
                             })
