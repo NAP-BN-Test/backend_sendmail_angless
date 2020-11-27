@@ -29,10 +29,7 @@ module.exports = {
                     }
                 });
             } else {
-                if (check.type)
-                    return true
-                else
-                    return false
+                res(check.Type);
             }
         })
     },

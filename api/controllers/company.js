@@ -436,6 +436,15 @@ module.exports = {
                                 })
                             })
                     })
+                var items = [];
+                var note = data.Note.split(",")
+                var relationship = data.Relationship.split(",")
+                for (var i = 0; i < note.length; i++) {
+                    items.push({
+                        note: note[i],
+                        relationship: relationship[i]
+                    })
+                }
                 var obj = {
                     id: data['ID'],
                     name: data['Name'],
@@ -452,12 +461,12 @@ module.exports = {
                     Role: data.Role,
                     CountryID: data.Country ? data.Country.ID : "",
                     Country: data.Country ? data.Country.Name : "",
-                    Note: data.Note,
                     ParentID: company ? company.ID : '',
                     ParentName: company ? company.Name : '',
-                    relationship: data.Relationship ? data.Relationship : '',
                     customerGroup: listGroup,
+                    items: items
                 }
+                console.log(obj);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -586,13 +595,22 @@ module.exports = {
 
             if (body.Role || body.Role === '')
                 listUpdate.push({ key: 'Role', value: body.Role });
-
-            if (body.Note || body.Note === '')
-                listUpdate.push({ key: 'Note', value: body.Note });
-
-            if (body.relationship || body.relationship === '')
-                listUpdate.push({ key: 'Relationship', value: body.relationship });
-
+            var items = JSON.parse(body.items);
+            if (items.length > 0) {
+                var relationship = '';
+                var note = '';
+                for (var i = 0; i < items.length; i++) {
+                    if (i == (items.length - 1)) {
+                        relationship += items[i].relationship;
+                        note += items[i].note;
+                    } else {
+                        relationship += items[i].relationship + ',';
+                        note += items[i].note + ',';
+                    }
+                }
+                listUpdate.push({ key: 'Note', value: note });
+                listUpdate.push({ key: 'Relationship', value: relationship });
+            }
             if (body.customerGroup || body.customerGroup === '') {
                 var listID = JSON.parse(body.customerGroup);
                 await mCompanyMailList(db).destroy({ where: { CompanyID: body.companyID } });
@@ -603,7 +621,6 @@ module.exports = {
                     })
                 }
             }
-
             if (body.ChildID || body.ChildID === '') {
                 if (body.ChildID === '') {
                     await rmCompanyChild(db).update({
@@ -615,9 +632,6 @@ module.exports = {
                     }, { where: { ChildID: body.companyID } })
                 }
             }
-
-
-
             let update = {};
             for (let field of listUpdate) {
                 update[field.key] = field.value
@@ -694,6 +708,20 @@ module.exports = {
                         { Address: body.address },
                     ]
                 })
+                var items = JSON.parse(body.items);
+                var relationship = '';
+                var note = '';
+                if (items.length > 0) {
+                    for (var i = 0; i < items.length; i++) {
+                        if (i == (items.length - 1)) {
+                            relationship += items[i].relationship;
+                            note += items[i].note;
+                        } else {
+                            relationship += items[i].relationship + ',';
+                            note += items[i].note + ',';
+                        }
+                    }
+                }
                 if (companyExits.length <= 0) {
                     if (companyObj.length) check = true;
                     company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
@@ -710,8 +738,8 @@ module.exports = {
                         CountryID: body.CountryID ? body.CountryID : null,
                         Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
                         Role: body.Role ? body.Role : '',
-                        Note: body.Note ? body.Note : '',
-                        Relationship: body.relationship ? body.relationship : '',
+                        Note: note,
+                        Relationship: relationship,
                     }).then(async data => {
                         if (body.customerGroup) {
                             var listID = JSON.parse(body.customerGroup);

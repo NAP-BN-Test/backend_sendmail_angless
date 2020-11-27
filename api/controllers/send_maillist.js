@@ -139,7 +139,6 @@ module.exports = {
                     var arrayEmail = convertStringToListObject(information[j].Email);
                     var informationID = information[j].ID;
                     for (var i = 0; i < arrayEmail.length; i++) {
-                        console.log(arrayEmail[i].name);
                         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.CampaignID}&type=Mailmerge&idGetInfo=${body.userID}&email=${arrayEmail[i].name}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
                         let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
@@ -167,7 +166,9 @@ module.exports = {
                                     })
                                 }
                             })
-                        mCheckMail.checkEmail(arrayEmail[i].name, db).then(async (checkMailRes) => {
+                        var emailR = arrayEmail[i].name;
+                        mCheckMail.checkEmail(emailR, db).then(async (checkMailRes) => {
+                            console.log('checkMailRes: ', checkMailRes);
                             if (checkMailRes == false) {
                                 var responeExits = await mMailResponse(db).findOne({
                                     where: {
@@ -175,7 +176,7 @@ module.exports = {
                                         Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                                         TypeSend: 'Mailmerge',
                                         IDGetInfo: body.userID,
-                                        Email: arrayEmail[i].name,
+                                        Email: emailR,
                                     }
                                 })
                                 if (responeExits) {
@@ -189,7 +190,7 @@ module.exports = {
                                         Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
                                         TypeSend: 'Mailmerge',
                                         IDGetInfo: body.userID,
-                                        Email: arrayEmail[i].name,
+                                        Email: emailR,
                                     });
                                 }
 

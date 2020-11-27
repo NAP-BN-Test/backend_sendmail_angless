@@ -140,7 +140,7 @@ async function resetJob(db) {
                                 bodyHtml = bodyHtml + unSubscribe;
                                 bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
                                 let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
-                                await mCheckMail.checkEmail(emailReceived, db).then(async (checkMailRes) => {
+                                mCheckMail.checkEmail(emailReceived, db).then(async (checkMailRes) => {
                                     if (checkMailRes == false) {
                                         var responeExits = await mMailResponse(db).findOne({
                                             where: {
