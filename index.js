@@ -36,13 +36,14 @@ app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     next();
 });
+
+// ------------------------------------------------------------------------------------------------------
 var nameMiddle;
 async function getDateInt(req, res, next) {
     var datetime = new Date();
     nameMiddle = Date.parse(datetime) + Math.floor(Math.random() * 1000000);
     next();
 }
-// ------------------------------------------------------------------------------------------------------
 var pathFile;
 let storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -57,7 +58,6 @@ let upload = multer({ storage: storage });
 const DIR = 'D:/images_services/ageless_sendmail';
 
 app.post('/api/upload', getDateInt, upload.array('photo', 12), function (req, res) {
-    console.log('abcdefghiklmnovs');
     if (!req.files) {
         console.log("No file received");
         return res.send({

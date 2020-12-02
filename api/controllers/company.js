@@ -750,13 +750,14 @@ module.exports = {
                                 })
                             }
                         }
+                        var result = {
+                            status: Constant.STATUS.SUCCESS,
+                            message: Constant.MESSAGE.ACTION_SUCCESS,
+                            exist: check,
+                            id: data.ID,
+                        }
+                        res.json(result);
                     })
-                    var result = {
-                        status: Constant.STATUS.SUCCESS,
-                        message: Constant.MESSAGE.ACTION_SUCCESS,
-                        exist: check,
-                    }
-                    res.json(result);
                 } else {
                     var result = {
                         status: Constant.STATUS.FAIL,
@@ -1089,7 +1090,6 @@ module.exports = {
 
     searchCompanyToAddressbook: (req, res) => {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let company = mCompany(db);

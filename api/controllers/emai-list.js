@@ -126,6 +126,13 @@ async function resetJob(db) {
                     for (var e = 0; e < listCompany.length; e++) {
                         let company = await mCompany(db).findOne({ where: { ID: listCompany[e].CompanyID } })
                         var arrayEmail = convertStringToListObject(company.Email);
+                        var contact = await mContact(db).findAll({ where: { CompanyID: company.ID } })
+                        contact.forEach(element => {
+                            var mail = convertStringToListObject(element.Email);
+                            mail.forEach(maile => {
+                                arrayEmail.push(maile)
+                            })
+                        })
                         for (var f = 0; f < arrayEmail.length; f++) {
                             let emailReceived = arrayEmail[f].name;
                             var job = schedule.scheduleJob(timeSend, async function () {
@@ -1062,13 +1069,6 @@ module.exports = {
                 if (body.Type === "MailList") {
                     data['Subject'] = body.subject ? body.subject : null;
                     mailCampainData = await mMailCampain(db).create(data);
-                    let listID = JSON.parse(body.mailListID);
-                    for (var i = 0; i < listID.length; i++) {
-                        await mMailListCampaign(db).create({
-                            MailCampainID: mailCampainData.ID,
-                            MailListID: listID[i],
-                        })
-                    }
                 } else {
                     data['TemplateID'] = body.TemplateID ? body.TemplateID : null;
                     data['IDTemplateReminder'] = body.idTemplateReminder ? body.idTemplateReminder : null;
@@ -1301,6 +1301,106 @@ module.exports = {
             res.json(error)
         })
     },
+    sendMailNow: async function (req, res) {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
+                var mMailListID = [];
+                await mMailListCampaign(db).findAll({
+                    where: {
+                        MailCampainID: body.campaignID
+                    }
+                }).then(data => {
+                    data.forEach(item => {
+                        mMailListID.push(item.MailListID)
+                    })
+                })
+
+                for (var j = 0; j < mMailListID.length; j++) {
+                    let mailListID = mMailListID[j];
+                    let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: mMailListID[j] } })
+                    for (var e = 0; e < listCompany.length; e++) {
+                        let company = await mCompany(db).findOne({ where: { ID: listCompany[e].CompanyID } })
+                        var arrayEmail = convertStringToListObject(company.Email);
+                        var contact = await mContact(db).findAll({ where: { CompanyID: company.ID } })
+                        contact.forEach(element => {
+                            var mail = convertStringToListObject(element.Email);
+                            mail.forEach(maile => {
+                                arrayEmail.push(maile)
+                            })
+                        })
+                        for (var f = 0; f < arrayEmail.length; f++) {
+                            let emailReceived = arrayEmail[f].name;
+                            let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
+                            let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
+                            let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                            let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
+                            let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
+                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                            let bodyHtml = body.body;
+                            bodyHtml = httpTrack + bodyHtml;
+                            bodyHtml = bodyHtml + unSubscribe;
+                            bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
+                            let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+                            mCheckMail.checkEmail(emailReceived, db).then(async (checkMailRes) => {
+                                if (checkMailRes == false) {
+                                    var responeExits = await mMailResponse(db).findOne({
+                                        where: {
+                                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                            TypeSend: 'Maillist',
+                                            MaillistID: mailListID,
+                                            IDGetInfo: body.userID,
+                                            Email: emailReceived,
+                                        }
+                                    })
+                                    if (responeExits) {
+                                        await mMailResponse(db).update({
+                                            TimeCreate: now,
+                                        }, { where: { ID: responeExits.ID } })
+                                    } else {
+                                        await mMailResponse(db).create({
+                                            TimeCreate: now,
+                                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                                            TypeSend: 'Maillist',
+                                            MaillistID: mailListID,
+                                            IDGetInfo: body.userID,
+                                            Email: emailReceived,
+                                        })
+                                    }
+                                }
+                            })
+                            let mainUn = await mMailResponse(db).findOne({
+                                where: {
+                                    Email: emailReceived,
+                                    Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                                    TypeSend: 'Maillist'
+                                }
+                            })
+                            if (!mainUn)
+                                await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {
+                                    if (sendMailRes) {
+                                        console.log(sendMailRes);
+                                    }
+                                    // await mMailResponse(db).create({
+                                    //     MailCampainID: body.campainID,
+                                    //     CompanyID: company.ID,
+                                    //     TimeCreate: now,
+                                    //     Type: Constant.MAIL_RESPONSE_TYPE.SEND
+                                    // });
+                                });
+
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log(error);
+            }
+
+        }, error => {
+            res.json(error)
+        })
+    },
 
     getMailListOption: async function (req, res) {
         let body = req.body;
@@ -1360,6 +1460,7 @@ module.exports = {
                         var listLink = await getListLinkImage(db, body.campainID);
                         let text = body.body;
                         text = text.replace(/%20/g, ' ');
+                        text = text.replace('data:image/png;base64,', "data:image/jpeg;base64,");
                         const re = RegExp('<img src="(.*?)">', 'g');
                         const keyField = []
                         const DIR = 'D:/images_services/ageless_sendmail/';
@@ -1386,8 +1487,9 @@ module.exports = {
                         }
                         if (matchesList.length > 0) {
                             for (var j = 0; j < matchesList.length; j++) {
+                                var base64Data;
                                 text = text.replace(matchesList[j], linkImageList[j]);
-                                var base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
+                                base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
                                 base64Data = base64Data.replace(/ /g, '+');
                                 var buf = new Buffer.from(base64Data, "base64");
                                 require("fs").writeFile(dirList[j], buf, function (err) {

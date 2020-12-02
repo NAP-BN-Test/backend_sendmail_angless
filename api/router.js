@@ -237,6 +237,8 @@ module.exports = function (app) {
 
     app.route('/crm/add_mail_send').post(emailList.addMailSend);
 
+    app.route('/crm/send_mail_now').post(emailList.sendMailNow);
+
     app.route('/crm/add_mail_click_link').post(emailList.addMailClickLink);
 
     app.route('/crm/report_mail_detail').post(emailList.reportEmailDetail);
@@ -390,4 +392,12 @@ module.exports = function (app) {
     var companySameGroup = require('./controllers/company-same-group');
     app.route('/crm/get_list_company_same_group').post(companySameGroup.getListCompanyAllGroup);
     app.route('/crm/delete_company_same_group').post(companySameGroup.deleteCompanyAddGroup);
+
+    // config mail send
+    var configMailSend = require('./controllers/config-mail-send');
+    app.route('/crm/add_config_mail_send').post(configMailSend.addConfigMailSend);
+    app.route('/crm/update_config_mail_send').post(configMailSend.updateConfigMailSend);
+    app.route('/crm/delete_config_mail_send').post(configMailSend.deleteConfigMailSend);
+    app.route('/crm/get_list_config_mail_send').post(configMailSend.getListConfigMailSend);
+
 };

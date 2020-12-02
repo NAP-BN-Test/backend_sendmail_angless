@@ -21,7 +21,8 @@ module.exports = {
                 data.forEach(element => {
                     var obj = {
                         id: Number(element.ID),
-                        name: element.Name
+                        name: element.Name,
+                        code: element.Code
                     }
                     array.push(obj);
                 });
@@ -86,7 +87,6 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                console.log(body);
                 let listID = JSON.parse(body.listID);
                 var listIDCampaign = [];
                 await mMailCampain(db).findAll({

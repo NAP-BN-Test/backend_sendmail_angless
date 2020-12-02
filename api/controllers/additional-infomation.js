@@ -92,7 +92,7 @@ module.exports = {
                                 })
                             array.push({
                                 ID: data[i].ID,
-                                OurRef: data[i].OurRef + handleNumber(i),
+                                OurRef: data[i].OurRef,
                                 PAT: data[i].PAT ? data[i].PAT : null,
                                 Applicant: data[i].Applicant ? data[i].Applicant : null,
                                 ApplicationNo: data[i].ApplicationNo ? data[i].ApplicationNo : null,
@@ -147,7 +147,6 @@ module.exports = {
     },
     addAdditionalInformation: (req, res) => {
         let body = req.body;
-        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -166,12 +165,25 @@ module.exports = {
                     where: { ID: groupCampaign.IDGroup }
                 }))
                 if (groupCampaign)
-                    OurRef = group.Name + '/' + groupCampaign.Name + '/';
+                    OurRef = group.Name + groupCampaign.Code + '/' + moment().format('YYYY') + '/';
                 else
                     OurRef = '' + NameAcronym;
             }
+            var number = 1;
+            var addInf = await mAdditionalInformation(db).findOne(
+                {
+                    order: [
+                        Sequelize.literal('max(TimeCreate) DESC'),
+                    ],
+                    group: ['OurRef', 'ContactID', 'CampaignID', 'ID', 'PAT', 'Applicant', 'ApplicationNo', 'ClassA', 'FilingDate', 'DateSend', 'Result', 'DateReminder', 'PriorTrademark', 'CampaignID', 'Description', 'TimeUpdate', 'TimeCreate', 'TimeRemind', 'TimeStart', 'UserID', 'Rerminder', 'Status', 'Email', 'Fax', 'Tel', 'Address', 'Firm', 'ClassB', 'RegNo', 'Owner'],
+                }
+            );
+            if (addInf)
+                number = Number(addInf.OurRef.substr(-4));
+            else
+                number = 0;
             mAdditionalInformation(db).create({
-                OurRef: OurRef,
+                OurRef: OurRef + handleNumber(number),
                 CampaignID: body.CampaignID,
                 PAT: body.PAT ? body.PAT : null,
                 Applicant: body.Applicant ? body.Applicant : null,
