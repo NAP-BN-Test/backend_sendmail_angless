@@ -1236,7 +1236,6 @@ module.exports = {
                         }
                         await deleteImageResidual(listLink, listLinkNew);
                     }
-                    console.log(text);
                     await mMailCampain(db).update({
                         TimeSend: timeSend,
                         Body: text,
@@ -1288,6 +1287,7 @@ module.exports = {
                             IDGetInfo: body.userID,
                             MailCampainID: body.campainID,
                         })
+                        console.log(mMailListID[j]);
                     }
                     resetJob(db);
                     res.json(Result.ACTION_SUCCESS)
@@ -1303,20 +1303,30 @@ module.exports = {
     },
     sendMailNow: async function (req, res) {
         let body = req.body;
+        body.body = body.body.replace(/%20/g, ' ');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
                 var mMailListID = [];
                 await mMailListCampaign(db).findAll({
                     where: {
-                        MailCampainID: body.campaignID
+                        MailCampainID: body.campainID
                     }
                 }).then(data => {
                     data.forEach(item => {
                         mMailListID.push(item.MailListID)
                     })
                 })
-
+                for (var j = 0; j < mMailListID.length; j++) {
+                    await mMailResponse(db).create({
+                        MaillistID: mMailListID[j],
+                        TimeCreate: now,
+                        Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                        TypeSend: 'Maillist',
+                        IDGetInfo: body.userID,
+                        MailCampainID: body.campainID,
+                    })
+                }
                 for (var j = 0; j < mMailListID.length; j++) {
                     let mailListID = mMailListID[j];
                     let listCompany = await mCompanyMailList(db).findAll({ where: { MailListID: mMailListID[j] } })

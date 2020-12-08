@@ -608,13 +608,48 @@ module.exports = {
                 var mailListCount = await mailList.count();
                 var array = [];
                 for (var i = 0; i < mailListData.length; i++) {
+                    var totalEmailSend = await mMailResponse(db).count({
+                        where: {
+                            MaillistID: mailListData[i].ID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                            TypeSend: 'Maillist',
+                        }
+                    });
+                    var totalInvalid = await mMailResponse(db).count({
+                        where: {
+                            MaillistID: mailListData[i].ID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.INVALID,
+                            TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
+                        }
+                    });
+                    var totalUnsubscribe = await mMailResponse(db).count({
+                        where: {
+                            MaillistID: mailListData[i].ID,
+                            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+                            TypeSend: 'Maillist',
+                            TimeCreate: { [Op.between]: [moment(body.timeFrom).format('YYYY-MM-DD HH:mm'), moment(body.timeTo).format('YYYY-MM-DD HH:mm')] },
+                        }
+                    });
                     var totalEmail = await mCompanyMailList(db).count({ where: { MailListID: mailListData[i].ID } })
-                    array.push({
-                        id: mailListData[i].ID,
-                        name: mailListData[i].Name,
-                        totalEmail: totalEmail,
-                        createTime: mModules.toDatetime(mailListData[i].TimeCreate),
-                    })
+                    var interIDs = await mMailListCampaign(db).findAll({ where: { MailListID: mailListData[i].ID } })
+                    for (var j = 0; j < interIDs.length; j++) {
+                        var campaignIDs = await mMailCampain(db).findAll({ where: { ID: interIDs[j].MailCampainID } })
+                        campaignIDs.forEach(element => {
+                            array.push({
+                                id: mailListData[i].ID,
+                                nameMaillist: mailListData[i].Name,
+                                totalEmail: totalEmail,
+                                createTime: mModules.toDatetime(mailListData[i].TimeCreate),
+                                endTime: mModules.toDatetime(mailListData[i].TimeCreate),
+                                nameCampaign: element.Name,
+                                totalReceived: totalEmailSend,
+                                totalInvalid: totalInvalid,
+                                totalUnsubscribe: totalUnsubscribe,
+                            })
+                        })
+                    }
+
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,

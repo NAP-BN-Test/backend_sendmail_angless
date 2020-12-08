@@ -8,6 +8,8 @@ var mUser = require('../controllers/user');
 
 var AWS = require('aws-sdk');
 AWS.config.update({ region: 'us-east-1' });
+var mailcomposer = require('mailcomposer')
+var ses = require('aws-sdk/clients/ses')
 
 module.exports = {
     amazonResponse: (req, res) => { //take this list for dropdown

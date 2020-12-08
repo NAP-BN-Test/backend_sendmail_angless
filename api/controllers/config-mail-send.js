@@ -16,7 +16,6 @@ module.exports = {
     // add_config_mail_send
     addConfigMailSend: (req, res) => {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             if (db) {
                 try {
