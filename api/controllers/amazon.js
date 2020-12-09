@@ -93,45 +93,82 @@ module.exports = {
 
 
     sendEmail: async function (emailSend, emailRecive, subject, body) { //take this list for dropdown
-        return new Promise(res => {
-            var ses = new AWS.SES();
-            var params = {
-                Destination: {
-                    BccAddresses: [], // bcc email
-                    CcAddresses: [], // cc email
-                    ToAddresses: [
-                        emailRecive
-                    ]
-                },
-                Message: {
-                    Body: {
-                        Html: {
-                            Charset: "UTF-8",
-                            Data: body
-                        }
+
+        return Promise.resolve().then(() => {
+            let sendRawEmailPromise;
+            const mail = mailcomposer({
+                from: emailSend,
+                replyTo: emailRecive,
+                to: emailRecive,
+                subject: subject,
+                text: body,
+                attachments: [
+                    {
+                        path: 'http://118.27.192.106:1357/ageless_sendmail/nap2-1607420547845.png',
                     },
-                    Subject: {
-                        Charset: "UTF-8",
-                        Data: subject
-                    }
-                },
-                ReplyToAddresses: [],
-                Source: emailSend,
-            };
-            ses.sendEmail(params, function (err, data) {
-                if (err) {
-                    console.log(err, err.stack); // an error occurred
-                    res();
-                } else {
-                    res(1);
-                }; // successful response
-                /*
-                data = {
-                 MessageId: "EXAMPLE78603177f-7a5433e7-8edb-42ae-af10-f0181f34d6ee-000000"
-                }
-                */
+                    {
+                        path: 'http://118.27.192.106:1357/ageless_sendmail/b1-4-1607422959730.jpg',
+                    },
+
+                ],
             });
-        })
+            var ses = new AWS.SES();
+            return new Promise((resolve, reject) => {
+                mail.build((err, message) => {
+                    if (err) {
+                        reject(`Error sending raw email: ${err}`);
+                    }
+                    sendRawEmailPromise = ses.sendRawEmail({ RawMessage: { Data: message } }).promise();
+                });
+
+                resolve(sendRawEmailPromise);
+            });
+        });
+
+
+
+
+
+
+        // return new Promise(res => {
+        //     var ses = new AWS.SES();
+        //     var params = {
+        //         Destination: {
+        //             BccAddresses: [], // bcc email
+        //             CcAddresses: [], // cc email
+        //             ToAddresses: [
+        //                 emailRecive
+        //             ]
+        //         },
+        //         Message: {
+        //             Body: {
+        //                 Html: {
+        //                     Charset: "UTF-8",
+        //                     Data: body
+        //                 }
+        //             },
+        //             Subject: {
+        //                 Charset: "UTF-8",
+        //                 Data: subject
+        //             }
+        //         },
+        //         ReplyToAddresses: [],
+        //         Source: emailSend,
+        //     };
+        //     ses.sendEmail(params, function (err, data) {
+        //         if (err) {
+        //             console.log(err, err.stack); // an error occurred
+        //             res();
+        //         } else {
+        //             res(1);
+        //         }; // successful response
+        //         /*
+        //         data = {
+        //          MessageId: "EXAMPLE78603177f-7a5433e7-8edb-42ae-af10-f0181f34d6ee-000000"
+        //         }
+        //         */
+        //     });
+        // })
     },
 
 }

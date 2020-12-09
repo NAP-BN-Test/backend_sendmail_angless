@@ -156,7 +156,7 @@ module.exports = {
                             }
                         })
                         if (!mailUn)
-                            mAmazon.sendEmail(emailSend.Email, arrayEmail[i].name, Subject, bodyHtml).then(async response => {
+                            mAmazon.sendEmail(emailSend.Email, arrayEmail[i].name, Subject, bodyHtml, []).then(async response => {
                                 if (response) {
                                     await mAdditionalInformation(db).update({
                                         Status: Constant.MAIL_RESPONSE_TYPE.SEND,

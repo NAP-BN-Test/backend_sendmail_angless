@@ -182,7 +182,7 @@ async function resetJob(db) {
                                     }
                                 })
                                 if (!mainUn)
-                                    await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {
+                                    await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml, campaign[i].listLink).then(async (sendMailRes) => {
                                         if (sendMailRes) {
                                             console.log(sendMailRes);
                                         }
@@ -1236,6 +1236,7 @@ module.exports = {
                         }
                         await deleteImageResidual(listLink, listLinkNew);
                     }
+                    console.log(body.attachFile);
                     await mMailCampain(db).update({
                         TimeSend: timeSend,
                         Body: text,
@@ -1243,6 +1244,7 @@ module.exports = {
                         Subject: body.subject ? body.subject : '',
                         Active: true,
                         ResBody: JSON.stringify(body),
+                        listLink: body.attachFile,
                     }, {
                         where: { ID: body.campainID }
                     })

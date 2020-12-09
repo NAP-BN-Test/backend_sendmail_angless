@@ -100,7 +100,7 @@ module.exports = {
                             var obj = {
                                 id: Number(element.ID),
                                 emailSend: element.EmailSend ? element.EmailSend : '',
-                                type: element.Type ? element.Type : '',
+                                type: element.Type == true ? 'Hoạt động' : 'kKông hoạt động',
                             }
                             array.push(obj);
                         });
