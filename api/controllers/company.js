@@ -382,7 +382,6 @@ module.exports = {
 
     getDetailCompany: (req, res) => {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
 
 
@@ -464,7 +463,8 @@ module.exports = {
                     ParentID: company ? company.ID : '',
                     ParentName: company ? company.Name : '',
                     customerGroup: listGroup,
-                    items: items
+                    items: items,
+                    noteCompany: data['NoteCompany'],
                 }
                 console.log(obj);
                 var result = {
@@ -547,6 +547,9 @@ module.exports = {
 
             if (body.customerGroup || body.customerGroup === '')
                 listUpdate.push({ key: 'CustomerGroup', value: body.customerGroup });
+
+            if (body.noteCompany || body.noteCompany === '')
+                listUpdate.push({ key: 'NoteCompany', value: body.noteCompany });
 
             if (body.companyName || body.companyName === '')
                 listUpdate.push({ key: 'Name', value: body.companyName });
@@ -740,6 +743,7 @@ module.exports = {
                         Role: body.Role ? body.Role : '',
                         Note: note,
                         Relationship: relationship,
+                        NoteCompany: body.noteCompany ? body.noteCompany : '',
                     }).then(async data => {
                         if (body.customerGroup) {
                             var listID = JSON.parse(body.customerGroup);
@@ -756,7 +760,9 @@ module.exports = {
                             exist: check,
                             id: data.ID,
                         }
+                        console.log(result);
                         res.json(result);
+
                     })
                 } else {
                     var result = {

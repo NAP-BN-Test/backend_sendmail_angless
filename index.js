@@ -141,7 +141,7 @@ var resetJob = require('./api/controllers/emai-list');
 
 server.listen(port, function () {
     // {"ip":"118.27.192.106","dbName":"AGELESS_EMAIL_DB"}, 'localhost', 'AGELESS_EMAIL_DB'
-    database.checkServerInvalid('118.27.192.106', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+    database.checkServerInvalid('localhost', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
         try {
             resetJob.resetJob(db);
         } catch (error) {
