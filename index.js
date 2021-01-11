@@ -80,7 +80,7 @@ let storages = multer.diskStorage({
     filename: (req, file, cb) => {
         pathFile = path.extname(file.originalname);
         middle = file.originalname.split('.')[0];
-        cb(null, middle + '-' + nameMiddle + pathFile);
+        cb(null, nameMiddle + pathFile);
     }
 });
 let uploads = multer({ storage: storages });
@@ -92,7 +92,7 @@ app.post('/api/upload_file', getDateInt, uploads.array('photo', 12), function (r
         });
     } else {
         return res.send({
-            link: 'http://118.27.192.106:1357/ageless_sendmail/' + middle + '-' + nameMiddle + pathFile,
+            link: 'http://118.27.192.106:1357/ageless_sendmail/' + nameMiddle + pathFile,
             success: true
         })
     }

@@ -21,7 +21,8 @@ var mMailResponse = require('../tables/mail-response');
 const Sequelize = require('sequelize');
 var mCampaignGroups = require('../tables/campaign-groups');
 var mGroupCampaign = require('../tables/group-campaign');
-
+var mContact = require('../tables/contact');
+var mCompany = require('../tables/company');
 
 function handleNumber(number) {
     if (number < 10) return "000" + (number + 1).toString();
@@ -147,6 +148,7 @@ module.exports = {
     },
     addAdditionalInformation: (req, res) => {
         let body = req.body;
+        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -189,7 +191,7 @@ module.exports = {
                 Applicant: body.Applicant ? body.Applicant : null,
                 ApplicationNo: body.ApplicationNo ? body.ApplicationNo : null,
                 ClassA: body.ClassA ? body.ClassA : null,
-                FilingDate: body.FilingDate ? body.FilingDate = '' : null,
+                FilingDate: body.FilingDate ? body.FilingDate : null,
                 // DateSend: body.DateSend = '' ? body.DateSend : null,
                 Result: body.Result ? body.Result : null,
                 // DateReminder: body.DateReminder = '' ? body.DateReminder : null,
@@ -244,6 +246,7 @@ module.exports = {
                     emailExist: true ? errorEmail === '' : false
 
                 }
+                console.log(result);
                 await mMailListDetail(db).create({
                     Email: data.Email ? data.Email : null,
                     OwnerID: data.UserID ? data.UserID : null,
@@ -252,14 +255,7 @@ module.exports = {
                     Name: data.OurRef ? data.OurRef : null,
                     DataID: data.ID,
                 })
-                res.json(result);
-            }, err => {
-                var result = {
-                    status: Constant.STATUS.FAIL,
-                    message: Constant.MESSAGE.BINDING_ERROR,
-                    ojb: err.fields,
-                    emailExist: true ? errorEmail === '' : false
-                }
+                console.log(result);
                 res.json(result);
             })
         })
@@ -538,4 +534,33 @@ module.exports = {
         //     if (err) console.log(err);
         // });
     },
+    getEmailFromCompany: (req, res) => {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                mCompany(db).findOne({ where: { id: body.id } }).then(async data => {
+                    var array = [];
+                    array.push({
+                        name: data.Email
+                    })
+                    await mContact(db).findAll({ where: { CompanyID: body.id } }).then(contact => {
+                        contact.forEach(item => {
+                            array.push({
+                                name: item.Email
+                            })
+                        })
+                    })
+                    let result = {
+                        array: array,
+                        status: Constant.STATUS.SUCCESS,
+                        message: '',
+                    }
+                    res.json(result)
+                })
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+        })
+    }
 }

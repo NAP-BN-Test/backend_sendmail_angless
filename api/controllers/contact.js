@@ -866,5 +866,5 @@ module.exports = {
             })
         })
 
-    }
+    },
 }

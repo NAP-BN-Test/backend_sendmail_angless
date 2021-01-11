@@ -339,6 +339,8 @@ module.exports = function (app) {
     app.route('/crm/get_all_additional_information').post(infomation.getAllAdditionalInformation);
     app.route('/crm/delete_image').post(infomation.deleteImage);
 
+    app.route('/crm/get_email_from_company').post(infomation.getEmailFromCompany);
+
     // handle create additional-information
     app.route('/crm/get_all_data_maillist').post(mailmerge.getDatafromInformation);
 
