@@ -92,7 +92,7 @@ module.exports = {
     },
 
 
-    sendEmail: async function (emailSend, emailRecive, subject, body) { //take this list for dropdown
+    sendEmail: async function (emailSend, emailRecive, subject, body, array) { //take this list for dropdown
 
         return Promise.resolve().then(() => {
             let sendRawEmailPromise;
@@ -102,15 +102,7 @@ module.exports = {
                 to: emailRecive,
                 subject: subject,
                 text: body,
-                attachments: [
-                    {
-                        path: 'http://118.27.192.106:1357/ageless_sendmail/nap2-1607420547845.png',
-                    },
-                    {
-                        path: 'http://118.27.192.106:1357/ageless_sendmail/b1-4-1607422959730.jpg',
-                    },
-
-                ],
+                attachments: array,
             });
             var ses = new AWS.SES();
             return new Promise((resolve, reject) => {

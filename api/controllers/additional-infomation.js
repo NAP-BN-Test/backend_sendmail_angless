@@ -148,7 +148,6 @@ module.exports = {
     },
     addAdditionalInformation: (req, res) => {
         let body = req.body;
-        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -246,7 +245,6 @@ module.exports = {
                     emailExist: true ? errorEmail === '' : false
 
                 }
-                console.log(result);
                 await mMailListDetail(db).create({
                     Email: data.Email ? data.Email : null,
                     OwnerID: data.UserID ? data.UserID : null,
@@ -255,13 +253,13 @@ module.exports = {
                     Name: data.OurRef ? data.OurRef : null,
                     DataID: data.ID,
                 })
-                console.log(result);
                 res.json(result);
             })
         })
     },
     updateAdditionalInformation: (req, res) => {
         let body = req.body;
+        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {

@@ -181,8 +181,9 @@ async function resetJob(db) {
                                         TypeSend: 'Maillist'
                                     }
                                 })
+                                var arrayFile = body.attachFile ? JSON.parse(body.attachFile) : []
                                 if (!mainUn)
-                                    await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml, campaign[i].listLink).then(async (sendMailRes) => {
+                                    await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml, arrayFile).then(async (sendMailRes) => {
                                         if (sendMailRes) {
                                             console.log(sendMailRes);
                                         }
