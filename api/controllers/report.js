@@ -565,7 +565,7 @@ module.exports = {
                         id: item.ID,
                         name: item.Name,
                         email: '',
-                        createTime: mModules.toDatetime(item.TimeCreate)
+                        createTime: mModules.toDatetime(moment(item.TimeCreate).subtract(7, 'hours'))
                     })
                 })
 
@@ -640,7 +640,7 @@ module.exports = {
                                 id: mailListData[i].ID,
                                 nameMaillist: mailListData[i].Name,
                                 totalEmail: totalEmail,
-                                createTime: mModules.toDatetime(mailListData[i].TimeCreate),
+                                createTime: mModules.toDatetime(moment(mailListData[i].TimeCreate).subtract(7, 'hours')),
                                 endTime: mModules.toDatetime(mailListData[i].TimeCreate),
                                 nameCampaign: element.Name,
                                 totalReceived: totalEmailSend,

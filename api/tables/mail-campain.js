@@ -24,6 +24,7 @@ module.exports = function (db) {
         IDGroup1: Sequelize.BIGINT,
         TimeSend: Sequelize.NOW,
         Active: Sequelize.BOOLEAN,
+        listLink: Sequelize.STRING,
     });
 
     return table;

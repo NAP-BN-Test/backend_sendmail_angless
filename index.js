@@ -8,6 +8,7 @@ const express = require('express');
 const multer = require('multer');
 const bodyParser = require('body-parser')
 
+var mFileAttach = require('./api/tables/file-attach')
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -51,53 +52,48 @@ let storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         pathFile = path.extname(file.originalname)
+        nameFile = file.originalname.split('.')[0]
         cb(null, file.fieldname + '-' + nameMiddle + pathFile);
     }
 });
 let upload = multer({ storage: storage });
 const DIR = 'D:/images_services/ageless_sendmail';
 
-app.post('/api/upload', getDateInt, upload.array('photo', 12), function (req, res) {
+app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (req, res) {
     if (!req.files) {
         console.log("No file received");
         return res.send({
             success: false
         });
     } else {
-        console.log('http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile);
+        database.checkServerInvalid('118.27.192.106', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+            let idLink = await mFileAttach(db).create({
+                Name: nameFile + pathFile,
+                Link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+            })
+            return res.send({
+                link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+                name: nameFile + pathFile,
+                id: idLink.ID,
+                success: true
+            })
+        })
+    }
+});
+app.post('/api/upload_image', getDateInt, upload.array('photo', 12), function (req, res) {
+    if (!req.files) {
+        console.log("No file received");
+        return res.send({
+            success: false
+        });
+    } else {
         return res.send({
             link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+            name: nameFile + pathFile,
             success: true
         })
     }
 });
-// -------------------------------------------------------------------------------------------------------------------------
-var middle;
-let storages = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, DIR);
-    },
-    filename: (req, file, cb) => {
-        pathFile = path.extname(file.originalname);
-        middle = file.originalname.split('.')[0];
-        cb(null, nameMiddle + pathFile);
-    }
-});
-let uploads = multer({ storage: storages });
-app.post('/api/upload_file', getDateInt, uploads.array('photo', 12), function (req, res) {
-    if (!req.files) {
-        console.log("No file received");
-        return res.send({
-            success: false
-        });
-    } else {
-        return res.send({
-            link: 'http://118.27.192.106:1357/ageless_sendmail/' + nameMiddle + pathFile,
-            success: true
-        })
-    }
-});
-
 const rateLimit = require("express-rate-limit");
 const someApiLimiter = rateLimit({
     windowMs: 2000,

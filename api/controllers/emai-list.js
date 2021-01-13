@@ -30,6 +30,7 @@ var cUser = require('../controllers/user');
 var mMailResponse = require('../tables/mail-response');
 const Sequelize = require('sequelize');
 var mUser = require('../tables/user');
+var mFileAttach = require('../tables/file-attach')
 
 var mModules = require('../constants/modules');
 
@@ -208,6 +209,13 @@ async function resetJob(db) {
 }
 async function deleteCampaign(db, listID) {
     try {
+        await mFileAttach(db).destroy({
+            where: {
+                CampaignID: {
+                    [Op.in]: listID,
+                }
+            }
+        })
         await mAdditionalInformation(db).destroy({
             where: {
                 CampaignID: {
@@ -802,7 +810,6 @@ module.exports = {
 
     getMailCampainDetail: async function (req, res) {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var listMailList = [];
@@ -837,8 +844,22 @@ module.exports = {
                     Description: mailCampainData.Description,
                     Type: mailCampainData.Type,
                     listMailList,
+                    listLink: mailCampainData.listLink ? mailCampainData.listLink : '',
                     timeSend: mailCampainData.TimeSend ? JSON.stringify(moment(mailCampainData.TimeSend).subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS')) : null
                 }
+                var arrayFile = []
+                await mFileAttach(db).findAll({ where: { CampaignID: mailCampainData.ID } }).then(file => {
+                    if (file.length > 0) {
+                        for (var e = 0; e < file.length; e++) {
+                            arrayFile.push({
+                                name: file[e].Name ? file[e].Name : '',
+                                link: file[e].Link ? file[e].Link : '',
+                                id: file[e].ID,
+                            })
+                        }
+                    }
+                })
+                obj['arrayFile'] = arrayFile;
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -1185,6 +1206,7 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
+        console.log(body);
         body.body = body.body.replace(/%20/g, ' ');
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1237,7 +1259,6 @@ module.exports = {
                         }
                         await deleteImageResidual(listLink, listLinkNew);
                     }
-                    console.log(body.attachFile);
                     await mMailCampain(db).update({
                         TimeSend: timeSend,
                         Body: text,
@@ -1448,6 +1469,7 @@ module.exports = {
 
     updateMailCampain: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let update = [];
@@ -1467,6 +1489,16 @@ module.exports = {
                     let time = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS')
                     update.push({ key: 'TimeSend', value: time });
                 }
+                body.attachFile = JSON.parse(body.attachFile)
+                if (body.attachFile.length > 0)
+                    for (var j = 0; j < body.attachFile.length; j++)
+                        await mFileAttach(db).update({
+                            CampaignID: body.campainID,
+                        }, {
+                            where: {
+                                ID: body.attachFile[j].id
+                            }
+                        })
                 update.push({ key: 'Active', value: false });
                 if (body.Type == 'MailList') {
                     if (body.body || body.body === '') {

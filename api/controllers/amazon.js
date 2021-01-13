@@ -101,7 +101,7 @@ module.exports = {
                 replyTo: emailRecive,
                 to: emailRecive,
                 subject: subject,
-                text: body,
+                html: body,
                 attachments: array,
             });
             var ses = new AWS.SES();

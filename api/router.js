@@ -30,7 +30,10 @@ module.exports = function (app) {
     var unsubscribe = require('./controllers/unsubscribe');
 
     var category = require('./controllers/category')
+    var tblFileAttach = require('./controllers/file-attach')
 
+    app.route('/crm/delete_file').post(tblFileAttach.deletetblFileAttach);
+    app.route('/crm/delete_file_from_link').post(tblFileAttach.deletetblFileFromLink);
 
     // todoList Routes
     app.route('/crm/user_login').post(login.login);
