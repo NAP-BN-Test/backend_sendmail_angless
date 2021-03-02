@@ -387,6 +387,8 @@ module.exports = {
 
             let company = mCompany(db);
             company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
+            company.belongsTo(company, { foreignKey: 'OldCompanyID', sourceKey: 'OldCompanyID', as: 'oldCompany' });
+            company.belongsTo(company, { foreignKey: 'NewCompanyID', sourceKey: 'NewCompanyID', as: 'newCompany' });
             // company.belongsTo(mDealStage(db), { foreignKey: 'StageID', sourceKey: 'StageID' });
             company.belongsTo(mCountry(db), { foreignKey: 'CountryID', sourceKey: 'CountryID', as: 'Country' });
             company.hasMany(mUserFollow(db), { foreignKey: 'CompanyID' })
@@ -403,6 +405,8 @@ module.exports = {
                     { model: mCity(db), required: false },
                     { model: mCountry(db), required: false, as: 'Country' },
                     { model: mCategoryCustomer(db), required: false },
+                    { model: company, required: false, as: 'oldCompany' },
+                    { model: company, required: false, as: 'newCompany' },
 
                 ]
             }).then(async data => {
@@ -462,11 +466,14 @@ module.exports = {
                     Country: data.Country ? data.Country.Name : "",
                     ParentID: company ? company.ID : '',
                     ParentName: company ? company.Name : '',
+                    oldName: data['oldCompany'] ? data['oldCompany']['Name'] : '',
+                    oldID: data['oldCompany'] ? data['oldCompany']['ID'] : '',
+                    newName: data['newCompany'] ? data['newCompany']['Name'] : '',
+                    newID: data['newCompany'] ? data['newCompany']['ID'] : '',
                     customerGroup: listGroup,
                     items: items,
                     noteCompany: data['NoteCompany'],
                 }
-                console.log(obj);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
@@ -577,6 +584,20 @@ module.exports = {
                     listUpdate.push({ key: 'CategoryID', value: null });
                 else
                     listUpdate.push({ key: 'CategoryID', value: body.CategoryID });
+
+            }
+            if (body.oldCompanyID || body.oldCompanyID === '') {
+                if (body.oldCompanyID === '')
+                    listUpdate.push({ key: 'OldCompanyID', value: null });
+                else
+                    listUpdate.push({ key: 'OldCompanyID', value: body.oldCompanyID });
+
+            }
+            if (body.newCompanyID || body.newCompanyID === '') {
+                if (body.newCompanyID === '')
+                    listUpdate.push({ key: 'NewCompanyID', value: null });
+                else
+                    listUpdate.push({ key: 'NewCompanyID', value: body.newCompanyID });
 
             }
 
@@ -698,6 +719,7 @@ module.exports = {
 
     addCompany: (req, res) => {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var company = mCompany(db);
@@ -744,6 +766,8 @@ module.exports = {
                         Note: note,
                         Relationship: relationship,
                         NoteCompany: body.noteCompany ? body.noteCompany : '',
+                        NewCompanyID: body.newCompanyID ? body.newCompanyID : null,
+                        OldCompanyID: body.oldCompanyID ? body.oldCompanyID : null,
                     }).then(async data => {
                         if (body.customerGroup) {
                             var listID = JSON.parse(body.customerGroup);

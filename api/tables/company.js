@@ -34,6 +34,8 @@ module.exports = function (db) {
         Relationship: Sequelize.STRING,
         MailListID: Sequelize.BIGINT,
         NoteCompany: Sequelize.STRING,
+        OldCompanyID: Sequelize.BIGINT,
+        NewCompanyID: Sequelize.BIGINT,
     });
 
     return table;

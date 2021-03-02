@@ -81,6 +81,7 @@ app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (re
     }
 });
 app.post('/api/upload_image', getDateInt, upload.array('photo', 12), function (req, res) {
+
     if (!req.files) {
         console.log("No file received");
         return res.send({
