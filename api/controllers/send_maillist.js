@@ -141,10 +141,10 @@ module.exports = {
                     for (var i = 0; i < arrayEmail.length; i++) {
                         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${body.CampaignID}&type=Mailmerge&idGetInfo=${body.userID}&email=${arrayEmail[i].name}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
                         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                        let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                        let httpTrack = `<img src="http://103.154.100.26:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
                         let tokenUnsubscribe = `email=${arrayEmail[i].name}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${body.CampaignID}&idGetInfo=${body.userID}&type=Mailmerge`;
                         let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                        let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                        let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://103.154.100.26:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                         bodyHtml = httpTrack + bodyHtml;
                         bodyHtml = bodyHtml + unSubscribe;
                         let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });

@@ -139,10 +139,10 @@ async function resetJob(db) {
                             var job = schedule.scheduleJob(timeSend, async function () {
                                 let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
                                 let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                                let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                                let httpTrack = `<img src="http://103.154.100.26:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
                                 let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                                 let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                                let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                                let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://103.154.100.26:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                                 let bodyHtml = body.body;
                                 bodyHtml = httpTrack + bodyHtml;
                                 bodyHtml = bodyHtml + unSubscribe;
@@ -269,7 +269,7 @@ const { LOGIN_FAIL } = require('../constants/result');
 
 async function deleteImage(linkImage) {
     console.log(linkImage);
-    var file = linkImage.replace("http://118.27.192.106:1357/ageless_sendmail/", "")
+    var file = linkImage.replace("http://103.154.100.26:1357/ageless_sendmail/", "")
     require("fs").unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
         if (err) {
             console.log(err);
@@ -1234,8 +1234,8 @@ module.exports = {
                             var numberRandom = Math.floor(Math.random() * 1000000);
                             nameMiddle = Date.parse(datetime) + numberRandom.toString();
                             var dir = DIR + 'photo-' + nameMiddle + '.jpg';
-                            var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
-                            if (matches[1].indexOf('http://118.27.192.106:1357/ageless_sendmail/photo-') == -1) {
+                            var linkImage = 'http://103.154.100.26:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
+                            if (matches[1].indexOf('http://103.154.100.26:1357/ageless_sendmail/photo-') == -1) {
                                 dirList.push(dir);
                                 matchesList.push(matches[1]);
                                 linkImageList.push(linkImage);
@@ -1368,10 +1368,10 @@ module.exports = {
                             let emailReceived = arrayEmail[f].name;
                             let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
                             let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                            let httpTrack = `<img src="http://118.27.192.106:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                            let httpTrack = `<img src="http://103.154.100.26:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
                             let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                             let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://118.27.192.106:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://103.154.100.26:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                             let bodyHtml = body.body;
                             bodyHtml = httpTrack + bodyHtml;
                             bodyHtml = bodyHtml + unSubscribe;
@@ -1518,8 +1518,8 @@ module.exports = {
                             var numberRandom = Math.floor(Math.random() * 1000000);
                             nameMiddle = Date.parse(datetime) + numberRandom.toString();
                             var dir = DIR + 'photo-' + nameMiddle + '.jpg';
-                            var linkImage = 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
-                            if (matches[1].indexOf('http://118.27.192.106:1357/ageless_sendmail/photo-') == -1) {
+                            var linkImage = 'http://103.154.100.26:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
+                            if (matches[1].indexOf('http://103.154.100.26:1357/ageless_sendmail/photo-') == -1) {
                                 dirList.push(dir);
                                 matchesList.push(matches[1]);
                                 linkImageList.push(linkImage);

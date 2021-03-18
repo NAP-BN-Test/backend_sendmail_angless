@@ -66,13 +66,13 @@ app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (re
             success: false
         });
     } else {
-        database.checkServerInvalid('118.27.192.106', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+        database.checkServerInvalid('103.154.100.26', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
             let idLink = await mFileAttach(db).create({
                 Name: nameFile + pathFile,
-                Link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+                Link: 'http://103.154.100.26:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
             })
             return res.send({
-                link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+                link: 'http://103.154.100.26:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
                 name: nameFile + pathFile,
                 id: idLink.ID,
                 success: true
@@ -89,7 +89,7 @@ app.post('/api/upload_image', getDateInt, upload.array('photo', 12), function (r
         });
     } else {
         return res.send({
-            link: 'http://118.27.192.106:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+            link: 'http://103.154.100.26:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
             name: nameFile + pathFile,
             success: true
         })
@@ -137,8 +137,8 @@ var database = require('./api/db');
 var resetJob = require('./api/controllers/emai-list');
 
 server.listen(port, function () {
-    // {"ip":"118.27.192.106","dbName":"AGELESS_EMAIL_DB"}, 'localhost', 'AGELESS_EMAIL_DB'
-    database.checkServerInvalid('118.27.192.106', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+    // {"ip":"103.154.100.26","dbName":"AGELESS_EMAIL_DB"}, 'localhost', 'AGELESS_EMAIL_DB'
+    database.checkServerInvalid('103.154.100.26', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
         try {
             resetJob.resetJob(db);
         } catch (error) {
