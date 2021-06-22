@@ -79,6 +79,7 @@ function convertStringToListObject(string) {
     }
     return resultArray;
 }
+var mConfigEmailSend = require('../tables/config-mail-send')
 
 module.exports = {
     sendMailList: (req, res) => {
@@ -147,7 +148,6 @@ module.exports = {
                         let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://103.154.100.26:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                         bodyHtml = httpTrack + bodyHtml;
                         bodyHtml = bodyHtml + unSubscribe;
-                        let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
                         let mailUn = await mMailResponse(db).findOne({
                             where: {
                                 Email: arrayEmail[i].name,
@@ -155,8 +155,16 @@ module.exports = {
                                 TypeSend: 'Mailmerge',
                             }
                         })
+                        let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+
+                        emailSend = await mConfigEmailSend(db).findOne({
+                            order: [
+                                ['ID', 'DESC']
+                            ],
+                            where: { EmailSend: emailSend.Email }
+                        });
                         if (!mailUn)
-                            mAmazon.sendEmail(emailSend.Email, arrayEmail[i].name, Subject, bodyHtml, []).then(async response => {
+                            mAmazon.sendEmail(emailSend, arrayEmail[i].name, Subject, bodyHtml, []).then(async response => {
                                 if (response) {
                                     await mAdditionalInformation(db).update({
                                         Status: Constant.MAIL_RESPONSE_TYPE.SEND,

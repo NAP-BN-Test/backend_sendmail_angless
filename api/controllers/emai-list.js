@@ -69,6 +69,7 @@ function handleClickLink(body, mailListDetailID) {
         return bodyHtml;
     } else return body.body;
 }
+var mConfigEmailSend = require('../tables/config-mail-send')
 
 async function getCompanyIDFromCampaignID(db, campainID) {
     var mMailListID = [];
@@ -147,7 +148,6 @@ async function resetJob(db) {
                                 bodyHtml = httpTrack + bodyHtml;
                                 bodyHtml = bodyHtml + unSubscribe;
                                 bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
-                                let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
                                 mCheckMail.checkEmail(emailReceived, db).then(async (checkMailRes) => {
                                     if (checkMailRes == false) {
                                         var responeExits = await mMailResponse(db).findOne({
@@ -183,8 +183,16 @@ async function resetJob(db) {
                                     }
                                 })
                                 var arrayFile = body.attachFile ? JSON.parse(body.attachFile) : []
+                                let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+
+                                emailSend = await mConfigEmailSend(db).findOne({
+                                    order: [
+                                        ['ID', 'DESC']
+                                    ],
+                                    where: { EmailSend: emailSend.Email }
+                                });
                                 if (!mainUn)
-                                    await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml, arrayFile).then(async (sendMailRes) => {
+                                    await mAmazon.sendEmail(emailSend, emailReceived, body.subject, bodyHtml, arrayFile).then(async (sendMailRes) => {
                                         if (sendMailRes) {
                                             console.log(sendMailRes);
                                         }
@@ -1376,7 +1384,7 @@ module.exports = {
                             bodyHtml = httpTrack + bodyHtml;
                             bodyHtml = bodyHtml + unSubscribe;
                             bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
-                            let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+                            // let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
                             mCheckMail.checkEmail(emailReceived, db).then(async (checkMailRes) => {
                                 if (checkMailRes == false) {
                                     var responeExits = await mMailResponse(db).findOne({
@@ -1411,8 +1419,16 @@ module.exports = {
                                     TypeSend: 'Maillist'
                                 }
                             })
+                            let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
+
+                            emailSend = await mConfigEmailSend(db).findOne({
+                                order: [
+                                    ['ID', 'DESC']
+                                ],
+                                where: { EmailSend: emailSend.Email }
+                            });
                             if (!mainUn)
-                                await mAmazon.sendEmail(emailSend.Email, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {
+                                await mAmazon.sendEmail(emailSend, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {
                                     if (sendMailRes) {
                                         console.log(sendMailRes);
                                     }

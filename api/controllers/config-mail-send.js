@@ -21,6 +21,7 @@ module.exports = {
                 try {
                     mConfigEmailSend(db).create({
                         EmailSend: body.emailSend ? body.emailSend : '',
+                        Password: body.password ? body.password : '',
                         Type: body.type ? body.type : true,
                     }).then(data => {
                         var result = {
@@ -47,6 +48,8 @@ module.exports = {
                     let update = [];
                     if (body.emailSend || body.emailSend === '')
                         update.push({ key: 'EmailSend', value: body.emailSend });
+                    if (body.password || body.password === '')
+                        update.push({ key: 'Password', value: body.password });
                     if (body.type || body.type === '')
                         update.push({ key: 'Type', value: body.type });
                     database.updateTable(update, mConfigEmailSend(db), body.id).then(response => {
@@ -100,6 +103,7 @@ module.exports = {
                             var obj = {
                                 id: Number(element.ID),
                                 emailSend: element.EmailSend ? element.EmailSend : '',
+                                password: element.Password ? element.Password : '',
                                 type: element.Type == true ? 'Hoạt động' : 'kKông hoạt động',
                             }
                             array.push(obj);

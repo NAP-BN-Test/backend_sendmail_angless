@@ -98,8 +98,8 @@ module.exports = {
         var mail = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: 'tung24041998@gmail.com',
-                pass: 'Tung010598'
+                user: emailSend.EmailSend,
+                pass: emailSend.Password,
             }
         });
         let arraySend = []
@@ -110,7 +110,7 @@ module.exports = {
             })
         }
         var mailOptions = {
-            from: emailSend,
+            from: emailSend.EmailSend,
             to: emailRecive,
             subject: subject,
             html: body,
@@ -118,7 +118,10 @@ module.exports = {
         }
         mail.sendMail(mailOptions, function (error, info) {
             if (error) {
-                console.log(error);
+                res.json({
+                    status: 0,
+                    message: error,
+                });
             } else {
                 console.log('Email sent: ' + info.response);
             }

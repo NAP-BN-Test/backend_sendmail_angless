@@ -8,8 +8,8 @@ module.exports = function (db) {
             autoIncrement: true
         },
         EmailSend: Sequelize.STRING,
-        Type: Sequelize.BOOLEAN
-
+        Type: Sequelize.BOOLEAN,
+        Password: Sequelize.STRING,
     });
 
     return table;
