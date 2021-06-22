@@ -89,7 +89,7 @@ app.post('/api/upload_image', getDateInt, upload.array('photo', 12), function (r
         });
     } else {
         return res.send({
-            link: 'http://103.154.100.26:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+            link: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
             name: nameFile + pathFile,
             success: true
         })
@@ -110,7 +110,7 @@ app.get('/crm/open_mail', someApiLimiter, emailList.addMailResponse);
 // const JSZip = require('pizzip');
 // const Docxtemplater = require('docxtemplater');
 // app.get('/api/test', async function (req, res) {
-//     fs.readFile('D:/images_services/ageless_sendmail/photo-1601448964001.docx', 'binary', function (err, data) {
+//     fs.readFile('C:/images_services/ageless_sendmail/photo-1601448964001.docx', 'binary', function (err, data) {
 //         var zip = new JSZip(data);
 //         var doc = new Docxtemplater().loadZip(zip)
 //         //set the templateVariables
@@ -123,7 +123,7 @@ app.get('/crm/open_mail', someApiLimiter, emailList.addMailResponse);
 //         doc.render()
 //         var buf = doc.getZip().generate({ type: 'nodebuffer' });
 //         // buf is a nodejs buffer, you can either write it to a file or do anything else with it.
-//         fs.writeFileSync(path.resolve('D:/images_services/ageless_sendmail/', 'output.docx'), buf);
+//         fs.writeFileSync(path.resolve('C:/images_services/ageless_sendmail/', 'output.docx'), buf);
 //     });
 // })
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

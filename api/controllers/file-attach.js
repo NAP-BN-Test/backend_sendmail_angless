@@ -8,8 +8,8 @@ const fs = require('fs');
 async function deleteRelationshiptblFileAttach(db, id) {
     await mFileAttach(db).findOne({ where: { ID: id } }).then(data => {
         if (data.Link) {
-            var file = data.Link.replace("http://103.154.100.26:1357/ageless_sendmail/", "")
-            fs.unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
+            var file = data.Link.replace("http://dbdev.namanphu.vn:1357/ageless_sendmail/", "")
+            fs.unlink("C:/images_services/ageless_sendmail/" + file, (err) => {
                 if (err) console.log(err);
             });
         }
@@ -28,8 +28,8 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             if (db) {
                 try {
-                    var file = body.link.replace("http://103.154.100.26:1357/ageless_sendmail/", "")
-                    fs.unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
+                    var file = body.link.replace("http://dbdev.namanphu.vn:1357/ageless_sendmail/", "")
+                    fs.unlink("C:/images_services/ageless_sendmail/" + file, (err) => {
                         if (err) console.log(err);
                     });
                 } catch (error) {

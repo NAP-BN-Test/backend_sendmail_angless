@@ -270,7 +270,7 @@ const { LOGIN_FAIL } = require('../constants/result');
 async function deleteImage(linkImage) {
     console.log(linkImage);
     var file = linkImage.replace("http://dbdev.namanphu.vn:1357/ageless_sendmail/", "")
-    require("fs").unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
+    require("fs").unlink("C:/images_services/ageless_sendmail/" + file, (err) => {
         if (err) {
             console.log(err);
         }
@@ -1224,7 +1224,7 @@ module.exports = {
                         text = text.replace(/%20/g, ' ');
                         const re = RegExp('<img src="(.*?)">', 'g');
                         const keyField = []
-                        const DIR = 'D:/images_services/ageless_sendmail/';
+                        const DIR = 'C:/images_services/ageless_sendmail/';
                         var datetime = new Date();
                         var listLinkNew = [];
                         var matchesList = [];
@@ -1508,7 +1508,7 @@ module.exports = {
                         text = text.replace('data:image/png;base64,', "data:image/jpeg;base64,");
                         const re = RegExp('<img src="(.*?)">', 'g');
                         const keyField = []
-                        const DIR = 'D:/images_services/ageless_sendmail/';
+                        const DIR = 'C:/images_services/ageless_sendmail/';
                         var datetime = new Date();
                         var listLinkNew = [];
                         var matchesList = [];

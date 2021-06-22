@@ -527,8 +527,8 @@ module.exports = {
     deleteImage: (req, res) => {
         // delete a file
         var body = req.body;
-        // var file = body.nameImage.replace("http://103.154.100.26:1357/ageless_sendmail/", "")
-        // fs.unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
+        // var file = body.nameImage.replace("http://dbdev.namanphu.vn:1357/ageless_sendmail/", "")
+        // fs.unlink("C:/images_services/ageless_sendmail/" + file, (err) => {
         //     if (err) console.log(err);
         // });
     },
