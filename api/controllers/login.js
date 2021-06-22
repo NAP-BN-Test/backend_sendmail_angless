@@ -16,31 +16,41 @@ module.exports = {
                 var data = await mUser(db).findOne({
                     where: { Username: body.username, Password: body.password }
                 })
-                var obj = {
-                    id: data.ID,
-                    name: data.Name,
-                    username: data.Username,
-                    password: data.Password,
-                    phone: data.Phone,
-                    email: data.Email,
-                    role: data.Roles,
-                }
-                if (obj) {
-                    req.session.userID = data.ID;
+                if (data) {
+                    var obj = {
+                        id: data.ID,
+                        name: data.Name,
+                        username: data.Username,
+                        password: data.Password,
+                        phone: data.Phone,
+                        email: data.Email,
+                        role: data.Roles,
+                    }
+                    if (obj) {
+                        req.session.userID = data.ID;
 
-                    await mUser(db).update({
-                        TimeLogin: moment().format("YYYY-MM-DD HH:mm:ss.SSS")
-                    }, {
-                        where: { Username: body.username }
-                    })
+                        await mUser(db).update({
+                            TimeLogin: moment().format("YYYY-MM-DD HH:mm:ss.SSS")
+                        }, {
+                            where: { Username: body.username }
+                        })
+                    }
+
+                    var result = {
+                        status: Constant.STATUS.SUCCESS,
+                        message: '',
+                        obj: obj
+                    }
+                    res.json(result);
+                } else {
+                    var result = {
+                        status: Constant.STATUS.FAIL,
+                        message: 'Tài khoản hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!',
+                        // obj: obj
+                    }
+                    res.json(result);
                 }
 
-                var result = {
-                    status: Constant.STATUS.SUCCESS,
-                    message: '',
-                    obj: obj
-                }
-                res.json(result);
             } catch (error) {
                 console.log(error);
                 res.json(Result.LOGIN_FAIL)

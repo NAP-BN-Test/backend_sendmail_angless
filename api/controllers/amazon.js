@@ -93,74 +93,37 @@ module.exports = {
 
 
     sendEmail: async function (emailSend, emailRecive, subject, body, array) { //take this list for dropdown
+        var nodemailer = require('nodemailer');
 
-        return Promise.resolve().then(() => {
-            let sendRawEmailPromise;
-            const mail = mailcomposer({
-                from: emailSend,
-                replyTo: emailRecive,
-                to: emailRecive,
-                subject: subject,
-                html: body,
-                attachments: array,
-            });
-            var ses = new AWS.SES();
-            return new Promise((resolve, reject) => {
-                mail.build((err, message) => {
-                    if (err) {
-                        reject(`Error sending raw email: ${err}`);
-                    }
-                    sendRawEmailPromise = ses.sendRawEmail({ RawMessage: { Data: message } }).promise();
-                });
-
-                resolve(sendRawEmailPromise);
-            });
+        var mail = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'tung24041998@gmail.com',
+                pass: 'Tung010598'
+            }
+        });
+        let arraySend = []
+        for (let i = 0; i < array.length; i++) {
+            arraySend.push({
+                filename: array[i].name,
+                path: array[i].link,
+            })
+        }
+        var mailOptions = {
+            from: emailSend,
+            to: emailRecive,
+            subject: subject,
+            html: body,
+            attachments: arraySend
+        }
+        mail.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
         });
 
-
-
-
-
-
-        // return new Promise(res => {
-        //     var ses = new AWS.SES();
-        //     var params = {
-        //         Destination: {
-        //             BccAddresses: [], // bcc email
-        //             CcAddresses: [], // cc email
-        //             ToAddresses: [
-        //                 emailRecive
-        //             ]
-        //         },
-        //         Message: {
-        //             Body: {
-        //                 Html: {
-        //                     Charset: "UTF-8",
-        //                     Data: body
-        //                 }
-        //             },
-        //             Subject: {
-        //                 Charset: "UTF-8",
-        //                 Data: subject
-        //             }
-        //         },
-        //         ReplyToAddresses: [],
-        //         Source: emailSend,
-        //     };
-        //     ses.sendEmail(params, function (err, data) {
-        //         if (err) {
-        //             console.log(err, err.stack); // an error occurred
-        //             res();
-        //         } else {
-        //             res(1);
-        //         }; // successful response
-        //         /*
-        //         data = {
-        //          MessageId: "EXAMPLE78603177f-7a5433e7-8edb-42ae-af10-f0181f34d6ee-000000"
-        //         }
-        //         */
-        //     });
-        // })
     },
 
 }

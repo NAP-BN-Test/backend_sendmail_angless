@@ -269,7 +269,7 @@ const { LOGIN_FAIL } = require('../constants/result');
 
 async function deleteImage(linkImage) {
     console.log(linkImage);
-    var file = linkImage.replace("http://103.154.100.26:1357/ageless_sendmail/", "")
+    var file = linkImage.replace("http://dbdev.namanphu.vn:1357/ageless_sendmail/", "")
     require("fs").unlink("D:/images_services/ageless_sendmail/" + file, (err) => {
         if (err) {
             console.log(err);
@@ -1234,8 +1234,8 @@ module.exports = {
                             var numberRandom = Math.floor(Math.random() * 1000000);
                             nameMiddle = Date.parse(datetime) + numberRandom.toString();
                             var dir = DIR + 'photo-' + nameMiddle + '.jpg';
-                            var linkImage = 'http://103.154.100.26:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
-                            if (matches[1].indexOf('http://103.154.100.26:1357/ageless_sendmail/photo-') == -1) {
+                            var linkImage = 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
+                            if (matches[1].indexOf('http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-') == -1) {
                                 dirList.push(dir);
                                 matchesList.push(matches[1]);
                                 linkImageList.push(linkImage);
@@ -1518,8 +1518,8 @@ module.exports = {
                             var numberRandom = Math.floor(Math.random() * 1000000);
                             nameMiddle = Date.parse(datetime) + numberRandom.toString();
                             var dir = DIR + 'photo-' + nameMiddle + '.jpg';
-                            var linkImage = 'http://103.154.100.26:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
-                            if (matches[1].indexOf('http://103.154.100.26:1357/ageless_sendmail/photo-') == -1) {
+                            var linkImage = 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
+                            if (matches[1].indexOf('http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-') == -1) {
                                 dirList.push(dir);
                                 matchesList.push(matches[1]);
                                 linkImageList.push(linkImage);
