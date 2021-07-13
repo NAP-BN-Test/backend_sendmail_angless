@@ -88,7 +88,6 @@ module.exports = {
                         arrayMailUnsubcribe.push(element.Email)
                     });
                 })
-                console.log(arrayMailUnsubcribe);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',

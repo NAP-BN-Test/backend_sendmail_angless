@@ -57,7 +57,6 @@ module.exports = {
                 var company = mCompany(db);
                 for (var i = 0; i < data.length; i++) {
                     var cityID = null;
-                    var countryID = null;
                     if (data[i].CityCode) {
                         var city = await mCity(db).findOne({ where: { Code: data[i].CityCode } });
                         if (city) cityID = city.ID;
@@ -69,12 +68,15 @@ module.exports = {
                             })
                         }
                     }
-                    if (data[i].CountryCode) {
-                        var country = await mCountry(db).findOne({ where: { Code: data[i].CountryCode } });
-                        if (country) countryID = country.ID;
+                    var countryID = null;
+                    if (data[i]['Country Code']) {
+                        var countryObj = await mCountry(db).findOne({ where: { Code: data[i]['Country Code'] } });
+                        if (countryObj) {
+                            countryID = countryObj.ID
+                        }
                         else {
                             await mCountry(db).create({
-                                Code: data[i].CountryCode,
+                                Code: data[i]['Country Code'],
                             }).then(data => {
                                 countryID = data.ID
                             })
@@ -98,9 +100,30 @@ module.exports = {
                             Type: 1,
                             CountryID: countryID ? countryID : null,
                             Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
-                            Role: data[i].Role ? data[i].Role : '',
+                            Role: data[i]['Properties'] ? data[i]['Properties'] : '',
                             Note: data[i].Note ? data[i].Note : '',
                         })
+                    else {
+                        await company.update({
+                            UserID: body.userID ? body.userID : null,
+                            Name: data[i]['Full Name'],
+                            // ShortName: data[i].shortName,
+                            Phone: data[i].Phone ? data[i].Phone.replace(/plus/g, '+') : '',
+                            Email: data[i].Email ? data[i].Email : '',
+                            Address: data[i].Address ? data[i].Address : '',
+                            CityID: cityID ? cityID : null,
+                            TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                            Type: 1,
+                            CountryID: countryID ? countryID : null,
+                            Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
+                            Role: data[i]['Properties'] ? data[i]['Properties'] : '',
+                            Note: data[i].Note ? data[i].Note : '',
+                        }, {
+                            where: {
+                                ID: check.ID
+                            }
+                        })
+                    }
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -364,12 +387,12 @@ module.exports = {
 
                             lastActivity: mModules.toDatetime(elm.LastActivity),
                             Fax: elm.Fax,
-                            Role: elm.Role,
+                            properties: elm.Role,
                             CategoryID: elm.CategoryID ? elm.CategoryID : '',
                             CustomerGroup: elm.CategoryCustomer ? elm.CategoryCustomer.Name : '',
                         })
                     });
-
+                    console.log(array);
                     var result = {
                         status: Constant.STATUS.SUCCESS,
                         message: '',
@@ -981,19 +1004,17 @@ module.exports = {
 
     deleteCompany: (req, res) => {
         let body = req.body;
-
-        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
-
-
-            if (body.companyIDs) {
-                let listCompany = JSON.parse(body.companyIDs);
-                let listcompanyID = [];
-                listCompany.forEach(item => {
-                    listcompanyID.push(Number(item + ""));
-                });
-
-                mUser(db).findOne({ where: { ID: body.userID } }).then(async user => {
-                    if (user.Roles == Constant.USER_ROLE.MANAGER) {
+        console.log(body);
+        try {
+            database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+                if (body.companyIDs) {
+                    let listCompany = JSON.parse(body.companyIDs);
+                    let listcompanyID = [];
+                    listCompany.forEach(item => {
+                        listcompanyID.push(Number(item + ""));
+                    });
+                    await mUser(db).findOne({ where: { ID: body.userID } }).then(async user => {
+                        // if (user.Roles == Constant.USER_ROLE.MANAGER) {
                         await mMailResponse(db).destroy({
                             where: {
                                 CompanyID: { [Op.in]: listcompanyID }
@@ -1041,15 +1062,21 @@ module.exports = {
 
                         res.json(Result.ACTION_SUCCESS);
 
-                    } else {
-                        mCompany(db).update({ UserID: null }, { where: { ID: { [Op.in]: listcompanyID } } }).then(() => {
-                            res.json(Result.ACTION_SUCCESS);
-                        })
-                    }
-                });
-            }
+                        // } else {
+                        //     mCompany(db).update({ UserID: null }, { where: { ID: { [Op.in]: listcompanyID } } }).then(() => {
+                        //         res.json(Result.ACTION_SUCCESS);
+                        //     })
+                        // }
+                    });
+                }
 
-        })
+            })
+        } catch (error) {
+            console.log(error);
+            res.json(Result.SYS_ERROR_RESULT)
+
+        }
+
     },
 
     deleteContactFromCompany: (req, res) => {
@@ -1210,7 +1237,7 @@ module.exports = {
                     for (var i = 0; i < data.items.length; i++) {
                         if (data.items[i].fields) {
                             let userFind = {};
-                            if (data.items[i].fields['name'] === 'Name') {
+                            if (data.items[i].fields['name'] === 'Full Name') {
                                 userFind['Name'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     whereOjb[Op.and] = userFind
@@ -1432,6 +1459,7 @@ module.exports = {
                 var array = [];
                 var all = await company.count({ where: whereOjb });
                 data.forEach(elm => {
+                    console.log(elm.Role);
                     array.push({
                         id: elm.ID,
                         name: elm.Name,
