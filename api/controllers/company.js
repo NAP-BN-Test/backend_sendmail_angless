@@ -1341,21 +1341,8 @@ module.exports = {
                                     whereOjb[Op.not] = userFind
                                 }
                             }
-                            if (data.items[i].fields['name'] === 'Nation') {
-                                var country = [];
-                                await mCountry(db).findAll({
-                                    where: {
-                                        [Op.or]: [
-                                            { Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' } },
-                                            { code: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' } },
-                                        ]
-                                    }
-                                }).then(data => {
-                                    data.forEach(item => {
-                                        country.push(item.ID);
-                                    })
-                                })
-                                userFind['CountryID'] = { [Op.in]: country }
+                            if (data.items[i].fields['name'] === 'Country') {
+                                userFind['CountryID'] = data.items[i]['searchFields']
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     whereOjb[Op.and] = userFind
                                 }
