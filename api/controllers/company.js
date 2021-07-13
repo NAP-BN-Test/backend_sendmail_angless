@@ -37,6 +37,7 @@ var mCompanyMailList = require('../tables/company-maillist');
 var mMailListCampaign = require('../tables/maillist-campaign');
 var mMailList = require('../tables/mail-list');
 var mMailResponse = require('../tables/mail-response');
+var mCompanyRelationship = require('../tables/company-relationship');
 
 
 
@@ -444,14 +445,34 @@ module.exports = {
                             })
                     })
                 var items = [];
-                var note = data.Note.split(",")
-                var relationship = data.Relationship.split(",")
-                for (var i = 0; i < note.length; i++) {
-                    items.push({
-                        note: note[i],
-                        relationship: relationship[i]
+                await mCompanyRelationship(db).findAll({
+                    where: {
+                        CompanyID: data.ID,
+                    }
+                }).then(relationship => {
+                    relationship.forEach(element => {
+                        items.push({
+                            relationship: element.RelationshipCompanyID,
+                            note: element.Note,
+                            companyID: element.CompanyID,
+                            relationshipCompanyID: element.RelationshipCompanyID,
+                        })
                     })
-                }
+                })
+                await mCompanyRelationship(db).findAll({
+                    where: {
+                        RelationshipCompanyID: data.ID,
+                    }
+                }).then(relationship => {
+                    relationship.forEach(element => {
+                        items.push({
+                            relationship: element.CompanyID,
+                            note: element.Note,
+                            companyID: element.RelationshipCompanyID,
+                            relationshipCompanyID: element.CompanyID,
+                        })
+                    })
+                })
                 var obj = {
                     id: data['ID'],
                     name: data['Name'],
@@ -551,6 +572,8 @@ module.exports = {
 
     updateCompany: (req, res) => {
         let body = req.body;
+        console.log(body);
+
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let listUpdate = [];
             if (body.relationship || body.relationship === '')
@@ -625,19 +648,25 @@ module.exports = {
                 listUpdate.push({ key: 'Role', value: body.Role });
             var items = JSON.parse(body.items);
             if (items.length > 0) {
-                var relationship = '';
-                var note = '';
-                for (var i = 0; i < items.length; i++) {
-                    if (i == (items.length - 1)) {
-                        relationship += items[i].relationship;
-                        note += items[i].note;
-                    } else {
-                        relationship += items[i].relationship + ',';
-                        note += items[i].note + ',';
+                await mCompanyRelationship(db).destroy({
+                    where: {
+                        [Op.or]: [
+                            {
+                                CompanyID: body.companyID,
+                            },
+                            {
+                                RelationshipCompanyID: body.companyID,
+                            }
+                        ]
                     }
+                })
+                for (let i = 0; i < items.length; i++) {
+                    await mCompanyRelationship(db).create({
+                        CompanyID: body.companyID,
+                        RelationshipCompanyID: items[i].relationship ? items[i].relationship : null,
+                        Note: items[i].note ? items[i].note : '',
+                    })
                 }
-                listUpdate.push({ key: 'Note', value: note });
-                listUpdate.push({ key: 'Relationship', value: relationship });
             }
             if (body.customerGroup || body.customerGroup === '') {
                 var listID = JSON.parse(body.customerGroup);
@@ -664,7 +693,6 @@ module.exports = {
             for (let field of listUpdate) {
                 update[field.key] = field.value
             }
-
             mCompany(db).update(update, { where: { ID: body.companyID } }).then(() => {
                 res.json(Result.ACTION_SUCCESS)
             }).catch(() => {
@@ -737,20 +765,6 @@ module.exports = {
                         { Address: body.address },
                     ]
                 })
-                var items = JSON.parse(body.items);
-                var relationship = '';
-                var note = '';
-                if (items.length > 0) {
-                    for (var i = 0; i < items.length; i++) {
-                        if (i == (items.length - 1)) {
-                            relationship += items[i].relationship;
-                            note += items[i].note;
-                        } else {
-                            relationship += items[i].relationship + ',';
-                            note += items[i].note + ',';
-                        }
-                    }
-                }
                 if (companyExits.length <= 0) {
                     if (companyObj.length) check = true;
                     company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
@@ -767,12 +781,22 @@ module.exports = {
                         CountryID: body.CountryID ? body.CountryID : null,
                         Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
                         Role: body.Role ? body.Role : '',
-                        Note: note,
-                        Relationship: relationship,
+                        // Note: note,
+                        // Relationship: relationship,
                         NoteCompany: body.noteCompany ? body.noteCompany : '',
                         NewCompanyID: body.newCompanyID ? body.newCompanyID : null,
                         OldCompanyID: body.oldCompanyID ? body.oldCompanyID : null,
                     }).then(async data => {
+                        var items = JSON.parse(body.items);
+                        if (items.length > 0) {
+                            for (let i = 0; i < items.length; i++) {
+                                await mCompanyRelationship(db).create({
+                                    CompanyID: data.ID,
+                                    RelationshipCompanyID: items[i].relationship ? items[i].relationship : null,
+                                    Note: items[i].note ? items[i].not : '',
+                                })
+                            }
+                        }
                         if (body.customerGroup) {
                             var listID = JSON.parse(body.customerGroup);
                             for (var i = 0; i < listID.length; i++) {
@@ -788,7 +812,6 @@ module.exports = {
                             exist: check,
                             id: data.ID,
                         }
-                        console.log(result);
                         res.json(result);
 
                     })
