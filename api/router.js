@@ -273,7 +273,8 @@ module.exports = function (app) {
 
     // Unsubscribe
     app.route('/unsubscribe/email_unsubscribe').post(unsubscribe.unSubscribe);
-    app.route('/unsubscribe/get_list_mail_unsubcribe_from_addressbook').post(unsubscribe.getListAddressbookUnsubscribe);
+    app.route('/crm/get_list_mail_unsubcribe_from_addressbook').post(unsubscribe.getListAddressbookUnsubscribe);
+    app.route('/crm/email_subscribe').post(unsubscribe.subscribe);
 
 
     //Aws http
