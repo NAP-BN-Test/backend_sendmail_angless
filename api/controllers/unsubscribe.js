@@ -74,5 +74,35 @@ module.exports = {
             }
         })
     },
+    getListAddressbookUnsubscribe: (req, res) => {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                let arrayMailUnsubcribe = []
+                await mMailResponse(db).findAll({
+                    where: {
+                        Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE
+                    }
+                }).then(async mail => {
+                    mail.forEach(element => {
+                        arrayMailUnsubcribe.push(element.Email)
+                    });
+                })
+                console.log(arrayMailUnsubcribe);
+                var result = {
+                    status: Constant.STATUS.SUCCESS,
+                    message: '',
+                    array
+                }
+                res.json(result);
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+
+        }, error => {
+            res.json(error)
+        })
+    }
 
 }

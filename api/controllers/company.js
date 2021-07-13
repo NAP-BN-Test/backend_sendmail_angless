@@ -49,6 +49,7 @@ module.exports = {
     // import_addressbook
     importAddressbook: (req, res) => {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let data = JSON.parse(body.data);
@@ -75,27 +76,30 @@ module.exports = {
                                 Code: data[i].CountryCode,
                             }).then(data => {
                                 countryID = data.ID
-
                             })
                         }
                     }
-                    await company.create({
-                        UserID: body.userID ? body.userID : null,
-                        Name: data[i].FullName,
-                        // ShortName: data[i].shortName,
-                        Phone: data[i].Phone ? data[i].Phone.replace(/plus/g, '+') : '',
-                        Email: data[i].Email ? data[i].Email : '',
-                        Address: data[i].Address ? data[i].Address : '',
-                        CityID: cityID ? cityID : null,
-                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                        Type: 1,
-                        CountryID: countryID ? countryID : null,
-                        Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
-                        Role: data[i].Role ? data[i].Role : '',
-                        Note: data[i].Note ? data[i].Note : '',
+                    let check = await company.findOne({
+                        where: {
+                            Name: data[i]['Full Name']
+                        }
                     })
-
-
+                    if (!check)
+                        await company.create({
+                            UserID: body.userID ? body.userID : null,
+                            Name: data[i]['Full Name'],
+                            // ShortName: data[i].shortName,
+                            Phone: data[i].Phone ? data[i].Phone.replace(/plus/g, '+') : '',
+                            Email: data[i].Email ? data[i].Email : '',
+                            Address: data[i].Address ? data[i].Address : '',
+                            CityID: cityID ? cityID : null,
+                            TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                            Type: 1,
+                            CountryID: countryID ? countryID : null,
+                            Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
+                            Role: data[i].Role ? data[i].Role : '',
+                            Note: data[i].Note ? data[i].Note : '',
+                        })
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -461,7 +465,7 @@ module.exports = {
                     city: data.City ? data.City.Name : "",
                     follow: data.UserFollows[0] ? data.UserFollows[0]['Follow'] : false,
                     Fax: data.Fax,
-                    Role: data.Role,
+                    properties: data.Role,
                     CountryID: data.Country ? data.Country.ID : "",
                     Country: data.Country ? data.Country.Name : "",
                     ParentID: company ? company.ID : '',
@@ -1444,7 +1448,7 @@ module.exports = {
                         companyType: elm.Type == 0 ? 'Có' : 'Không',
                         lastActivity: mModules.toDatetime(elm.LastActivity),
                         Fax: elm.Fax,
-                        Role: elm.Role,
+                        properties: elm.Role,
                     })
                 });
                 var result = {
