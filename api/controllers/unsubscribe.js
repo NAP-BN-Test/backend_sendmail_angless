@@ -104,6 +104,7 @@ module.exports = {
     },
     getListAddressbookUnsubscribe: (req, res) => {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let array = []
@@ -171,10 +172,13 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
-                await mMailResponse(db).update({ Type: null }, {
-                    where: { Email: body.email }
-                })
+                body.emailArray = JSON.parse(body.emailArray)
+                for (let email = 0; email < body.emailArray.length; email++) {
+                    let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
+                    await mMailResponse(db).update({ Type: null }, {
+                        where: { Email: body.emailArray[email] }
+                    })
+                }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
