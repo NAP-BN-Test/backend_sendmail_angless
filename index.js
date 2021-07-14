@@ -66,7 +66,7 @@ app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (re
             success: false
         });
     } else {
-        database.checkServerInvalid('103.154.100.26', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+        database.checkServerInvalid('dbdev.namanphu.vn', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
             let idLink = await mFileAttach(db).create({
                 Name: nameFile + pathFile,
                 Link: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
@@ -137,8 +137,8 @@ var database = require('./api/db');
 var resetJob = require('./api/controllers/emai-list');
 
 server.listen(port, function () {
-    // {"ip":"103.154.100.26","dbName":"AGELESS_EMAIL_DB"}, 'localhost', 'AGELESS_EMAIL_DB'
-    database.checkServerInvalid('103.154.100.26', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+    // {"ip":"dbdev.namanphu.vn","dbName":"AGELESS_EMAIL_DB"}, 'localhost', 'AGELESS_EMAIL_DB'
+    database.checkServerInvalid('dbdev.namanphu.vn', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
         try {
             resetJob.resetJob(db);
         } catch (error) {

@@ -140,10 +140,10 @@ async function resetJob(db) {
                             var job = schedule.scheduleJob(timeSend, async function () {
                                 let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
                                 let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                                let httpTrack = `<img src="http://103.154.100.26:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                                let httpTrack = `<img src="http://dbdev.namanphu.vn:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
                                 let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                                 let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                                let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://103.154.100.26:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                                let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://dbdev.namanphu.vn:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                                 let bodyHtml = body.body;
                                 bodyHtml = httpTrack + bodyHtml;
                                 bodyHtml = bodyHtml + unSubscribe;
@@ -1376,10 +1376,10 @@ module.exports = {
                             let emailReceived = arrayEmail[f].name;
                             let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
                             let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
-                            let httpTrack = `<img src="http://103.154.100.26:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
+                            let httpTrack = `<img src="http://dbdev.namanphu.vn:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
                             let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                             let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://103.154.100.26:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://dbdev.namanphu.vn:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                             let bodyHtml = body.body;
                             bodyHtml = httpTrack + bodyHtml;
                             bodyHtml = bodyHtml + unSubscribe;

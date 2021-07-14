@@ -135,7 +135,7 @@ module.exports = {
                             for (let con = 0; con < contact.length; con++) {
                                 let arrayEmail = await convertStringToListObjectEmail(contact[con].Email)
                                 for (let em = 0; em < arrayEmail.length; em++) {
-                                    let check = await checkUnsubsctibe(db, companyFind[com].Email)
+                                    let check = await checkUnsubsctibe(db, arrayEmail[em].name)
                                     let status = 'Subcribe'
                                     if (check == true) {
                                         status = 'Unsubcribe'
