@@ -1669,6 +1669,7 @@ module.exports = {
             try {
                 let array = []
                 let listID = JSON.parse(body.listID);
+                let stt = 0;
                 for (var i = 0; i < listID.length; i++) {
                     let CompanyMailList = mCompanyMailList(db);
                     CompanyMailList.belongsTo(mCompany(db), { foreignKey: 'CompanyID', sourceKey: 'CompanyID', as: 'company' })
@@ -1692,6 +1693,7 @@ module.exports = {
                                     }
                                 })
                                 array.push({
+                                    stt: stt.toString(),
                                     addressbookID: listID[i],
                                     name: data[i].company ? data[i].company.Name : '',
                                     email: data[i].company ? data[i].company.Email : '',
@@ -1701,6 +1703,8 @@ module.exports = {
                                     group: group ? group.Name : '',
                                     groupID: group ? group.ID : null,
                                 })
+                                stt += 1
+
                             }
 
                         }

@@ -666,7 +666,6 @@ module.exports = {
 
             if (body.Fax || body.Fax === '')
                 listUpdate.push({ key: 'Fax', value: body.Fax.replace(/plus/g, '+') });
-
             if (body.Role || body.Role === '')
                 listUpdate.push({ key: 'Role', value: body.Role });
             var items = JSON.parse(body.items);
@@ -1056,6 +1055,11 @@ module.exports = {
                         await rmUserFlow(db).destroy({
                             where: { CompanyID: { [Op.in]: listcompanyID } }
                         });
+                        await mCompanyRelationship(db).destroy({
+                            where: {
+                                CompanyID: { [Op.in]: listcompanyID }
+                            }
+                        })
                         await mCompany(db).destroy({
                             where: { ID: { [Op.in]: listcompanyID } }
                         });
