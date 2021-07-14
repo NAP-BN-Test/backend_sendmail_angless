@@ -220,6 +220,8 @@ module.exports = function (app) {
 
     app.route('/crm/add_addressbook_to_maillist').post(emailList.addCompanyTodMailList);
 
+    app.route('/crm/check_duplicate_addressbook').post(emailList.checkDuplicateAddressbook);
+
     app.route('/crm/add_mail_campain').post(emailList.addMailCampain);
 
     //  108/01/2020

@@ -316,6 +316,8 @@ async function deleteImageResidual(listLink, listLinkNew) {
         }
     }
 }
+var mMailList = require('../tables/mail-list');
+
 module.exports = {
     deleteImageResidual,
     resetJob,
@@ -1010,6 +1012,7 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
+                let array = []
                 if (body.listID) {
                     let listID = JSON.parse(body.listID);
                     for (var i = 0; i < listID.length; i++) {
@@ -1027,8 +1030,14 @@ module.exports = {
                         }
                     }
                 }
-                res.json(Result.ACTION_SUCCESS);
+                let result = {
+                    status: Constant.STATUS.SUCCESS,
+                    message: Constant.MESSAGE.ACTION_SUCCESS,
+                    // array: array
+                }
+                res.json(result);
             } catch (error) {
+                console.log(error);
                 res.json(Result.SYS_ERROR_RESULT)
             }
 
@@ -1654,4 +1663,70 @@ module.exports = {
             res.json(error)
         })
     },
+    checkDuplicateAddressbook: async function (req, res) {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                let array = []
+                let listID = JSON.parse(body.listID);
+                for (var i = 0; i < listID.length; i++) {
+                    let CompanyMailList = mCompanyMailList(db);
+                    CompanyMailList.belongsTo(mCompany(db), { foreignKey: 'CompanyID', sourceKey: 'CompanyID', as: 'company' })
+                    await CompanyMailList.findAll({
+                        where: {
+                            CompanyID: listID[i],
+                        },
+                        include: [
+                            {
+                                model: mCompany(db),
+                                required: false,
+                                as: 'company'
+                            },
+                        ],
+                    }).then(async data => {
+                        if (data) {
+                            for (let i = 0; i < data.length; i++) {
+                                let group = await mMailList(db).findOne({
+                                    where: {
+                                        ID: data[i].MailListID
+                                    }
+                                })
+                                array.push({
+                                    addressbookID: listID[i],
+                                    name: data[i].company ? data[i].company.Name : '',
+                                    email: data[i].company ? data[i].company.Email : '',
+                                    address: data[i].company ? data[i].company.Address : '',
+                                    shortName: data[i].company ? data[i].company.ShortName : '',
+                                    phone: data[i].company ? data[i].company.Phone : '',
+                                    group: group ? group.Name : '',
+                                    groupID: group ? group.ID : null,
+                                })
+                            }
+
+                        }
+                    })
+                }
+                if (array.length <= 0)
+                    for (var i = 0; i < listID.length; i++) {
+                        await mCompanyMailList(db).create({
+                            CompanyID: listID[i],
+                            MailListID: body.mailListID,
+                        })
+                    }
+                var result = {
+                    status: Constant.STATUS.SUCCESS,
+                    message: Constant.MESSAGE.ACTION_SUCCESS,
+                    array: array
+                }
+                res.json(result);
+
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+
+        }, error => {
+            res.json(error)
+        })
+    }
 }
