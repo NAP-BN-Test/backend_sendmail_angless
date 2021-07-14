@@ -170,6 +170,7 @@ module.exports = {
     },
     subscribe: (req, res) => {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 body.emailArray = JSON.parse(body.emailArray)
@@ -181,7 +182,7 @@ module.exports = {
                 }
                 var result = {
                     status: Constant.STATUS.SUCCESS,
-                    message: '',
+                    message: 'Thao tác thành công',
                 }
                 res.json(result);
             } catch (error) {
