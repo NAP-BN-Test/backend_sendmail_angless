@@ -143,7 +143,7 @@ async function resetJob(db) {
                                 let httpTrack = `<img src="http://dbdev.namanphu.vn:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
                                 let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                                 let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                                let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://dbdev.namanphu.vn:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                                let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://dbdev.namanphu.vn:2220/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                                 let bodyHtml = body.body;
                                 bodyHtml = httpTrack + bodyHtml;
                                 bodyHtml = bodyHtml + unSubscribe;
@@ -1379,7 +1379,7 @@ module.exports = {
                             let httpTrack = `<img src="http://dbdev.namanphu.vn:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
                             let tokenUnsubscribe = `email=${emailReceived}&ip=${body.ip}&dbName=${body.dbName}&secretKey=${body.secretKey}&campainID=${mailListID}&idGetInfo=${body.userID}&type=Maillist`;
                             let tokenUnsubscribeEncrypt = mModules.encryptKey(tokenUnsubscribe);
-                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://dbdev.namanphu.vn:1120/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
+                            let unSubscribe = `<p>&nbsp;</p><p style="text-align: center;"><span style="font-size: xx-small;"><a href="http://dbdev.namanphu.vn:2220/#/submit?token=${tokenUnsubscribeEncrypt}"><u><span style="color: #0088ff;">Click Here</span></u></a> to unsubscribe from this email</span></p>`
                             let bodyHtml = body.body;
                             bodyHtml = httpTrack + bodyHtml;
                             bodyHtml = bodyHtml + unSubscribe;
