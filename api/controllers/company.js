@@ -359,14 +359,6 @@ module.exports = {
 
                     var array = [];
                     data.forEach(elm => {
-                        let role = JSON.parse(elm.Role)
-                        let roleString = ''
-                        for (let i = 0; i <= role.length; i++) {
-                            roleString += role[i] + ', '
-                            if (i == (role.length - 1))
-                                roleString += role[i]
-
-                        }
                         array.push({
                             id: elm.ID,
                             name: elm.Name,
@@ -394,7 +386,7 @@ module.exports = {
 
                             lastActivity: mModules.toDatetime(elm.LastActivity),
                             Fax: elm.Fax,
-                            properties: roleString,
+                            properties: elm.Role,
                             CategoryID: elm.CategoryID ? elm.CategoryID : '',
                             CustomerGroup: elm.CategoryCustomer ? elm.CategoryCustomer.Name : '',
                         })
@@ -794,6 +786,14 @@ module.exports = {
                         { Address: body.address },
                     ]
                 })
+                let role = JSON.parse(body.properties)
+                let roleString = ''
+                for (let i = 0; i < role.length; i++) {
+                    roleString += role[i] + ', '
+                    if (i == (role.length - 1))
+                        roleString += role[i]
+
+                }
                 if (companyExits.length <= 0) {
                     if (companyObj.length) check = true;
                     company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
@@ -809,7 +809,7 @@ module.exports = {
                         Type: 1,
                         CountryID: body.CountryID ? body.CountryID : null,
                         Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
-                        Role: body.properties ? body.properties : '',
+                        Role: roleString,
                         // Note: note,
                         // Relationship: relationship,
                         NoteCompany: body.noteCompany ? body.noteCompany : '',
