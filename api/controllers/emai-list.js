@@ -1669,6 +1669,7 @@ module.exports = {
             try {
                 let array = []
                 let listID = JSON.parse(body.listID);
+                console.log(listID);
                 let stt = 0;
                 for (var i = 0; i < listID.length; i++) {
                     let CompanyMailList = mCompanyMailList(db);
@@ -1686,25 +1687,24 @@ module.exports = {
                         ],
                     }).then(async data => {
                         if (data) {
-                            for (let i = 0; i < data.length; i++) {
+                            for (let d = 0; d < data.length; d++) {
                                 let group = await mMailList(db).findOne({
                                     where: {
-                                        ID: data[i].MailListID
+                                        ID: data[d].MailListID
                                     }
                                 })
                                 array.push({
                                     stt: stt.toString(),
                                     addressbookID: listID[i],
-                                    name: data[i].company ? data[i].company.Name : '',
-                                    email: data[i].company ? data[i].company.Email : '',
-                                    address: data[i].company ? data[i].company.Address : '',
-                                    shortName: data[i].company ? data[i].company.ShortName : '',
-                                    phone: data[i].company ? data[i].company.Phone : '',
+                                    name: data[d].company ? data[d].company.Name : '',
+                                    email: data[d].company ? data[d].company.Email : '',
+                                    address: data[d].company ? data[d].company.Address : '',
+                                    shortName: data[d].company ? data[d].company.ShortName : '',
+                                    phone: data[d].company ? data[d].company.Phone : '',
                                     group: group ? group.Name : '',
                                     groupID: group ? group.ID : null,
                                 })
                                 stt += 1
-
                             }
 
                         }

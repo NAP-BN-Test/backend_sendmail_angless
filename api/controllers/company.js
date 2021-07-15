@@ -666,8 +666,8 @@ module.exports = {
 
             if (body.Fax || body.Fax === '')
                 listUpdate.push({ key: 'Fax', value: body.Fax.replace(/plus/g, '+') });
-            if (body.Role || body.Role === '')
-                listUpdate.push({ key: 'Role', value: body.Role });
+            if (body.properties || body.properties === '')
+                listUpdate.push({ key: 'Properties', value: body.properties });
             var items = JSON.parse(body.items);
             if (items.length > 0) {
                 await mCompanyRelationship(db).destroy({
@@ -802,7 +802,7 @@ module.exports = {
                         Type: 1,
                         CountryID: body.CountryID ? body.CountryID : null,
                         Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
-                        Role: body.Role ? body.Role : '',
+                        Role: body.properties ? body.properties : '',
                         // Note: note,
                         // Relationship: relationship,
                         NoteCompany: body.noteCompany ? body.noteCompany : '',
