@@ -359,7 +359,14 @@ module.exports = {
 
                     var array = [];
                     data.forEach(elm => {
+                        let role = JSON.parse(elm.Role)
+                        let roleString = ''
+                        for (let i = 0; i <= role.length; i++) {
+                            roleString += role[i] + ', '
+                            if (i == (role.length - 1))
+                                roleString += role[i]
 
+                        }
                         array.push({
                             id: elm.ID,
                             name: elm.Name,
@@ -387,7 +394,7 @@ module.exports = {
 
                             lastActivity: mModules.toDatetime(elm.LastActivity),
                             Fax: elm.Fax,
-                            properties: elm.Role,
+                            properties: roleString,
                             CategoryID: elm.CategoryID ? elm.CategoryID : '',
                             CustomerGroup: elm.CategoryCustomer ? elm.CategoryCustomer.Name : '',
                         })
