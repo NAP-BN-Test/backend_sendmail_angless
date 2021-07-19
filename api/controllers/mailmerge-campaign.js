@@ -220,7 +220,7 @@ module.exports = {
                     text = text.replace('data:image/png;base64,', "data:image/jpeg;base64,");
                     const re = RegExp('<img src="(.*?)">', 'g');
                     const keyField = []
-                    const DIR = 'C:/images_services/ageless_sendmail/';
+                    const DIR = 'D:/images_services/ageless_sendmail/';
                     var datetime = new Date();
                     var listLinkNew = [];
                     var matchesList = [];
@@ -255,10 +255,13 @@ module.exports = {
                         }
                     }
                     // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
-                    update.push({ key: 'Body', value: text });
+                    console.log(text);
+                    update.push({ key: 'body', value: text });
                     await deleteImageResidual(listLink, listLinkNew);
                 }
+                console.log(update, body.ID);
                 database.updateTable(update, mTemplate(db), body.ID).then(response => {
+                    console.log(response);
                     if (response == 1) {
                         res.json(Result.ACTION_SUCCESS);
                     } else {
@@ -303,6 +306,7 @@ module.exports = {
                         message: '',
                         obj: obj
                     }
+                    console.log(obj);
                     res.json(result);
                 }
                 else {
