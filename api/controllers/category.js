@@ -160,24 +160,81 @@ module.exports = {
     //===============Country
     getListCountry: (req, res) => {
         let body = req.body;
-
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
-
             try {
-                let whereSearch = [];
-                if (body.searchKey) {
-                    whereSearch = [
-                        { Name: { [Op.like]: '%' + body.searchKey + '%' } },
-                        { Code: { [Op.like]: '%' + body.searchKey + '%' } },
-                    ];
-                } else {
-                    whereSearch = [
-                        { Name: { [Op.like]: '%%' } },
-                        { Code: { [Op.like]: '%%' } },
-                    ];
+                let whereObj = {}
+                let arraySearchAnd = [];
+                let arraySearchOr = [];
+                let arraySearchNot = [];
+                if (body.dataSearch) {
+                    var data = JSON.parse(body.dataSearch)
+                    if (data.search) {
+                        where = {
+                            [Op.or]: [
+                                {
+                                    Name: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                                {
+                                    Code: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                            ]
+                        };
+                    } else {
+                        where = [{
+                            ID: {
+                                [Op.ne]: null
+                            }
+                        },];
+                    }
+                    whereObj[Op.and] = where
+                    if (data.items) {
+                        for (var i = 0; i < data.items.length; i++) {
+                            let userFind = {};
+                            if (data.items[i].fields['name'] === 'Tên nước') {
+                                userFind['Name'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    arraySearchAnd.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    arraySearchOr.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    arraySearchNot.push(userFind)
+                                }
+                            }
+                            if (data.items[i].fields['name'] === 'Mã nước') {
+                                userFind['Code'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    arraySearchAnd.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    arraySearchOr.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    arraySearchNot.push(userFind)
+                                }
+                            }
+                        }
+                        if (arraySearchOr.length > 0)
+                            whereObj[Op.or] = arraySearchOr
+                        if (arraySearchAnd.length > 0)
+                            whereObj[Op.and] = arraySearchAnd
+                        if (arraySearchNot.length > 0)
+                            whereObj[Op.not] = arraySearchNot
+                    }
+
                 }
                 var countryData = await mCountry(db).findAll({
-                    where: { [Op.or]: whereSearch },
+                    where: whereObj,
                     raw: true,
                     order: [
                         ['Name', 'ASC']
@@ -187,7 +244,7 @@ module.exports = {
                 });
 
                 var count = await mCountry(db).count({
-                    where: { [Op.or]: whereSearch }
+                    where: whereObj
                 });
 
                 var array = [];

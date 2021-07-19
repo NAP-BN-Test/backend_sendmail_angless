@@ -78,7 +78,7 @@ module.exports = {
                     var emailArray = [];
                     addInf.forEach(item => {
                         countEmail += 1;
-                        emailArray += item.Email + ', ';
+                        emailArray += item.Email + ',';
                     })
                     var campain = await mMailCampain(db).findOne({
                         where: {

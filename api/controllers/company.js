@@ -437,96 +437,101 @@ module.exports = {
 
                 ]
             }).then(async data => {
-                let companyParent = await rmCompanyChild(db).findOne({ where: { ChildID: body.companyID } });
-                let company;
-                if (companyParent) {
-                    company = await mCompany(db).findOne({ where: { ID: companyParent.ParentID } })
-                }
-                let listGroup = [];
-                let listGroupID = [];
-                await mCompanyMailList(db).findAll({
-                    where: { CompanyID: data['ID'] },
-                }).then(companymaillist => {
-                    if (companymaillist.length > 0)
-                        companymaillist.forEach(item => {
-                            listGroupID.push(item.MailListID);
-                        })
-                })
-                if (listGroupID)
-                    await mMailList(db).findAll({
-                        where: {
-                            ID: { [Op.in]: listGroupID },
-                        }
-                    }).then(maillist => {
-                        if (maillist)
-                            maillist.forEach(item => {
-                                listGroup.push({
-                                    id: Number(item.ID),
-                                    name: item.Name,
-                                })
+                if (data) {
+                    let companyParent = await rmCompanyChild(db).findOne({ where: { ChildID: body.companyID } });
+                    let company;
+                    if (companyParent) {
+                        company = await mCompany(db).findOne({ where: { ID: companyParent.ParentID } })
+                    }
+                    let listGroup = [];
+                    let listGroupID = [];
+                    await mCompanyMailList(db).findAll({
+                        where: { CompanyID: data['ID'] },
+                    }).then(companymaillist => {
+                        if (companymaillist.length > 0)
+                            companymaillist.forEach(item => {
+                                listGroupID.push(item.MailListID);
                             })
                     })
-                var items = [];
-                await mCompanyRelationship(db).findAll({
-                    where: {
-                        CompanyID: data.ID,
-                    }
-                }).then(relationship => {
-                    relationship.forEach(element => {
-                        items.push({
-                            relationship: element.RelationshipCompanyID,
-                            note: element.Note,
-                            companyID: element.CompanyID,
-                            relationshipCompanyID: element.RelationshipCompanyID,
+                    if (listGroupID)
+                        await mMailList(db).findAll({
+                            where: {
+                                ID: { [Op.in]: listGroupID },
+                            }
+                        }).then(maillist => {
+                            if (maillist)
+                                maillist.forEach(item => {
+                                    listGroup.push({
+                                        id: Number(item.ID),
+                                        name: item.Name,
+                                    })
+                                })
+                        })
+                    var items = [];
+                    await mCompanyRelationship(db).findAll({
+                        where: {
+                            CompanyID: data.ID,
+                        }
+                    }).then(relationship => {
+                        relationship.forEach(element => {
+                            items.push({
+                                relationship: element.RelationshipCompanyID,
+                                note: element.Note,
+                                companyID: element.CompanyID,
+                                relationshipCompanyID: element.RelationshipCompanyID,
+                            })
                         })
                     })
-                })
-                await mCompanyRelationship(db).findAll({
-                    where: {
-                        RelationshipCompanyID: data.ID,
-                    }
-                }).then(relationship => {
-                    relationship.forEach(element => {
-                        items.push({
-                            relationship: element.CompanyID,
-                            note: element.Note,
-                            companyID: element.RelationshipCompanyID,
-                            relationshipCompanyID: element.CompanyID,
+                    await mCompanyRelationship(db).findAll({
+                        where: {
+                            RelationshipCompanyID: data.ID,
+                        }
+                    }).then(relationship => {
+                        relationship.forEach(element => {
+                            items.push({
+                                relationship: element.CompanyID,
+                                note: element.Note,
+                                companyID: element.RelationshipCompanyID,
+                                relationshipCompanyID: element.CompanyID,
+                            })
                         })
                     })
-                })
-                var obj = {
-                    id: data['ID'],
-                    name: data['Name'],
-                    shortName: data['ShortName'],
-                    address: data['Address'],
-                    phone: data['Phone'],
-                    email: data['Email'],
-                    timeActive: data['TimeActive'],
-                    website: data['Website'],
-                    cityID: data.City ? data.City.ID : -1,
-                    city: data.City ? data.City.Name : "",
-                    follow: data.UserFollows[0] ? data.UserFollows[0]['Follow'] : false,
-                    Fax: data.Fax,
-                    properties: data.Role,
-                    CountryID: data.Country ? data.Country.ID : "",
-                    Country: data.Country ? data.Country.Name : "",
-                    ParentID: company ? company.ID : '',
-                    ParentName: company ? company.Name : '',
-                    oldName: data['oldCompany'] ? data['oldCompany']['Name'] : '',
-                    oldID: data['oldCompany'] ? data['oldCompany']['ID'] : '',
-                    newName: data['newCompany'] ? data['newCompany']['Name'] : '',
-                    newID: data['newCompany'] ? data['newCompany']['ID'] : '',
-                    customerGroup: listGroup,
-                    items: items,
-                    noteCompany: data['NoteCompany'],
+                    var obj = {
+                        id: data['ID'],
+                        name: data['Name'],
+                        shortName: data['ShortName'],
+                        address: data['Address'],
+                        phone: data['Phone'],
+                        email: data['Email'],
+                        timeActive: data['TimeActive'],
+                        website: data['Website'],
+                        cityID: data.City ? data.City.ID : -1,
+                        city: data.City ? data.City.Name : "",
+                        follow: data.UserFollows[0] ? data.UserFollows[0]['Follow'] : false,
+                        Fax: data.Fax,
+                        properties: data.Role,
+                        CountryID: data.Country ? data.Country.ID : "",
+                        Country: data.Country ? data.Country.Name : "",
+                        ParentID: company ? company.ID : '',
+                        ParentName: company ? company.Name : '',
+                        oldName: data['oldCompany'] ? data['oldCompany']['Name'] : '',
+                        oldID: data['oldCompany'] ? data['oldCompany']['ID'] : '',
+                        newName: data['newCompany'] ? data['newCompany']['Name'] : '',
+                        newID: data['newCompany'] ? data['newCompany']['ID'] : '',
+                        customerGroup: listGroup,
+                        items: items,
+                        noteCompany: data['NoteCompany'],
+                    }
+                    var result = {
+                        status: Constant.STATUS.SUCCESS,
+                        message: '',
+                        obj: obj
+                    }
+                    res.json(result)
+                } else {
+                    res.json(Result.NO_DATA_RESULT);
                 }
-                var result = {
-                    status: Constant.STATUS.SUCCESS,
-                    message: '',
-                    obj: obj
-                }
-                res.json(result)
+
             })
 
         })
@@ -789,7 +794,7 @@ module.exports = {
                 let role = JSON.parse(body.properties)
                 let roleString = ''
                 for (let i = 0; i < role.length; i++) {
-                    roleString += role[i] + ', '
+                    roleString += role[i] + ','
                     if (i == (role.length - 1))
                         roleString += role[i]
 

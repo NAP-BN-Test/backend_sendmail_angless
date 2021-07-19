@@ -427,7 +427,7 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                var data = JSON.parse(body.data)
+                var data = JSON.parse(body.dataSearch)
 
                 if (data.search) {
                     where = [
@@ -661,6 +661,7 @@ module.exports = {
 
     getListMailCampain: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var userRole = await cUser.checkUser(body.ip, body.dbName, body.userID);
@@ -704,50 +705,107 @@ module.exports = {
                         ],
                     });
                 } else {
+                    let whereObj = {}
+                    let arraySearchAnd = [];
+                    let arraySearchOr = [];
+                    let arraySearchNot = [];
                     var data = JSON.parse(body.data);
                     if (data.search) {
-                        where = [
-                            { Name: { [Op.like]: '%' + data.search + '%' } },
-                            { Type: 'MailList' }
-                        ];
+                        let ownerIDs = []
+                        await mUser(db).findAll({
+                            where: {
+                                Name: { [Op.like]: '%' + data.search + '%' },
+                            }
+                        }).then(data => {
+                            data.forEach(item => {
+                                ownerIDs.push(item.ID)
+                            })
+                        })
+                        where = {
+                            [Op.or]: [
+                                { Name: { [Op.like]: '%' + data.search + '%' } },
+                                { Subject: { [Op.like]: '%' + data.search + '%' } },
+                                { OwnerID: { [Op.in]: ownerIDs } },
+                            ]
+                        };
                     } else {
-                        where = [
-                            { Name: { [Op.like]: '%%' } },
-                            { Type: 'MailList' }
-                        ];
+                        where = [{
+                            ID: {
+                                [Op.ne]: null
+                            },
+                        },];
                     }
-                    let whereOjb = { [Op.and]: where };
+                    let arrayAnd = []
+                    arrayAnd.push(where)
+                    arrayAnd.push({
+                        Type: 'MailList'
+                    })
+                    whereObj[Op.and] = where
                     if (data.items) {
                         for (var i = 0; i < data.items.length; i++) {
                             let userFind = {};
                             if (data.items[i].fields['name'] === 'Name') {
-                                userFind['Name'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Name'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
-                                    whereOjb[Op.and] = userFind
+                                    arraySearchAnd.push(userFind)
                                 }
                                 if (data.items[i].conditionFields['name'] == 'Or') {
-                                    whereOjb[Op.or] = userFind
+                                    arraySearchOr.push(userFind)
                                 }
                                 if (data.items[i].conditionFields['name'] == 'Not') {
-                                    whereOjb[Op.not] = userFind
+                                    arraySearchNot.push(userFind)
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Subject') {
-                                userFind['Subject'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Subject'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
-                                    whereOjb[Op.and] = userFind
+                                    arraySearchAnd.push(userFind)
                                 }
                                 if (data.items[i].conditionFields['name'] == 'Or') {
-                                    whereOjb[Op.or] = userFind
+                                    arraySearchOr.push(userFind)
                                 }
                                 if (data.items[i].conditionFields['name'] == 'Not') {
-                                    whereOjb[Op.not] = userFind
+                                    arraySearchNot.push(userFind)
+                                }
+                            }
+                            if (data.items[i].fields['name'] === 'Owner') {
+                                let ownerIDs = []
+                                await mUser(db).findAll({
+                                    where: {
+                                        Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' },
+                                    }
+                                }).then(data => {
+                                    data.forEach(item => {
+                                        ownerIDs.push(item.ID)
+                                    })
+                                })
+                                userFind['OwnerID'] = {
+                                    [Op.like]: { [Op.in]: ownerIDs }
+                                }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    arraySearchAnd.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    arraySearchOr.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    arraySearchNot.push(userFind)
                                 }
                             }
                         }
+                        if (arraySearchOr.length > 0)
+                            whereObj[Op.or] = arraySearchOr
+                        if (arraySearchAnd.length > 0)
+                            whereObj[Op.and] = arraySearchAnd
+                        if (arraySearchNot.length > 0)
+                            whereObj[Op.not] = arraySearchNot
                     }
                     var mailCampainData = await mailCampain.findAll({
-                        where: whereOjb,
+                        where: whereObj,
                         include: [
                             { model: mUser(db) },
                             { model: mTemplate(db), required: false, as: 'Template' },
