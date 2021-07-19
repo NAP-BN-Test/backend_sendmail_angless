@@ -81,7 +81,31 @@ async function getAdditionalInfomation(db, CampaignID, page, itemPerPage) {
     })
     return obj;
 }
-
+async function deleteImageResidual(listLink, listLinkNew) {
+    for (var i = 0; i < listLink.length; i++) {
+        if (!checkDuplicate(listLinkNew, listLink[i])) {
+            await deleteImage(listLink[i]);
+        }
+    }
+}
+async function getListLinkImage(db, templateID) {
+    try {
+        var template = await mTemplate(db).findOne({
+            where: { ID: templateID }
+        })
+        var keyField = []
+        if (template) {
+            let body = template.Body;
+            const re = RegExp('<img src="(.*?)">', 'g');
+            while ((matches = re.exec(body)) !== null) {
+                keyField.push(matches[1]);
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+    return keyField;
+}
 module.exports = {
     // --------------------- Template -----------------------------------------------------------
     getAdditionalInfomation,
@@ -174,13 +198,11 @@ module.exports = {
     },
     updateMailmergeTemplate: (req, res) => {
         let body = req.body;
-
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
 
             try {
                 let update = [];
-                if (body.body || body.body === '')
-                    update.push({ key: 'body', value: body.body });
                 if (body.Name || body.Name === '')
                     update.push({ key: 'Name', value: body.Name });
                 if (body.Description || body.Description === '')
@@ -191,7 +213,51 @@ module.exports = {
                     update.push({ key: 'TimeRemind', value: body.TimeRemind });
                 if (body.TimeStart || body.TimeStart === '')
                     update.push({ key: 'TimeStart', value: body.TimeStart });
-
+                if (body.body || body.body === '') {
+                    var listLink = await getListLinkImage(db, body.ID);
+                    let text = body.body;
+                    text = text.replace(/%20/g, ' ');
+                    text = text.replace('data:image/png;base64,', "data:image/jpeg;base64,");
+                    const re = RegExp('<img src="(.*?)">', 'g');
+                    const keyField = []
+                    const DIR = 'C:/images_services/ageless_sendmail/';
+                    var datetime = new Date();
+                    var listLinkNew = [];
+                    var matchesList = [];
+                    var linkImageList = [];
+                    var dirList = [];
+                    while ((matches = re.exec(text)) !== null) {
+                        var numberRandom = Math.floor(Math.random() * 1000000);
+                        nameMiddle = Date.parse(datetime) + numberRandom.toString();
+                        var dir = DIR + 'photo-' + nameMiddle + '.jpg';
+                        var linkImage = 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + '.jpg'
+                        if (matches[1].indexOf('http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-') == -1) {
+                            dirList.push(dir);
+                            matchesList.push(matches[1]);
+                            linkImageList.push(linkImage);
+                            keyField.push(matches[1].replace(/ /g, '+'));
+                            listLinkNew.push(linkImage);
+                        }
+                        else {
+                            listLinkNew.push(matches[1]);
+                        }
+                    }
+                    if (matchesList.length > 0) {
+                        for (var j = 0; j < matchesList.length; j++) {
+                            var base64Data;
+                            text = text.replace(matchesList[j], linkImageList[j]);
+                            base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
+                            base64Data = base64Data.replace(/ /g, '+');
+                            var buf = new Buffer.from(base64Data, "base64");
+                            require("fs").writeFile(dirList[j], buf, function (err) {
+                                if (err) console.log(err + '');
+                            });
+                        }
+                    }
+                    // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
+                    update.push({ key: 'Body', value: text });
+                    await deleteImageResidual(listLink, listLinkNew);
+                }
                 database.updateTable(update, mTemplate(db), body.ID).then(response => {
                     if (response == 1) {
                         res.json(Result.ACTION_SUCCESS);

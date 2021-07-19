@@ -1494,7 +1494,6 @@ module.exports = {
 
     updateMailCampain: async function (req, res) {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let update = [];
