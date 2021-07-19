@@ -220,7 +220,7 @@ module.exports = {
                     text = text.replace('data:image/png;base64,', "data:image/jpeg;base64,");
                     const re = RegExp('<img src="(.*?)">', 'g');
                     const keyField = []
-                    const DIR = 'D:/images_services/ageless_sendmail/';
+                    const DIR = 'C:/images_services/ageless_sendmail/';
                     var datetime = new Date();
                     var listLinkNew = [];
                     var matchesList = [];
