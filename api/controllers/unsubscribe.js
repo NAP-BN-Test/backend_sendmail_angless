@@ -108,10 +108,105 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let array = []
+                let whereObj = {}
+                let arraySearchAnd = [];
+                let arraySearchOr = [];
+                let arraySearchNot = [];
+                if (body.dataSearch) {
+                    var data = JSON.parse(body.dataSearch)
+                    if (data.search) {
+                        where = {
+                            [Op.or]: [
+                                {
+                                    Name: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                                {
+                                    Address: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                                {
+                                    ID: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                                {
+                                    Email: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                            ]
+                        };
+                    } else {
+                        where = [{
+                            ID: {
+                                [Op.ne]: null
+                            }
+                        },];
+                    }
+                    whereObj[Op.and] = where
+                    if (data.items) {
+                        for (var i = 0; i < data.items.length; i++) {
+                            let userFind = {};
+                            if (data.items[i].fields['name'] === 'Address') {
+                                userFind['Address'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    arraySearchAnd.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    arraySearchOr.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    arraySearchNot.push(userFind)
+                                }
+                            }
+                            if (data.items[i].fields['name'] === 'Addressbook') {
+                                userFind['Name'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    arraySearchAnd.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    arraySearchOr.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    arraySearchNot.push(userFind)
+                                }
+                            }
+                            if (data.items[i].fields['name'] === 'Email') {
+                                userFind['Email'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    arraySearchAnd.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    arraySearchOr.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    arraySearchNot.push(userFind)
+                                }
+                            }
+                        }
+                        if (arraySearchOr.length > 0)
+                            whereObj[Op.or] = arraySearchOr
+                        if (arraySearchAnd.length > 0)
+                            whereObj[Op.and] = arraySearchAnd
+                        if (arraySearchNot.length > 0)
+                            whereObj[Op.not] = arraySearchNot
+                    }
+
+                }
                 await mCompany(db).findAll({
                     order: [['ID', 'DESC']],
-                    offset: Number(body.itemPerPage) * (Number(body.page) - 1),
-                    limit: Number(body.itemPerPage)
+                    // offset: Number(body.itemPerPage) * (Number(body.page) - 1),
+                    // limit: Number(body.itemPerPage),
+                    where: whereObj,
                 }).then(async companyFind => {
                     for (let com = 0; com < companyFind.length; com++) {
                         let check = await checkUnsubsctibe(db, companyFind[com].Email)
@@ -156,7 +251,7 @@ module.exports = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
                     array: array,
-                    all: await mCompany(db).count()
+                    all: await mCompany(db).count({ where: whereObj })
                 }
                 res.json(result);
             } catch (error) {
