@@ -726,25 +726,24 @@ module.exports = {
                                 { Name: { [Op.like]: '%' + data.search + '%' } },
                                 { Subject: { [Op.like]: '%' + data.search + '%' } },
                                 { OwnerID: { [Op.in]: ownerIDs } },
-                            ]
+                                { Type: 'MailList' }
+
+                            ],
                         };
                     } else {
                         where = [{
                             ID: {
                                 [Op.ne]: null
                             },
+                            Type: 'MailList'
                         },];
                     }
-                    let arrayAnd = []
-                    arrayAnd.push(where)
-                    arrayAnd.push({
-                        Type: 'MailList'
-                    })
                     whereObj[Op.and] = where
+                    console.log(data.items);
                     if (data.items) {
                         for (var i = 0; i < data.items.length; i++) {
                             let userFind = {};
-                            if (data.items[i].fields['name'] === 'Name') {
+                            if (data.items[i].fields['name'] === 'Tên chiến dịch') {
                                 userFind['Name'] = {
                                     [Op.like]: '%' + data.items[i]['searchFields'] + '%'
                                 }
@@ -758,7 +757,7 @@ module.exports = {
                                     arraySearchNot.push(userFind)
                                 }
                             }
-                            if (data.items[i].fields['name'] === 'Subject') {
+                            if (data.items[i].fields['name'] === 'Tiêu đề') {
                                 userFind['Subject'] = {
                                     [Op.like]: '%' + data.items[i]['searchFields'] + '%'
                                 }
@@ -772,7 +771,7 @@ module.exports = {
                                     arraySearchNot.push(userFind)
                                 }
                             }
-                            if (data.items[i].fields['name'] === 'Owner') {
+                            if (data.items[i].fields['name'] === 'Người tạo') {
                                 let ownerIDs = []
                                 await mUser(db).findAll({
                                     where: {
@@ -784,7 +783,7 @@ module.exports = {
                                     })
                                 })
                                 userFind['OwnerID'] = {
-                                    [Op.like]: { [Op.in]: ownerIDs }
+                                    [Op.in]: ownerIDs
                                 }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
@@ -797,6 +796,7 @@ module.exports = {
                                 }
                             }
                         }
+                        arraySearchAnd.push({ Type: 'MailList' })
                         if (arraySearchOr.length > 0)
                             whereObj[Op.or] = arraySearchOr
                         if (arraySearchAnd.length > 0)
@@ -804,6 +804,7 @@ module.exports = {
                         if (arraySearchNot.length > 0)
                             whereObj[Op.not] = arraySearchNot
                     }
+                    console.log(whereObj, arraySearchAnd);
                     var mailCampainData = await mailCampain.findAll({
                         where: whereObj,
                         include: [
