@@ -442,7 +442,7 @@ module.exports = {
                 if (data.items) {
                     for (var i = 0; i < data.items.length; i++) {
                         let userFind = {};
-                        if (data.items[i].fields['name'] === 'Name') {
+                        if (data.items[i].fields['name'] === 'Tên danh sách') {
                             userFind['Name'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
                             if (data.items[i].conditionFields['name'] == 'And') {
                                 whereOjb[Op.and] = userFind
@@ -454,7 +454,7 @@ module.exports = {
                                 whereOjb[Op.not] = userFind
                             }
                         }
-                        if (data.items[i].fields['name'] === 'Owner') {
+                        if (data.items[i].fields['name'] === 'Người tạo') {
                             var owner = await mUser(db).findAll({
                                 where: {
                                     Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
