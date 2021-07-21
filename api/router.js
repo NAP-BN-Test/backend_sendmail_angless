@@ -277,8 +277,8 @@ module.exports = function (app) {
     app.route('/unsubscribe/email_unsubscribe').post(unsubscribe.unSubscribe);
     app.route('/crm/get_list_mail_unsubcribe_from_addressbook').post(unsubscribe.getListAddressbookUnsubscribe);
     app.route('/crm/email_subscribe').post(unsubscribe.subscribe);
-
-    app.route('/crm/send_mail').post(unsubscribe.sendMail);
+    let amazonSend = require('./controllers/amazon')
+    app.route('/crm/send_mail').post(amazonSend.sendMail);
 
 
     //Aws http

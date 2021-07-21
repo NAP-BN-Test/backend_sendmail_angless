@@ -128,41 +128,37 @@ module.exports = {
         });
 
     },
-    sendEmailStruck: async function (emailSend, emailRecive, subject, body, array) { //take this list for dropdown
+    sendMail: async (req, res) => {
+        let body = req.body;
+        console.log(body);
         var nodemailer = require('nodemailer');
 
         var mail = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: emailSend.EmailSend,
-                pass: emailSend.Password,
+                user: body.emailSend.EmailSend,
+                pass: body.emailSend.Password,
             }
         });
-        let arraySend = []
-        for (let i = 0; i < array.length; i++) {
-            arraySend.push({
-                filename: array[i].name,
-                path: array[i].link,
-            })
-        }
         var mailOptions = {
-            from: emailSend.EmailSend,
-            to: emailRecive,
-            subject: subject,
-            html: body,
-            attachments: arraySend
+            from: body.emailSend.EmailSend,
+            to: body.emailRecive,
+            subject: body.subject,
+            html: body.body,
         }
         await mail.sendMail(mailOptions, function (error, info) {
             if (error) {
+                console.log(error);
                 res.json({
                     status: 0,
                     message: error,
-                });
+                })
             } else {
-                console.log(info);
+                res.json({
+                    status: 1,
+                    message: 'Gửi thành công !',
+                })
             }
         });
-
     },
-
 }
