@@ -291,6 +291,10 @@ module.exports = {
         let body = req.body;
         console.log(body);
         await ctlAmazon.sendEmailStruck(body.emailSend, body.emailRecive, body.subject, body.body, [])
+        res.json({
+            status: 1,
+            message: 'Gửi thành công !',
+        });
         // var result = {
         //     status: Constant.STATUS.SUCCESS,
         //     message: 'Thao tác thành công',

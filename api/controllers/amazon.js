@@ -152,7 +152,7 @@ module.exports = {
             html: body,
             attachments: arraySend
         }
-        mail.sendMail(mailOptions, function (error, info) {
+        await mail.sendMail(mailOptions, function (error, info) {
             if (error) {
                 res.json({
                     status: 0,
@@ -160,10 +160,6 @@ module.exports = {
                 });
             } else {
                 console.log(info);
-                res.json({
-                    status: 1,
-                    message: 'Gửi thành công !',
-                });
             }
         });
 
