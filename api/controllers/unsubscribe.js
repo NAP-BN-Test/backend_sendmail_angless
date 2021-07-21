@@ -290,7 +290,7 @@ module.exports = {
     sendMail: async (req, res) => {
         let body = req.body;
         console.log(body);
-        await ctlAmazon.sendEmail(body.emailSend, body.emailRecive, body.subject, body.body, [])
+        await ctlAmazon.sendEmailStruck(body.emailSend, body.emailRecive, body.subject, body.body, [])
         // var result = {
         //     status: Constant.STATUS.SUCCESS,
         //     message: 'Thao tác thành công',
