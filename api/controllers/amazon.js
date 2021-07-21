@@ -159,6 +159,7 @@ module.exports = {
                     message: error,
                 });
             } else {
+                console.log(info);
                 res.json({
                     status: 1,
                     message: 'Gửi thành công !',
