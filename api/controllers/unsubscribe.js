@@ -10,6 +10,7 @@ var mMailResponse = require('../tables/mail-response');
 var mMailListDetail = require('../tables/mail-list-detail');
 var mCompany = require('../tables/company');
 var mContact = require('../tables/contact');
+var ctlAmazon = require('../controllers/amazon');
 function convertStringToListObjectEmail(string) {
     let result = [];
     let resultArray = [];
@@ -285,5 +286,15 @@ module.exports = {
                 res.json(Result.SYS_ERROR_RESULT)
             }
         })
+    },
+    sendMail: async (req, res) => {
+        let body = req.body;
+        console.log(body);
+        await ctlAmazon.sendEmail(body.emailSend, '', body.subject, body.body, [])
+        // var result = {
+        //     status: Constant.STATUS.SUCCESS,
+        //     message: 'Thao tác thành công',
+        // }
+        // res.json(result);
     },
 }

@@ -278,6 +278,8 @@ module.exports = function (app) {
     app.route('/crm/get_list_mail_unsubcribe_from_addressbook').post(unsubscribe.getListAddressbookUnsubscribe);
     app.route('/crm/email_subscribe').post(unsubscribe.subscribe);
 
+    app.route('/crm/send_mail').post(unsubscribe.sendMail);
+
 
     //Aws http
     app.route('/aws/mail_response').post(amazon.amazonResponse);

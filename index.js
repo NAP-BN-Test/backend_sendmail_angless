@@ -57,7 +57,7 @@ let storage = multer.diskStorage({
     }
 });
 let upload = multer({ storage: storage });
-const DIR = 'C:/images_services/ageless_sendmail';
+const DIR = 'D:/images_services/ageless_sendmail';
 
 app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (req, res) {
     if (!req.files) {
@@ -66,18 +66,24 @@ app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (re
             success: false
         });
     } else {
-        database.checkServerInvalid('dbdev.namanphu.vn', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
-            let idLink = await mFileAttach(db).create({
-                Name: nameFile + pathFile,
-                Link: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+        try {
+            console.log(12345);
+            database.checkServerInvalid('dbdev.namanphu.vn', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
+                console.log(db);
+                let idLink = await mFileAttach(db).create({
+                    Name: nameFile + pathFile,
+                    Link: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+                })
+                return res.send({
+                    link: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
+                    name: nameFile + pathFile,
+                    id: idLink.ID,
+                    success: true
+                })
             })
-            return res.send({
-                link: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,
-                name: nameFile + pathFile,
-                id: idLink.ID,
-                success: true
-            })
-        })
+        } catch (error) {
+            console.log(error);
+        }
     }
 });
 app.post('/api/upload_image', getDateInt, upload.array('photo', 12), function (req, res) {

@@ -82,8 +82,6 @@ module.exports = {
                     Password: Sequelize.STRING,
                     DatabaseName: Sequelize.STRING,
                 });
-
-
                 const serverData = await serverInfo.findOne({
                     where: { ServerIP: ip, DatabaseName: dbName }
                 })
@@ -110,6 +108,7 @@ module.exports = {
                 return Promise.resolve(mainServer)
             } catch (error) {
                 dbServer.close();
+                console.log(error);
                 return Promise.reject(Result.LOGIN_FAIL)
             }
         } else {
