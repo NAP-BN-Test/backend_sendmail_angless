@@ -1568,10 +1568,10 @@ module.exports = {
                     let time = moment(body.endTime).format('YYYY-MM-DD HH:mm:ss.SSS')
                     update.push({ key: 'TimeEnd', value: time });
                 }
-                if (body.timeSend || body.timeSend === '') {
-                    let time = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS')
-                    update.push({ key: 'TimeSend', value: time });
-                }
+                // if (body.timeSend || body.timeSend === '') {
+                //     let time = moment(body.timeSend).format('YYYY-MM-DD HH:mm:ss.SSS')
+                //     update.push({ key: 'TimeSend', value: time });
+                // }
                 body.attachFile = JSON.parse(body.attachFile)
                 if (body.attachFile.length > 0)
                     for (var j = 0; j < body.attachFile.length; j++)
