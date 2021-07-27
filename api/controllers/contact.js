@@ -23,6 +23,7 @@ var rmUserFollow = require('../tables/user-follow');
 var rmMeetContact = require('../tables/meet-contact');
 var rmDeal = require('../tables/deal');
 var mHistoryContact = require('../tables/HistoryContact');
+var mMailResponse = require('../tables/mail-response');
 
 var mModules = require('../constants/modules');
 const email = require('../tables/email');
@@ -53,7 +54,19 @@ function convertStringToListObjectEmail(string) {
     }
     return resultArray;
 }
-
+async function checkUnsubsctibe(db, email) {
+    let check = false
+    let mail = await mMailResponse(db).findOne({
+        where: {
+            Type: Constant.MAIL_RESPONSE_TYPE.UNSUBSCRIBE,
+            Email: email,
+        }
+    })
+    if (mail) {
+        check = true
+    }
+    return check
+}
 module.exports = {
     getListHistoryContact: (req, res) => {
         let body = req.body;
@@ -823,36 +836,43 @@ module.exports = {
                         order: [['ID', 'DESC']],
                         offset: Number(body.itemPerPage) * (Number(body.page) - 1),
                         limit: Number(body.itemPerPage)
-                    }).then(data => {
+                    }).then(async data => {
                         var array = [];
-                        data.forEach(elm => {
+                        for (let d = 0; d < data.length; d++) {
+                            let arrayMail = convertStringToListObjectEmail(data[d].Email)
+                            let arrayStatusMail = []
+                            for (let i = 0; i < arrayMail.length; i++) {
+                                let checkUn = await checkUnsubsctibe(db, arrayMail[i].name)
+                                let status = checkUn == false ? 'Subcribe' : 'Unsubcribe'
+                                arrayStatusMail.push(status)
+                            }
                             array.push({
-                                id: elm.ID,
-                                name: elm.Name,
-                                email: convertStringToListObjectEmail(elm.Email),
-                                phone: convertStringToListObject(elm.Phone),
-                                fax: convertStringToListObject(elm.Fax),
-                                timeCreate: mModules.toDatetime(elm.TimeCreate),
+                                id: data[d].ID,
+                                name: data[d].Name,
+                                email: arrayMail,
+                                phone: convertStringToListObject(data[d].Phone),
+                                fax: convertStringToListObject(data[d].Fax),
+                                timeCreate: mModules.toDatetime(data[d].TimeCreate),
 
-                                companyID: elm.Company ? elm.Company.ID : null,
-                                companyName: elm.Company ? elm.Company.Name : "",
+                                companyID: data[d].Company ? data[d].Company.ID : null,
+                                companyName: data[d].Company ? data[d].Company.Name : "",
 
-                                ownerID: elm.UserID,
-                                ownerName: elm.CreateUser ? elm.CreateUser.Username : "",
+                                ownerID: data[d].UserID,
+                                ownerName: data[d].CreateUser ? data[d].CreateUser.Username : "",
 
-                                assignID: elm.AssignID,
-                                assignName: elm.AssignUser ? elm.AssignUser.Username : "",
+                                assignID: data[d].AssignID,
+                                assignName: data[d].AssignUser ? data[d].AssignUser.Username : "",
 
-                                follow: elm.UserFollows[0] ? elm.UserFollows[0]['Follow'] : false,
+                                follow: data[d].UserFollows[0] ? data[d].UserFollows[0]['Follow'] : false,
 
-                                lastActivity: elm.LastActivity,
-                                JobTile: elm.JobTile,
-                                JobTileName: elm.JobTileID ? elm.JobTileID.Name : '',
-                                Note: elm.Note ? elm.Note : '',
-                                Status: elm.Status ? elm.Status : '',
-                                statusMail: elm.StatusMail ? elm.StatusMail : '',
+                                lastActivity: data[d].LastActivity,
+                                JobTile: data[d].JobTile,
+                                JobTileName: data[d].JobTileID ? data[d].JobTileID.Name : '',
+                                Note: data[d].Note ? data[d].Note : '',
+                                Status: data[d].Status ? data[d].Status : '',
+                                statusMail: arrayStatusMail,
                             })
-                        });
+                        }
                         var result = {
                             status: Constant.STATUS.SUCCESS,
                             message: '',

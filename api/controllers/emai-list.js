@@ -845,6 +845,21 @@ module.exports = {
                                 TypeSend: 'Mailmerge',
                             }
                         });
+                        var listMailList = '';
+                        await mMailListCampaign(db).findAll({
+                            where: { MailCampainID: mailCampainData[i].ID }
+                        }).then(async data => {
+                            for (var i = 0; i < data.length; i++) {
+                                var mailList = await mMailList(db).findOne({
+                                    where: { ID: data[i].MailListID }
+                                })
+                                if (i == data.length)
+                                    listMailList = listMailList + mailList.Name
+                                else
+                                    listMailList = listMailList + mailList.Name + ', '
+
+                            }
+                        })
                         array.push({
                             id: Number(mailCampainData[i].ID),
                             name: mailCampainData[i].Name,
@@ -855,11 +870,12 @@ module.exports = {
                             TemplateName: mailCampainData[i].Template ? mailCampainData[i].Template.Name : '',
                             TemplateReminderName: mailCampainData[i].TemplateRemider ? mailCampainData[i].TemplateRemider.Name : '',
                             NumberAddressBook: numberAddressBook,
-                            Description: mailCampainData[i].Description
+                            Description: mailCampainData[i].Description,
+                            nameMailList: listMailList,
                         })
                     }
                 }
-
+                console.log(array);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
