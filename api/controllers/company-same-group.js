@@ -107,7 +107,7 @@ module.exports = {
                 for (var i = 0; i < listID.length; i++) {
                     await mCompanyMailList(db).destroy({
                         where: [
-                            { MailListID: listID[i].mailListID },
+                            { MailListID: listID[i].groupID },
                             { CompanyID: listID[i].companyID }
                         ]
                     })
