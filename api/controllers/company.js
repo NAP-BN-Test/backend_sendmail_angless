@@ -202,6 +202,7 @@ module.exports = {
                 user.checkUser(body.ip, body.dbName, body.userID).then(async role => {
                     var data = await mCompany(db).findAll({
                         order: [['ID', 'DESC']],
+                        where: { NewCompanyID: null },
                         limit: 1000,
                     });
                     var array = [];
@@ -1136,6 +1137,16 @@ module.exports = {
                                 CompanyID: { [Op.in]: listcompanyID }
                             }
                         })
+                        await mCompany(db).update({
+                            NewCompanyID: null
+                        }, {
+                            where: { NewCompanyID: { [Op.in]: listcompanyID } }
+                        });
+                        await mCompany(db).update({
+                            OldCompanyID: null
+                        }, {
+                            where: { OldCompanyID: { [Op.in]: listcompanyID } }
+                        });
                         await mCompany(db).destroy({
                             where: { ID: { [Op.in]: listcompanyID } }
                         });
@@ -1608,7 +1619,7 @@ module.exports = {
                     let obj = await getDetailCompanyOld(db, companyNewID)
                     array.push(obj)
                     if (obj.oldCompanyID) {
-                        companyNewID = obj.oldCompanyID
+                        companyNewID = obj.id
                         check = true
                     } else {
                         check = false
