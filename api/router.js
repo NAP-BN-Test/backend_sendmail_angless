@@ -403,7 +403,9 @@ module.exports = function (app) {
     //  company same group
     var companySameGroup = require('./controllers/company-same-group');
     app.route('/crm/get_list_company_same_group').post(companySameGroup.getListCompanyAllGroup);
+    app.route('/crm/get_list_company_same_group_to_group').post(companySameGroup.getListCompanyGroup);
     app.route('/crm/delete_company_same_group').post(companySameGroup.deleteCompanyAddGroup);
+    app.route('/crm/delete_company_duplicate_to_group').post(companySameGroup.deleteCompanyDuplicateToGroup);
 
     // config mail send
     var configMailSend = require('./controllers/config-mail-send');

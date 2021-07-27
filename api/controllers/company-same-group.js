@@ -97,5 +97,100 @@ module.exports = {
                 res.json(Result.SYS_ERROR_RESULT)
             }
         })
-    }
+    },
+    deleteCompanyDuplicateToGroup: (req, res) => {
+        let body = req.body;
+        console.log(body);
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                let listID = JSON.parse(body.listID);
+                for (var i = 0; i < listID.length; i++) {
+                    await mCompanyMailList(db).destroy({
+                        where: [
+                            { MailListID: listID[i].mailListID },
+                            { CompanyID: listID[i].companyID }
+                        ]
+                    })
+                }
+                res.json(Result.ACTION_SUCCESS);
+
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+        })
+    },
+    getListCompanyGroup: (req, res) => {
+        let body = req.body;
+        console.log(body);
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                let array = []
+                let companyIDs = []
+                await mCompanyMailList(db).findAll({
+                    where: {
+                        MailListID: body.groupID
+                    },
+                }).then(async data => {
+                    for (let d = 0; d < data.length; d++) {
+                        let countCompanyInGroup = await mCompanyMailList(db).count({
+                            where: {
+                                CompanyID: data[d].CompanyID
+                            }
+                        })
+                        if (countCompanyInGroup > 1)
+                            companyIDs.push(data[d].CompanyID)
+                    }
+                })
+                for (let com = 0; com < companyIDs.length; com++) {
+                    let CompanyMailList = mCompanyMailList(db);
+                    CompanyMailList.belongsTo(mMailList(db), { foreignKey: 'MailListID', sourceKey: 'MailListID', as: 'group' })
+                    CompanyMailList.belongsTo(mCompany(db), { foreignKey: 'CompanyID', sourceKey: 'CompanyID', as: 'company' })
+                    await CompanyMailList.findAll({
+                        where: {
+                            CompanyID: companyIDs[com]
+                        },
+                        include: [
+                            {
+                                model: mMailList(db),
+                                required: false,
+                                as: 'group'
+                            },
+                            {
+                                model: mCompany(db),
+                                required: false,
+                                as: 'company'
+                            },
+                        ],
+                    }).then(async data => {
+                        let stt = 1;
+                        for (let d = 0; d < data.length; d++) {
+                            let obj = {
+                                stt: stt.toString(),
+                                addressbookID: data[d].CompanyID ? data[d].CompanyID : null,
+                                name: data[d].company ? data[d].company.Name : '',
+                                email: data[d].company ? data[d].company.Email : '',
+                                address: data[d].company ? data[d].company.Address : '',
+                                shortName: data[d].company ? data[d].company.ShortName : '',
+                                phone: data[d].company ? data[d].company.Phone : '',
+                                group: data[d].group ? data[d].group.Name : '',
+                                groupID: data[d].group ? data[d].group.ID : null,
+                            }
+                            array.push(obj);
+                            stt += 1
+                        }
+                    })
+                }
+                var result = {
+                    status: Constant.STATUS.SUCCESS,
+                    message: '',
+                    array: array
+                }
+                res.json(result)
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+        })
+    },
 }
