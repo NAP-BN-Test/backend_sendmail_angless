@@ -875,7 +875,6 @@ module.exports = {
                         })
                     }
                 }
-                console.log(array);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
