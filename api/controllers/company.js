@@ -553,6 +553,7 @@ module.exports = {
                             })
                         })
                     })
+                    console.log(data.Role);
                     var obj = {
                         id: data['ID'],
                         name: data['Name'],
@@ -728,7 +729,7 @@ module.exports = {
             if (body.Fax || body.Fax === '')
                 listUpdate.push({ key: 'Fax', value: body.Fax.replace(/plus/g, '+') });
             if (body.properties || body.properties === '')
-                listUpdate.push({ key: 'Properties', value: body.properties });
+                listUpdate.push({ key: 'Role', value: body.properties });
             var items = JSON.parse(body.items);
             if (items.length > 0) {
                 await mCompanyRelationship(db).destroy({
