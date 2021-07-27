@@ -368,6 +368,7 @@ module.exports = function (app) {
     var adddressBook = require('./controllers/address-book');
     app.route('/crm/get_list_address_book').post(adddressBook.getListAddressBook);
     app.route('/crm/search_address_book').post(company.searchCompanyToAddressbook);
+    app.route('/crm/get_list_history_company').post(company.getListHistoryCompany);
 
     // category customer
     var catagoryCustomer = require('./controllers/category-customer');
