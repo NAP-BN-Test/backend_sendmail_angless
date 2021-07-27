@@ -857,6 +857,7 @@ module.exports = {
                         roleString += role[i]
 
                 }
+                let now = moment().subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
                 if (companyExits.length <= 0) {
                     if (companyObj.length) check = true;
                     company.belongsTo(mCity(db), { foreignKey: 'CityID', sourceKey: 'CityID' });
@@ -868,7 +869,7 @@ module.exports = {
                         Email: body.email,
                         Address: body.address,
                         CityID: body.cityID ? body.cityID : null,
-                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        TimeCreate: now,
                         Type: 1,
                         CountryID: body.CountryID ? body.CountryID : null,
                         Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
