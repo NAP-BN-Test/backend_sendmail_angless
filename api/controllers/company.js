@@ -67,36 +67,38 @@ async function getDetailCompanyOld(db, companyNewID) {
         ],
         order: [['ID', 'DESC']],
     });
-    let obj = {
-        id: data.ID,
-        name: data.Name,
+    let obj = {}
+    if (data)
+        obj = {
+            id: data.ID,
+            name: data.Name,
 
-        ownerID: data.UserID,
-        ownerName: data.CreateUser ? data.CreateUser.Username : "",
+            ownerID: data.UserID,
+            ownerName: data.CreateUser ? data.CreateUser.Username : "",
 
-        assignID: data.AssignID,
-        assignName: data.AssignUser ? data.AssignUser.Username : "",
+            assignID: data.AssignID,
+            assignName: data.AssignUser ? data.AssignUser.Username : "",
 
-        address: data.Address,
-        phone: data.Phone,
-        email: data.Email,
-        website: data.Website,
-        timeCreate: mModules.toDatetime(data.TimeCreate),
+            address: data.Address,
+            phone: data.Phone,
+            email: data.Email,
+            website: data.Website,
+            timeCreate: mModules.toDatetime(data.TimeCreate),
 
-        cityID: data.City ? data.City.ID : -1,
-        city: data.City ? data.City.Name : "",
-        CountryID: data.Country ? data.Country.ID : "",
-        Country: data.Country ? data.Country.Name : "",
+            cityID: data.City ? data.City.ID : -1,
+            city: data.City ? data.City.Name : "",
+            CountryID: data.Country ? data.Country.ID : "",
+            Country: data.Country ? data.Country.Name : "",
 
-        follow: data.UserFollows[0] ? data.UserFollows[0]['Follow'] : false,
-        checked: false,
-        companyType: data.Type == 0 ? 'Có' : 'Không',
-        lastActivity: mModules.toDatetime(data.LastActivity),
-        Fax: data.Fax,
-        properties: data.Role,
-        newCompanyID: data.NewCompanyID ? data.NewCompanyID : null,
-        oldCompanyID: data.OldCompanyID ? data.OldCompanyID : null,
-    }
+            follow: data.UserFollows[0] ? data.UserFollows[0]['Follow'] : false,
+            checked: false,
+            companyType: data.Type == 0 ? 'Có' : 'Không',
+            lastActivity: mModules.toDatetime(data.LastActivity),
+            Fax: data.Fax,
+            properties: data.Role,
+            newCompanyID: data.NewCompanyID ? data.NewCompanyID : null,
+            oldCompanyID: data.OldCompanyID ? data.OldCompanyID : null,
+        }
     return obj
 }
 
