@@ -1841,7 +1841,7 @@ module.exports = {
                         })
                         array.push({
                             groupName: mailList ? mailList.Name : '',
-                            date: data[d].DateTime ? data[d].DateTime : null,
+                            date: data[d].DateTime ? moment(data[d].DateTime).subtract(7, 'hours').format("DD/MM/YYYY HH:mm:ss") : null,
                         })
                     }
                 })

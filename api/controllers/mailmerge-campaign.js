@@ -135,7 +135,7 @@ module.exports = {
                                 body: item.body ? item.body : null,
                                 TimeStart: mModules.toDatetime(item.timeStart) ? item.timeStart : null,
                                 TimeRemind: mModules.toDatetime(item.timeRemind) ? item.timeRemind : null,
-                                TimeCreate: now.format('YYYY-MM-DD HH:mm:ss.SSS'),
+                                TimeCreate: mModules.toDatetime(item.TimeUpdate),
                                 TimeUpdate: mModules.toDatetime(item.TimeUpdate),
                                 Description: item.description ? item.description : null,
                                 UserID: item.UserID ? item.UserID : null,
