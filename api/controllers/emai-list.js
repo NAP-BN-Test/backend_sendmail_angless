@@ -317,6 +317,8 @@ async function deleteImageResidual(listLink, listLinkNew) {
     }
 }
 var mMailList = require('../tables/mail-list');
+var mHistorySendMailCampaign = require('../tables/HistorySendMailCampaign');
+const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require('constants');
 
 module.exports = {
     deleteImageResidual,
@@ -1304,7 +1306,6 @@ module.exports = {
 
     addMailSend: async function (req, res) {
         let body = req.body;
-        console.log(body);
         body.body = body.body.replace(/%20/g, ' ');
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1368,9 +1369,9 @@ module.exports = {
                     }, {
                         where: { ID: body.campainID }
                     })
-                    console.log(body);
-                    let listID = JSON.parse(body.mailListID)
+                    let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
                     if (body.mailListID || body.mailListID === '') {
+                        let listID = JSON.parse(body.mailListID)
                         await mMailListCampaign(db).destroy({
                             where: {
                                 MailCampainID: body.campainID
@@ -1381,9 +1382,14 @@ module.exports = {
                                 MailListID: listID[i],
                                 MailCampainID: body.campainID,
                             })
+                            await mHistorySendMailCampaign(db).create({
+                                MailListID: listID[i],
+                                MailCampainID: body.campainID,
+                                DateTime: now,
+                            })
                         }
+                        await addGroupToCampaign(listID, body.campainID, db);
                     }
-                    await addGroupToCampaign(listID, body.campainID, db);
                     var mMailListID = [];
                     await mMailListCampaign(db).findAll({
                         where: {
@@ -1806,5 +1812,53 @@ module.exports = {
         }, error => {
             res.json(error)
         })
-    }
+    },
+
+    getHistorySendMailCampaign: async function (req, res) {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                let array = []
+                var itemPerPage = 10000;
+                var page = 1;
+                if (body.itemPerPage) {
+                    itemPerPage = Number(body.itemPerPage);
+                    if (body.page)
+                        page = Number(body.page);
+                }
+                await mHistorySendMailCampaign(db).findAll({
+                    where: {
+                        MailCampainID: body.campaignID,
+                    },
+                    offset: itemPerPage * (page - 1),
+                    limit: itemPerPage
+                }).then(async data => {
+                    for (let d = 0; d < data.length; d++) {
+                        let mailList = await mMailList(db).findOne({
+                            where: {
+                                ID: data[d].MailListID
+                            }
+                        })
+                        array.push({
+                            groupName: mailList ? mailList.Name : '',
+                            date: data[d].DateTime ? data[d].DateTime : null,
+                        })
+                    }
+                })
+                var result = {
+                    status: Constant.STATUS.SUCCESS,
+                    message: Constant.MESSAGE.ACTION_SUCCESS,
+                    array: array
+                }
+                res.json(result);
+
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT)
+            }
+
+        }, error => {
+            res.json(error)
+        })
+    },
 }

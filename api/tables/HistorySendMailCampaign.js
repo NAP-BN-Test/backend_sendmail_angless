@@ -1,14 +1,14 @@
 const Sequelize = require('sequelize');
 
 module.exports = function (db) {
-    var table = db.define('MailListCampaign', {
+    var table = db.define('HistorySendMailCampaign', {
         ID: {
             type: Sequelize.BIGINT,
             primaryKey: true,
             autoIncrement: true
         },
-        MailListID: Sequelize.BIGINT,
         MailCampainID: Sequelize.BIGINT,
+        MailListID: Sequelize.BIGINT,
         DateTime: Sequelize.NOW,
     });
 

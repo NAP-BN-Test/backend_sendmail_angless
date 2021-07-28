@@ -83,7 +83,7 @@ async function getDetailCompanyOld(db, companyNewID) {
             phone: data.Phone,
             email: data.Email,
             website: data.Website,
-            timeCreate: mModules.toDatetime(data.TimeCreate),
+            timeCreate: moment(data.TimeCreate).subtract(7, 'hours').format("DD/MM/YYYY HH:mm:ss"),
 
             cityID: data.City ? data.City.ID : -1,
             city: data.City ? data.City.Name : "",
@@ -874,10 +874,7 @@ module.exports = {
                         CountryID: body.CountryID ? body.CountryID : null,
                         Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
                         Role: roleString,
-                        // Note: note,
-                        // Relationship: relationship,
                         NoteCompany: body.noteCompany ? body.noteCompany : '',
-                        // NewCompanyID: body.newCompanyID ? body.newCompanyID : null,
                         OldCompanyID: body.oldCompanyID ? body.oldCompanyID : null,
                     }).then(async data => {
                         if (data) {
