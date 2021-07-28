@@ -1605,6 +1605,7 @@ module.exports = {
                             }
                         })
                 update.push({ key: 'Active', value: false });
+                console.log(body);
                 if (body.Type == 'MailList') {
                     if (body.body || body.body === '') {
                         var listLink = await getListLinkImage(db, body.campainID);
@@ -1637,14 +1638,16 @@ module.exports = {
                         }
                         if (matchesList.length > 0) {
                             for (var j = 0; j < matchesList.length; j++) {
-                                var base64Data;
-                                text = text.replace(matchesList[j], linkImageList[j]);
-                                base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
-                                base64Data = base64Data.replace(/ /g, '+');
-                                var buf = new Buffer.from(base64Data, "base64");
-                                require("fs").writeFile(dirList[j], buf, function (err) {
-                                    if (err) console.log(err + '');
-                                });
+                                if (matchesList[j].length > 10000) {
+                                    var base64Data;
+                                    text = text.replace(matchesList[j], linkImageList[j]);
+                                    base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
+                                    base64Data = base64Data.replace(/ /g, '+');
+                                    var buf = new Buffer.from(base64Data, "base64");
+                                    require("fs").writeFile(dirList[j], buf, function (err) {
+                                        if (err) console.log(err + '');
+                                    });
+                                }
                             }
                         }
                         // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
