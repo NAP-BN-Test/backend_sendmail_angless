@@ -67,9 +67,7 @@ app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (re
         });
     } else {
         try {
-            console.log(12345);
             database.checkServerInvalid('dbdev.namanphu.vn', 'AGELESS_EMAIL_DB', '00a2152372fa8e0e62edbb45dd82831a').then(async db => {
-                console.log(db);
                 let idLink = await mFileAttach(db).create({
                     Name: nameFile + pathFile,
                     Link: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-' + nameMiddle + pathFile,

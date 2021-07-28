@@ -269,7 +269,7 @@ module.exports = function (app) {
 
 
     // Upload file
-    app.route('/crm/upload_file').post(upload.uploadFile);
+    // app.route('/crm/upload_file').post(upload.uploadFile);
 
     app.route('/import/import_tx').post(imports.importDataTX);
 
