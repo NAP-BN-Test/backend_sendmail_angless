@@ -57,7 +57,7 @@ let storage = multer.diskStorage({
     }
 });
 let upload = multer({ storage: storage });
-const DIR = 'D:/images_services/ageless_sendmail';
+const DIR = 'C:/images_services/ageless_sendmail';
 
 app.post('/api/upload_file', getDateInt, upload.array('photo', 12), function (req, res) {
     if (!req.files) {
