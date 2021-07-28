@@ -631,8 +631,9 @@ module.exports = {
                         }
                     let mailCount = await mMailResponse(db).count({
                         where: {
+                            MaillistID: body.mailListID,
                             Type: Constant.MAIL_RESPONSE_TYPE.SEND,
-                            Email: mCompanyData[i].Email,
+                            TypeSend: 'Maillist',
                         }
                     })
                     array.push({
@@ -1367,8 +1368,9 @@ module.exports = {
                     }, {
                         where: { ID: body.campainID }
                     })
+                    console.log(body);
+                    let listID = JSON.parse(body.mailListID)
                     if (body.mailListID || body.mailListID === '') {
-                        let listID = JSON.parse(body.mailListID)
                         await mMailListCampaign(db).destroy({
                             where: {
                                 MailCampainID: body.campainID
@@ -1381,13 +1383,6 @@ module.exports = {
                             })
                         }
                     }
-                    let campaign = await mMailListCampaign(db).findAll({
-                        where: {
-                            MailCampainID: body.campainID
-                        }
-                    })
-                    let listID = JSON.parse(body.mailListID);
-
                     await addGroupToCampaign(listID, body.campainID, db);
                     var mMailListID = [];
                     await mMailListCampaign(db).findAll({
@@ -1399,6 +1394,7 @@ module.exports = {
                             mMailListID.push(item.MailListID)
                         })
                     })
+                    console.log(mMailListID);
                     for (var j = 0; j < mMailListID.length; j++) {
                         await mMailResponse(db).create({
                             MaillistID: mMailListID[j],
@@ -1408,7 +1404,6 @@ module.exports = {
                             IDGetInfo: body.userID,
                             MailCampainID: body.campainID,
                         })
-                        console.log(mMailListID[j]);
                     }
                     resetJob(db);
                     res.json(Result.ACTION_SUCCESS)
