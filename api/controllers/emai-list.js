@@ -629,12 +629,18 @@ module.exports = {
                                 }
                             })
                         }
+                    let mailCount = await mMailResponse(db).count({
+                        where: {
+                            Type: Constant.MAIL_RESPONSE_TYPE.SEND,
+                            Email: mCompanyData[i].Email,
+                        }
+                    })
                     array.push({
                         id: Number(mCompanyData[i].ID),
                         email: mCompanyData[i].Email,
                         owner: mCompanyData[i].User ? mCompanyData[i].User.Name : '',
                         createTime: mModules.toDatetime(mCompanyData[i].TimeCreate),
-                        mailCount: mCompanyData[i].MailResponses.length,
+                        mailCount: mailCount,
                         contactName: mCompanyData[i].Name,
                         checkDuplicate: companyDuplicant.length > 0 ? true : false,
                         nameGroup: listNameCompany ? listNameCompany : '',
