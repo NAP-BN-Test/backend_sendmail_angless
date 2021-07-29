@@ -737,7 +737,6 @@ module.exports = {
                     } else {
                         arraySearchAnd.push({ Type: 'MailList' })
                         arraySearchAnd.push({ ID: { [Op.ne]: null } })
-
                     }
                     if (data.items) {
                         for (var i = 0; i < data.items.length; i++) {
@@ -809,7 +808,6 @@ module.exports = {
                         whereObj[Op.and] = arraySearchAnd
                     if (arraySearchNot.length > 0)
                         whereObj[Op.not] = arraySearchNot
-                    console.log(whereObj, arraySearchAnd);
                     var mailCampainData = await mailCampain.findAll({
                         where: whereObj,
                         include: [
