@@ -565,7 +565,7 @@ module.exports = {
                         id: item.ID,
                         name: item.Name,
                         email: '',
-                        createTime: mModules.toDatetime(moment(item.TimeCreate).subtract(7, 'hours'))
+                        createTime: moment(item.TimeCreate).format('DD/MM/YYYY HH:mm')
                     })
                 })
 
