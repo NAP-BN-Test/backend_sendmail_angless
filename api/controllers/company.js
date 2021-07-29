@@ -1317,24 +1317,22 @@ module.exports = {
                             country.push(item.ID);
                         })
                     })
-                    where = [
-                        { Name: { [Op.like]: '%' + data.search + '%' } },
-                        { Email: { [Op.like]: '%' + data.search + '%' } },
-                        { Fax: { [Op.like]: '%' + data.search + '%' } },
-                        { Role: { [Op.like]: '%' + data.search + '%' } },
-                        { Note: { [Op.like]: '%' + data.search + '%' } },
-                        { Phone: { [Op.like]: '%' + data.search + '%' } },
-                        { Address: { [Op.like]: '%' + data.search + '%' } },
-                        { Relationship: { [Op.like]: '%' + data.search + '%' } },
-                        { CountryID: { [Op.in]: country } },
-                        { CityID: { [Op.in]: city } },
-                    ];
+                    arraySearchOr.push({ Name: { [Op.like]: '%' + data.search + '%' } })
+                    arraySearchOr.push({ Email: { [Op.like]: '%' + data.search + '%' } })
+                    arraySearchOr.push({ Fax: { [Op.like]: '%' + data.search + '%' } })
+                    arraySearchOr.push({ Role: { [Op.like]: '%' + data.search + '%' } })
+                    arraySearchOr.push({ Note: { [Op.like]: '%' + data.search + '%' } })
+                    arraySearchOr.push({ Phone: { [Op.like]: '%' + data.search + '%' } })
+                    arraySearchOr.push({ Address: { [Op.like]: '%' + data.search + '%' } })
+                    arraySearchOr.push({ Relationship: { [Op.like]: '%' + data.search + '%' } })
+                    arraySearchOr.push({ CountryID: { [Op.in]: country } })
+                    arraySearchOr.push({ CityID: { [Op.in]: city } })
                 } else {
                     where = [
                         { Name: { [Op.like]: '%%' } },
                     ];
                 }
-                arraySearchAnd.push(where)
+                arraySearchOr.push(where)
                 if (data.items) {
                     for (var i = 0; i < data.items.length; i++) {
                         if (data.items[i].fields) {
@@ -1536,7 +1534,6 @@ module.exports = {
                 arraySearchAnd.push({
                     NewCompanyID: null
                 })
-
                 if (arraySearchOr.length > 0)
                     whereObj[Op.or] = arraySearchOr
                 if (arraySearchAnd.length > 0)
@@ -1551,6 +1548,7 @@ module.exports = {
                         itemPerPage = body.itemPerPage;
                     }
                 }
+                console.log(whereObj);
                 var data = await company.findAll({
                     where: whereObj,
                     include: [

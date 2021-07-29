@@ -730,25 +730,15 @@ module.exports = {
                                 ownerIDs.push(item.ID)
                             })
                         })
-                        where = {
-                            [Op.or]: [
-                                { Name: { [Op.like]: '%' + data.search + '%' } },
-                                { Subject: { [Op.like]: '%' + data.search + '%' } },
-                                { OwnerID: { [Op.in]: ownerIDs } },
-                                { Type: 'MailList' }
-
-                            ],
-                        };
+                        arraySearchOr.push({ Name: { [Op.like]: '%' + data.search + '%' } })
+                        arraySearchOr.push({ Subject: { [Op.like]: '%' + data.search + '%' } })
+                        arraySearchOr.push({ OwnerID: { [Op.in]: ownerIDs } })
+                        arraySearchAnd.push({ Type: 'MailList' })
                     } else {
-                        where = [{
-                            ID: {
-                                [Op.ne]: null
-                            },
-                            Type: 'MailList'
-                        },];
+                        arraySearchAnd.push({ Type: 'MailList' })
+                        arraySearchAnd.push({ ID: { [Op.ne]: null } })
+
                     }
-                    whereObj[Op.and] = where
-                    console.log(data.items);
                     if (data.items) {
                         for (var i = 0; i < data.items.length; i++) {
                             let userFind = {};
@@ -813,6 +803,12 @@ module.exports = {
                         if (arraySearchNot.length > 0)
                             whereObj[Op.not] = arraySearchNot
                     }
+                    if (arraySearchOr.length > 0)
+                        whereObj[Op.or] = arraySearchOr
+                    if (arraySearchAnd.length > 0)
+                        whereObj[Op.and] = arraySearchAnd
+                    if (arraySearchNot.length > 0)
+                        whereObj[Op.not] = arraySearchNot
                     console.log(whereObj, arraySearchAnd);
                     var mailCampainData = await mailCampain.findAll({
                         where: whereObj,
