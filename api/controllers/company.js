@@ -879,12 +879,20 @@ module.exports = {
                     }).then(async data => {
                         if (data) {
                             var items = JSON.parse(body.items);
-                            if (body.oldCompanyID)
+                            if (body.oldCompanyID) {
                                 await mCompany(db).update({
                                     NewCompanyID: data.ID,
                                 }, {
                                     where: { ID: body.oldCompanyID }
                                 })
+                                await mCompanyMailList(db).update({
+                                    CompanyID: data.ID
+                                }, {
+                                    where: {
+                                        CompanyID: body.oldCompanyID
+                                    }
+                                })
+                            }
                             if (items.length > 0) {
                                 for (let i = 0; i < items.length; i++) {
                                     await mCompanyRelationship(db).create({
