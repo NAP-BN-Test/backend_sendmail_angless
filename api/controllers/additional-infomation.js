@@ -116,7 +116,7 @@ module.exports = {
                                 UserID: data[i].UserID ? data[i].UserID : null,
                                 UserName: data[i].User ? data[i].User.Name : "",
                                 TimeStart: mModules.toDatetime(data[i].timeStart) ? data[i].timeStart : null,
-                                TimeRemind: mModules.toDatetime(data[i].timeRemind) ? data[i].timeRemind : null,
+                                TimeRemind: mModules.toDatetime(data[i].timeRemind) ? moment(data[i].timeRemind).format('DD/MM/YYYY') : null,
                                 TimeCreate: mModules.toDatetime(data[i].TimeCreate),
                                 TimeUpdate: mModules.toDatetime(data[i].TimeUpdate),
                                 Description: data[i].description,
