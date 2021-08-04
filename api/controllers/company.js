@@ -111,6 +111,8 @@ module.exports = {
             try {
                 let data = JSON.parse(body.data);
                 var company = mCompany(db);
+                let checkResult = true;
+                let arrayDuplicate = []
                 for (var i = 0; i < data.length; i++) {
                     var cityID = null;
                     if (data[i].CityCode) {
@@ -160,31 +162,42 @@ module.exports = {
                             Note: data[i].Note ? data[i].Note : '',
                         })
                     else {
-                        await company.update({
-                            UserID: body.userID ? body.userID : null,
-                            Name: data[i]['Full Name'],
-                            // ShortName: data[i].shortName,
-                            Phone: data[i].Phone ? data[i].Phone.replace(/plus/g, '+') : '',
-                            Email: data[i].Email ? data[i].Email : '',
-                            Address: data[i].Address ? data[i].Address : '',
-                            CityID: cityID ? cityID : null,
-                            TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                            Type: 1,
-                            CountryID: countryID ? countryID : null,
-                            Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
-                            Role: data[i]['Properties'] ? data[i]['Properties'] : '',
-                            Note: data[i].Note ? data[i].Note : '',
-                        }, {
-                            where: {
-                                ID: check.ID
-                            }
-                        })
+                        checkResult = false
+                        arrayDuplicate.push(data[i]['Full Name'])
+                        // await company.update({
+                        //     UserID: body.userID ? body.userID : null,
+                        //     Name: data[i]['Full Name'],
+                        //     // ShortName: data[i].shortName,
+                        //     Phone: data[i].Phone ? data[i].Phone.replace(/plus/g, '+') : '',
+                        //     Email: data[i].Email ? data[i].Email : '',
+                        //     Address: data[i].Address ? data[i].Address : '',
+                        //     CityID: cityID ? cityID : null,
+                        //     TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        //     Type: 1,
+                        //     CountryID: countryID ? countryID : null,
+                        //     Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
+                        //     Role: data[i]['Properties'] ? data[i]['Properties'] : '',
+                        //     Note: data[i].Note ? data[i].Note : '',
+                        // }, {
+                        //     where: {
+                        //         ID: check.ID
+                        //     }
+                        // })
+                        break
                     }
                 }
-                var result = {
-                    status: Constant.STATUS.SUCCESS,
-                    message: Constant.MESSAGE.ACTION_SUCCESS,
-                }
+                var result = {}
+                if (checkResult == true)
+                    result = {
+                        status: Constant.STATUS.SUCCESS,
+                        message: Constant.MESSAGE.ACTION_SUCCESS,
+                    }
+                else
+                    result = {
+                        status: Constant.STATUS.FAIL,
+                        message: 'Addressbook đã tồn tại. Vui lòng kiểm tra lại!',
+                        arrayDuplicate: arrayDuplicate,
+                    }
                 res.json(result);
 
             } catch (error) {
@@ -834,6 +847,7 @@ module.exports = {
     },
 
     addCompany: (req, res) => {
+        b
         let body = req.body;
         console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1548,7 +1562,6 @@ module.exports = {
                         itemPerPage = body.itemPerPage;
                     }
                 }
-                console.log(whereObj);
                 var data = await company.findAll({
                     where: whereObj,
                     include: [

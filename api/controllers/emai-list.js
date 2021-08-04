@@ -430,7 +430,10 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 var data = JSON.parse(body.dataSearch)
-
+                var whereObj = {};
+                let arraySearchAnd = [];
+                let arraySearchOr = [];
+                let arraySearchNot = [];
                 if (data.search) {
                     where = [
                         { Name: { [Op.like]: '%' + data.search + '%' } },
@@ -440,20 +443,20 @@ module.exports = {
                         { Name: { [Op.ne]: '%%' } },
                     ];
                 }
-                let whereOjb = { [Op.or]: where };
+                arraySearchOr.push(where)
                 if (data.items) {
                     for (var i = 0; i < data.items.length; i++) {
                         let userFind = {};
                         if (data.items[i].fields['name'] === 'Tên danh sách') {
                             userFind['Name'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
                             if (data.items[i].conditionFields['name'] == 'And') {
-                                whereOjb[Op.and] = userFind
+                                arraySearchAnd.push(userFind)
                             }
                             if (data.items[i].conditionFields['name'] == 'Or') {
-                                whereOjb[Op.or] = userFind
+                                arraySearchOr.push(userFind)
                             }
                             if (data.items[i].conditionFields['name'] == 'Not') {
-                                whereOjb[Op.not] = userFind
+                                arraySearchNot.push(userFind)
                             }
                         }
                         if (data.items[i].fields['name'] === 'Người tạo') {
@@ -468,17 +471,23 @@ module.exports = {
                             })
                             userFind['OwnerID'] = { [Op.in]: listOwner }
                             if (data.items[i].conditionFields['name'] == 'And') {
-                                whereOjb[Op.and] = userFind
+                                arraySearchAnd.push(userFind)
                             }
                             if (data.items[i].conditionFields['name'] == 'Or') {
-                                whereOjb[Op.or] = userFind
+                                arraySearchOr.push(userFind)
                             }
                             if (data.items[i].conditionFields['name'] == 'Not') {
-                                whereOjb[Op.not] = userFind
+                                arraySearchNot.push(userFind)
                             }
                         }
                     }
                 }
+                if (arraySearchOr.length > 0)
+                    whereObj[Op.or] = arraySearchOr
+                if (arraySearchAnd.length > 0)
+                    whereObj[Op.and] = arraySearchAnd
+                if (arraySearchNot.length > 0)
+                    whereObj[Op.not] = arraySearchNot
                 var mailList = mMailList(db);
                 mailList.belongsTo(mUser(db), { foreignKey: 'OwnerID' })
                 mailList.hasMany(mMailListDetail(db), { foreignKey: 'MailListID' })
@@ -491,7 +500,7 @@ module.exports = {
                     }
                 }
                 var mMailListData = await mailList.findAll({
-                    where: whereOjb,
+                    where: whereObj,
                     include: [
                         { model: mUser(db) },
                         { model: mMailListDetail(db) }
@@ -514,7 +523,7 @@ module.exports = {
                     })
                 })
 
-                var mMailListCount = await mailList.count({ where: whereOjb, });
+                var mMailListCount = await mailList.count({ where: whereObj, });
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
