@@ -109,7 +109,9 @@ module.exports = {
         console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
+                body.data = body.data.replace(/!!@@##/g, '&')
                 let data = JSON.parse(body.data);
+                console.log(data);
                 var company = mCompany(db);
                 let checkResult = true;
                 let arrayDuplicate = []
@@ -127,14 +129,14 @@ module.exports = {
                         }
                     }
                     var countryID = null;
-                    if (data[i]['Country Code']) {
-                        var countryObj = await mCountry(db).findOne({ where: { Code: data[i]['Country Code'] } });
+                    if (data[i]['Country']) {
+                        var countryObj = await mCountry(db).findOne({ where: { Code: data[i]['Country'] } });
                         if (countryObj) {
                             countryID = countryObj.ID
                         }
                         else {
                             await mCountry(db).create({
-                                Code: data[i]['Country Code'],
+                                Code: data[i]['Country'],
                             }).then(data => {
                                 countryID = data.ID
                             })
@@ -142,48 +144,45 @@ module.exports = {
                     }
                     let check = await company.findOne({
                         where: {
-                            Name: data[i]['Full Name']
+                            Name: data[i]['Name']
                         }
                     })
-                    if (!check)
-                        await company.create({
+                    if (!check) {
+                        console.log(123456);
+                        let companyObj = await company.create({
                             UserID: body.userID ? body.userID : null,
-                            Name: data[i]['Full Name'],
+                            Name: data[i]['Name'],
                             // ShortName: data[i].shortName,
-                            Phone: data[i].Phone ? data[i].Phone.replace(/plus/g, '+') : '',
-                            Email: data[i].Email ? data[i].Email : '',
+                            Phone: data[i].Tel ? data[i].Tel.replace(/plus/g, '+') : '',
+                            Email: data[i]['Other emails'] ? data[i]['Other emails'] : '',
                             Address: data[i].Address ? data[i].Address : '',
                             CityID: cityID ? cityID : null,
                             TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                             Type: 1,
                             CountryID: countryID ? countryID : null,
                             Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
-                            Role: data[i]['Properties'] ? data[i]['Properties'] : '',
+                            Role: data[i]['Agent/ Company'] ? data[i]['Agent/ Company'] : '',
                             Note: data[i].Note ? data[i].Note : '',
                         })
+                        await mContact(db).create({
+                            Email: data[i]['Contact Persons1'],
+                            Name: data[i]['Email1'],
+                            CompanyID: companyObj.ID,
+                        })
+                        await mContact(db).create({
+                            Email: data[i]['Contact Persons2'],
+                            Name: data[i]['Email2'],
+                            CompanyID: companyObj.ID,
+                        })
+                        await mContact(db).create({
+                            Email: data[i]['Contact Persons3'],
+                            Name: data[i]['Email3'],
+                            CompanyID: companyObj.ID,
+                        })
+                    }
                     else {
                         checkResult = false
-                        arrayDuplicate.push(data[i]['Full Name'])
-                        // await company.update({
-                        //     UserID: body.userID ? body.userID : null,
-                        //     Name: data[i]['Full Name'],
-                        //     // ShortName: data[i].shortName,
-                        //     Phone: data[i].Phone ? data[i].Phone.replace(/plus/g, '+') : '',
-                        //     Email: data[i].Email ? data[i].Email : '',
-                        //     Address: data[i].Address ? data[i].Address : '',
-                        //     CityID: cityID ? cityID : null,
-                        //     TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
-                        //     Type: 1,
-                        //     CountryID: countryID ? countryID : null,
-                        //     Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
-                        //     Role: data[i]['Properties'] ? data[i]['Properties'] : '',
-                        //     Note: data[i].Note ? data[i].Note : '',
-                        // }, {
-                        //     where: {
-                        //         ID: check.ID
-                        //     }
-                        // })
-                        break
+                        arrayDuplicate.push(data[i]['Name'])
                     }
                 }
                 var result = {}
@@ -1343,7 +1342,7 @@ module.exports = {
                     arraySearchOr.push({ CityID: { [Op.in]: city } })
                 } else {
                     where = [
-                        { Name: { [Op.like]: '%%' } },
+                        { ID: { [Op.ne]: null } },
                     ];
                 }
                 arraySearchOr.push(where)
