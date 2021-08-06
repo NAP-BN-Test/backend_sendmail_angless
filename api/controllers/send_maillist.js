@@ -123,7 +123,7 @@ module.exports = {
             })
             var bodyHtml;
             for (var j = 0; j < information.length; j++) {
-                if (information[j].Result == 'None') {
+                if (information[j].Result == 'None' || information[j].Result == '' || information[j].Result == null) {
                     if (body.typeSend == 'Send') {
                         await mAdditionalInformation(db).update({
                             DateSend: now,
