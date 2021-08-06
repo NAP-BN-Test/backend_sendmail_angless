@@ -1350,13 +1350,15 @@ module.exports = {
                         }
                         if (matchesList.length > 0) {
                             for (var j = 0; j < matchesList.length; j++) {
-                                text = text.replace(matchesList[j], linkImageList[j]);
-                                var base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
-                                base64Data = base64Data.replace(/ /g, '+');
-                                var buf = new Buffer.from(base64Data, "base64");
-                                require("fs").writeFile(dirList[j], buf, function (err) {
-                                    if (err) console.log(err + '');
-                                });
+                                if (matchesList[j].length > 10000) {
+                                    text = text.replace(matchesList[j], linkImageList[j]);
+                                    var base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
+                                    base64Data = base64Data.replace(/ /g, '+');
+                                    var buf = new Buffer.from(base64Data, "base64");
+                                    require("fs").writeFile(dirList[j], buf, function (err) {
+                                        if (err) console.log(err + '');
+                                    });
+                                }
                             }
                         }
                         await deleteImageResidual(listLink, listLinkNew);
@@ -1608,7 +1610,6 @@ module.exports = {
                             }
                         })
                 update.push({ key: 'Active', value: false });
-                console.log(body);
                 if (body.Type == 'MailList') {
                     if (body.body || body.body === '') {
                         var listLink = await getListLinkImage(db, body.campainID);
