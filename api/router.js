@@ -370,6 +370,7 @@ module.exports = function (app) {
     app.route('/crm/get_list_address_book').post(adddressBook.getListAddressBook);
     app.route('/crm/search_address_book').post(company.searchCompanyToAddressbook);
     app.route('/crm/get_list_history_company').post(company.getListHistoryCompany);
+    app.route('/crm/create_company_and_contact').post(company.createCompanyAndContact);
 
     // category customer
     var catagoryCustomer = require('./controllers/category-customer');

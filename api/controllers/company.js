@@ -111,7 +111,6 @@ module.exports = {
             try {
                 body.data = body.data.replace(/!!@@##/g, '&')
                 let data = JSON.parse(body.data);
-                console.log(data);
                 var company = mCompany(db);
                 let checkResult = true;
                 let arrayDuplicate = []
@@ -148,7 +147,6 @@ module.exports = {
                         }
                     })
                     if (!check) {
-                        console.log(123456);
                         let companyObj = await company.create({
                             UserID: body.userID ? body.userID : null,
                             Name: data[i]['Name'],
@@ -181,8 +179,40 @@ module.exports = {
                         })
                     }
                     else {
+                        let arrayContact = []
+                        arrayContact.push({
+                            Email: data[i]['Contact Persons1'],
+                            Name: data[i]['Email1'],
+                            // CompanyID: companyObj.ID,
+                        })
+                        arrayContact.push({
+                            Email: data[i]['Contact Persons2'],
+                            Name: data[i]['Email2'],
+                            // CompanyID: companyObj.ID,
+                        })
+                        arrayContact.push({
+                            Email: data[i]['Contact Persons3'],
+                            Name: data[i]['Email3'],
+                            // CompanyID: companyObj.ID,
+                        })
                         checkResult = false
-                        arrayDuplicate.push(data[i]['Name'])
+                        arrayDuplicate.push({
+                            STT: data[i]['STT'],
+                            UserID: body.userID ? body.userID : null,
+                            Name: data[i]['Name'],
+                            // ShortName: data[i].shortName,
+                            Phone: data[i]['Tel'] ? data[i]['Tel'].replace(/plus/g, '+') : '',
+                            Email: data[i]['Other emails'] ? data[i]['Other emails'] : '',
+                            Address: data[i].Address ? data[i].Address : '',
+                            CityID: cityID ? cityID : null,
+                            TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                            Type: 1,
+                            CountryID: countryID ? countryID : null,
+                            Fax: data[i]['Fax'] ? data[i]['Fax'].replace(/plus/g, '+') : '',
+                            Role: data[i]['Agent/ Company'] ? data[i]['Agent/ Company'] : '',
+                            Note: data[i].Note ? data[i].Note : '',
+                            arrayContact: arrayContact,
+                        })
                     }
                 }
                 var result = {}
@@ -846,7 +876,6 @@ module.exports = {
     },
 
     addCompany: (req, res) => {
-        b
         let body = req.body;
         console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1646,6 +1675,48 @@ module.exports = {
                     status: Constant.STATUS.SUCCESS,
                     message: '',
                     array: array,
+                }
+                res.json(result)
+            } catch (error) {
+                console.log(error);
+                res.json(Result.SYS_ERROR_RESULT);
+            }
+        })
+    },
+    // create_company_and_contact
+    createCompanyAndContact: (req, res) => {
+        let body = req.body;
+        database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            try {
+                console.log(body)
+                let data = JSON.parse(body.data)
+                for (let i = 0; i < data.length; i++) {
+                    let companyObj = await mCompany(db).create({
+                        UserID: data[i].UserID ? data[i].UserID : null,
+                        Name: data[i]['Name'],
+                        // ShortName: data[i].shortName,
+                        Phone: data[i].Phone ? data[i].Phone.replace(/plus/g, '+') : '',
+                        Email: data[i].Email ? data[i].Email : '',
+                        Address: data[i].Address ? data[i].Address : '',
+                        CityID: data[i].CityID ? data[i].CityID : null,
+                        TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
+                        Type: 1,
+                        CountryID: data[i].CountryID ? data[i].CountryID : null,
+                        Fax: data[i]['Fax'] ? data[i]['Fax'].replace(/plus/g, '+') : '',
+                        Role: data[i].Role ? data[i].Role : '',
+                        Note: data[i].Note ? data[i].Note : '',
+                    })
+                    for (let c = 0; c < data[i].arrayContact.length; c++) {
+                        await mContact(db).create({
+                            Email: data[c].arrayContact[c].Email,
+                            Name: data[c].arrayContact[c].Email,
+                            CompanyID: companyObj.ID,
+                        })
+                    }
+                }
+                var result = {
+                    status: Constant.STATUS.SUCCESS,
+                    message: 'Thao tác thành công !',
                 }
                 res.json(result)
             } catch (error) {
