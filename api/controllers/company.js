@@ -1688,7 +1688,7 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                console.log(body)
+                body.data = body.data.replace(/!!@@##/g, '&')
                 let data = JSON.parse(body.data)
                 for (let i = 0; i < data.length; i++) {
                     let companyObj = await mCompany(db).create({
@@ -1708,8 +1708,8 @@ module.exports = {
                     })
                     for (let c = 0; c < data[i].arrayContact.length; c++) {
                         await mContact(db).create({
-                            Email: data[c].arrayContact[c].Email,
-                            Name: data[c].arrayContact[c].Email,
+                            Email: data[i].arrayContact[c].Email,
+                            Name: data[i].arrayContact[c].Email,
                             CompanyID: companyObj.ID,
                         })
                     }
