@@ -153,7 +153,7 @@ module.exports = {
                             UserID: body.userID ? body.userID : null,
                             Name: data[i]['Name'],
                             // ShortName: data[i].shortName,
-                            Phone: data[i].Tel ? data[i].Tel.replace(/plus/g, '+') : '',
+                            Phone: data[i]['Tel'] ? data[i]['Tel'] : '',
                             Email: data[i]['Other emails'] ? data[i]['Other emails'] : '',
                             Address: data[i].Address ? data[i].Address : '',
                             CityID: cityID ? cityID : null,
