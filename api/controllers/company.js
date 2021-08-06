@@ -160,7 +160,7 @@ module.exports = {
                             TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                             Type: 1,
                             CountryID: countryID ? countryID : null,
-                            Fax: data[i].Fax ? data[i].Fax.replace(/plus/g, '+') : '',
+                            Fax: data[i]['Fax'] ? data[i]['Fax'] : '',
                             Role: data[i]['Agent/ Company'] ? data[i]['Agent/ Company'] : '',
                             Note: data[i].Note ? data[i].Note : '',
                         })
