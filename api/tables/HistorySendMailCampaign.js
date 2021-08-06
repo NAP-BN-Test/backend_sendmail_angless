@@ -10,6 +10,7 @@ module.exports = function (db) {
         MailCampainID: Sequelize.BIGINT,
         MailListID: Sequelize.BIGINT,
         DateTime: Sequelize.NOW,
+        Random: Sequelize.STRING,
     });
 
     return table;

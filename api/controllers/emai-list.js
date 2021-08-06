@@ -1382,6 +1382,7 @@ module.exports = {
                                 MailCampainID: body.campainID
                             }
                         })
+                        let random = Math.floor(Math.random() * 10000);
                         for (var i = 0; i < listID.length; i++) {
                             await mMailListCampaign(db).create({
                                 MailListID: listID[i],
@@ -1391,6 +1392,7 @@ module.exports = {
                                 MailListID: listID[i],
                                 MailCampainID: body.campainID,
                                 DateTime: now,
+                                Random: random,
                             })
                         }
                         await addGroupToCampaign(listID, body.campainID, db);
@@ -1840,18 +1842,38 @@ module.exports = {
                     offset: itemPerPage * (page - 1),
                     limit: itemPerPage
                 }).then(async data => {
+                    let arrayCheck = []
                     for (let d = 0; d < data.length; d++) {
-                        let mailList = await mMailList(db).findOne({
-                            where: {
-                                ID: data[d].MailListID
+                        if (!checkDuplicate(arrayCheck, data[d].Random))
+                            arrayCheck.push(data[d].Random)
+                    }
+                    for (let c = 0; c < arrayCheck.length; c++) {
+                        let groupName = '';
+                        let date = '';
+                        let stt = 0;
+                        for (let d = 0; d < data.length; d++) {
+                            if (data[d].Random == arrayCheck[c]) {
+                                let mailList = await mMailList(db).findOne({
+                                    where: {
+                                        ID: data[d].MailListID
+                                    }
+                                })
+                                date = data[d].DateTime ? moment(data[d].DateTime).subtract(7, 'hours').format("DD/MM/YYYY HH:mm:ss") : null
+                                if (stt == 0)
+                                    groupName += (mailList ? mailList.Name : '')
+                                else
+                                    groupName += ', ' + (mailList ? mailList.Name : '')
+                                stt = 1
                             }
-                        })
+
+                        }
                         array.push({
-                            groupName: mailList ? mailList.Name : '',
-                            date: data[d].DateTime ? moment(data[d].DateTime).subtract(7, 'hours').format("DD/MM/YYYY HH:mm:ss") : null,
+                            groupName: groupName,
+                            date: date,
                         })
                     }
                 })
+                console.log(array);
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     message: Constant.MESSAGE.ACTION_SUCCESS,
