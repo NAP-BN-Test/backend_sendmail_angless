@@ -74,6 +74,7 @@ async function getAdditionalInfomation(db, CampaignID, page, itemPerPage) {
                     TimeCreate: mModules.toDatetime(data.TimeCreate),
                     TimeUpdate: mModules.toDatetime(data.TimeUpdate),
                     Description: data.description,
+                    Result: data.Result,
                     Subject: data.Campaign.Subject ? data.Campaign.Subject : null,
                 })
             })
