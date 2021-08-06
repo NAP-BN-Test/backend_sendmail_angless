@@ -1776,26 +1776,53 @@ module.exports = {
                         ],
                     }).then(async data => {
                         if (data) {
+                            let arrayGroup = []
                             for (let d = 0; d < data.length; d++) {
-                                let group = await mMailList(db).findOne({
-                                    where: {
-                                        ID: data[d].MailListID
+                                if (!checkDuplicate(arrayGroup, (data[d].company ? data[d].company.Name : ''))) {
+                                    arrayGroup.push(data[d].company ? data[d].company.Name : '')
+                                }
+                            }
+                            for (let grp = 0; grp < arrayGroup.length; grp++) {
+                                let check = 0;
+                                let groupName = ''
+                                let email = ''
+                                let address = ''
+                                let shortName = ''
+                                let phone = ''
+                                let groupID = []
+                                for (let d = 0; d < data.length; d++) {
+                                    if (arrayGroup[grp] == (data[d].company ? data[d].company.Name : '')) {
+                                        let group = await mMailList(db).findOne({
+                                            where: {
+                                                ID: data[d].MailListID
+                                            }
+                                        })
+                                        if (check == 0) {
+                                            groupName += group.Name
+                                            email = data[d].company ? data[d].company.Email : ''
+                                            address = data[d].company ? data[d].company.Address : ''
+                                            shortName = data[d].company ? data[d].company.ShortName : ''
+                                            phone = data[d].company ? data[d].company.Phone : ''
+                                        }
+                                        else
+                                            groupName += ', ' + group.Name
+                                        groupID.push(group.ID)
+                                        check = 1
                                     }
-                                })
+                                }
                                 array.push({
                                     stt: stt.toString(),
                                     addressbookID: listID[i],
-                                    name: data[d].company ? data[d].company.Name : '',
-                                    email: data[d].company ? data[d].company.Email : '',
-                                    address: data[d].company ? data[d].company.Address : '',
-                                    shortName: data[d].company ? data[d].company.ShortName : '',
-                                    phone: data[d].company ? data[d].company.Phone : '',
-                                    group: group ? group.Name : '',
-                                    groupID: group ? group.ID : null,
+                                    name: arrayGroup[grp],
+                                    email: email,
+                                    address: address,
+                                    shortName: shortName,
+                                    phone: phone,
+                                    group: groupName,
+                                    groupID: groupID,
                                 })
                                 stt += 1
                             }
-
                         }
                     })
                 }
