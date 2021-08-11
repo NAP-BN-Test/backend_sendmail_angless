@@ -29,7 +29,77 @@ module.exports = {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                mCompany(db).findAll().then(async company => {
+                var whereObj = {};
+                let arraySearchAnd = [];
+                let arraySearchOr = [];
+                let arraySearchNot = [];
+                if (body.dataSearch) {
+                    var data = JSON.parse(body.dataSearch)
+                    if (data.search) {
+                        where = {
+                            [Op.or]: [
+                                {
+                                    Name: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                                {
+                                    Address: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                }
+                            ]
+                        };
+                    } else {
+                        where = [{
+                            ID: {
+                                [Op.ne]: null
+                            }
+                        },];
+                    }
+                    whereObj[Op.and] = where
+                    if (data.items) {
+                        for (var i = 0; i < data.items.length; i++) {
+                            let userFind = {};
+                            if (data.items[i].fields['name'] === 'Full Name') {
+                                userFind['Name'] = data.items[i]['searchFields']
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    arraySearchAnd.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    arraySearchOr.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    arraySearchNot.push(userFind)
+                                }
+                            }
+                            if (data.items[i].fields['name'] === 'Address') {
+                                userFind['Address'] = {
+                                    [Op.eq]: data.items[i]['searchFields']
+                                }
+                                if (data.items[i].conditionFields['name'] == 'And') {
+                                    arraySearchAnd.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Or') {
+                                    arraySearchOr.push(userFind)
+                                }
+                                if (data.items[i].conditionFields['name'] == 'Not') {
+                                    arraySearchNot.push(userFind)
+                                }
+                            }
+                        }
+                    }
+                    if (arraySearchOr.length > 0)
+                        whereObj[Op.or] = arraySearchOr
+                    if (arraySearchAnd.length > 0)
+                        whereObj[Op.and] = arraySearchAnd
+                    if (arraySearchNot.length > 0)
+                        whereObj[Op.not] = arraySearchNot
+                }
+                console.log(whereObj);
+                mCompany(db).findAll({
+                    where: whereObj
+                }).then(async company => {
                     var array = [];
                     for (var i = 0; i < company.length; i++) {
                         let count = await mCompanyMailList(db).count({
