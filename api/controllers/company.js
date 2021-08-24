@@ -106,7 +106,6 @@ module.exports = {
     // import_addressbook
     importAddressbook: (req, res) => {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 body.data = body.data.replace(/!!@@##/g, '&')
@@ -151,48 +150,48 @@ module.exports = {
                             UserID: body.userID ? body.userID : null,
                             Name: data[i]['Name'],
                             // ShortName: data[i].shortName,
-                            Phone: data[i]['Tel'] ? data[i]['Tel'].replace(/plus/g, '+') : '',
+                            Phone: data[i]['Tel'] ? data[i]['Tel'].toString().replace(/plus/g, '+') : '',
                             Email: data[i]['Other emails'] ? data[i]['Other emails'] : '',
                             Address: data[i].Address ? data[i].Address : '',
                             CityID: cityID ? cityID : null,
                             TimeCreate: moment().format('YYYY-MM-DD HH:mm:ss.SSS'),
                             Type: 1,
                             CountryID: countryID ? countryID : null,
-                            Fax: data[i]['Fax'] ? data[i]['Fax'].replace(/plus/g, '+') : '',
+                            Fax: data[i]['Fax'] ? data[i]['Fax'].toString().replace(/plus/g, '+') : '',
                             Role: data[i]['Agent/ Company'] ? data[i]['Agent/ Company'] : '',
                             Note: data[i].Note ? data[i].Note : '',
                         })
                         await mContact(db).create({
-                            Email: data[i]['Contact Persons1'],
-                            Name: data[i]['Email1'],
+                            Email: data[i]['Contact Persons1'] ? data[i]['Contact Persons1'] : '',
+                            Name: data[i]['Email1'] ? data[i]['Email1'] : '',
                             CompanyID: companyObj.ID,
                         })
                         await mContact(db).create({
-                            Email: data[i]['Contact Persons2'],
-                            Name: data[i]['Email2'],
+                            Email: data[i]['Contact Persons2'] ? data[i]['Contact Persons2'] : '',
+                            Name: data[i]['Email2'] ? data[i]['Email2'] : '',
                             CompanyID: companyObj.ID,
                         })
                         await mContact(db).create({
-                            Email: data[i]['Contact Persons3'],
-                            Name: data[i]['Email3'],
+                            Email: data[i]['Contact Persons3'] ? data[i]['Contact Persons3'] : '',
+                            Name: data[i]['Email3'] ? data[i]['Email3'] : '',
                             CompanyID: companyObj.ID,
                         })
                     }
                     else {
                         let arrayContact = []
                         arrayContact.push({
-                            Email: data[i]['Contact Persons1'],
-                            Name: data[i]['Email1'],
+                            Email: data[i]['Contact Persons1'] ? data[i]['Contact Persons1'] : '',
+                            Name: data[i]['Email1'] ? data[i]['Email1'] : '',
                             // CompanyID: companyObj.ID,
                         })
                         arrayContact.push({
-                            Email: data[i]['Contact Persons2'],
-                            Name: data[i]['Email2'],
+                            Email: data[i]['Contact Persons2'] ? data[i]['Contact Persons2'] : '',
+                            Name: data[i]['Email2'] ? data[i]['Email2'] : '',
                             // CompanyID: companyObj.ID,
                         })
                         arrayContact.push({
-                            Email: data[i]['Contact Persons3'],
-                            Name: data[i]['Email3'],
+                            Email: data[i]['Contact Persons3'] ? data[i]['Contact Persons3'] : '',
+                            Name: data[i]['Email3'] ? data[i]['Email3'] : '',
                             // CompanyID: companyObj.ID,
                         })
                         checkResult = false
