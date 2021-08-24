@@ -537,21 +537,24 @@ module.exports = {
             try {
                 mCompany(db).findOne({ where: { id: body.id } }).then(async data => {
                     var array = [];
-                    array.push({
-                        name: data.Email
-                    })
-                    await mContact(db).findAll({ where: { CompanyID: body.id } }).then(contact => {
-                        contact.forEach(item => {
-                            array.push({
-                                name: item.Email
+                    if (data) {
+                        array.push({
+                            name: data.Email
+                        })
+                        await mContact(db).findAll({ where: { CompanyID: body.id } }).then(contact => {
+                            contact.forEach(item => {
+                                array.push({
+                                    name: item.Email
+                                })
                             })
                         })
-                    })
+                    }
                     let result = {
                         array: array,
                         status: Constant.STATUS.SUCCESS,
                         message: '',
                     }
+                    console.log(result);
                     res.json(result)
                 })
             } catch (error) {

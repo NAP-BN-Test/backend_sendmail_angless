@@ -908,7 +908,7 @@ module.exports = {
                         Name: body.name,
                         ShortName: body.shortName,
                         Phone: body.phone ? body.phone.replace(/plus/g, '+') : '',
-                        Email: body.email,
+                        Email: body.email ? body.email : null,
                         Address: body.address,
                         CityID: body.cityID ? body.cityID : null,
                         TimeCreate: now,
