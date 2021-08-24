@@ -434,6 +434,7 @@ module.exports = {
                 let arraySearchAnd = [];
                 let arraySearchOr = [];
                 let arraySearchNot = [];
+
                 if (data.search) {
                     where = [
                         { Name: { [Op.like]: '%' + data.search + '%' } },
@@ -513,16 +514,26 @@ module.exports = {
                 })
 
                 var array = [];
-                mMailListData.forEach(item => {
-                    array.push({
-                        id: Number(item.ID),
-                        name: item.Name,
-                        owner: item.User.Name,
-                        createTime: mModules.toDatetime(item.TimeCreate),
-                        contactCount: item.MailListDetails.length
+                for (let mailList = 0; mailList < mMailListData.length; mailList++) {
+                    var listCompanyID = [];
+                    await mCompanyMailList(db).findAll({
+                        where: { MailListID: mMailListData[mailList].ID }
+                    }).then(data => {
+                        data.forEach(item => {
+                            listCompanyID.push(item.CompanyID);
+                        })
                     })
-                })
-
+                    var mCompanyCount = await mCompany(db).count({
+                        where: { ID: { [Op.in]: listCompanyID } }
+                    })
+                    array.push({
+                        id: Number(mMailListData[mailList].ID),
+                        name: mMailListData[mailList].Name,
+                        owner: mMailListData[mailList].User.Name,
+                        createTime: mModules.toDatetime(mMailListData[mailList].TimeCreate),
+                        contactCount: mCompanyCount,
+                    })
+                }
                 var mMailListCount = await mailList.count({ where: whereObj, });
                 var result = {
                     status: Constant.STATUS.SUCCESS,
@@ -562,7 +573,7 @@ module.exports = {
                     ];
                 } else {
                     where = [
-                        { Name: { [Op.like]: '%%' } },
+                        // { Name: { [Op.like]: '%%' } },
                         { ID: { [Op.in]: listCompanyID } }
                     ];
                 }
@@ -619,6 +630,7 @@ module.exports = {
                 var mCompanyCount = await company.count({
                     where: whereOjb
                 })
+                console.log(whereOjb);
                 var array = [];
                 for (var i = 0; i < mCompanyData.length; i++) {
                     let listNameCompany = '';
