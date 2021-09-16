@@ -90,50 +90,14 @@ module.exports = {
             });
         }
     },
-
-
-    sendEmail: async function (emailSend, emailRecive, subject, body, array) { //take this list for dropdown
-        var nodemailer = require('nodemailer');
-
-        var mail = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: emailSend.EmailSend,
-                pass: emailSend.Password,
-            }
-        });
-        let arraySend = []
-        for (let i = 0; i < array.length; i++) {
-            arraySend.push({
-                filename: array[i].name,
-                path: array[i].link,
-            })
-        }
-        var mailOptions = {
-            from: emailSend.EmailSend,
-            to: emailRecive,
-            subject: subject,
-            html: body,
-            attachments: arraySend
-        }
-        mail.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                res.json({
-                    status: 0,
-                    message: error,
-                });
-            } else {
-                console.log('Email sent: ' + info.response);
-            }
-        });
-
-    },
     sendMail: async (req, res) => {
         let body = req.body;
-        console.log(body);
         var nodemailer = require('nodemailer');
 
         var mail = nodemailer.createTransport({
+            // host: "smtp.office365.com",
+            // secureConnection: true,
+            // port: 587,
             service: 'gmail',
             auth: {
                 user: body.emailSend.EmailSend,
@@ -160,5 +124,77 @@ module.exports = {
                 })
             }
         });
+    },
+    // sendMail: async (req, res) => {
+    //     let body = req.body;
+    //     var nodemailer = require('nodemailer');
+    //     console.log(body);
+    //     var mail = nodemailer.createTransport({
+    //         host: "mail.ageless.vn",
+    //         port: 587,
+    //         secure: false,
+    //         ignoreTLS: true,
+    //         auth: {
+    //             user: "Test@ageless.vn",
+    //             pass: "ageless123@#",
+    //         },
+    //     });
+    //     var mailOptions = {
+    //         from: 'test@ageless.vn',
+    //         to: 'tung24041998@gmail.com',
+    //         subject: "TEST",
+    //         html: "DONE",
+    //     }
+    //     await mail.sendMail(mailOptions, function (error, info) {
+    //         if (error) {
+    //             console.log(error);
+    //             res.json({
+    //                 status: 0,
+    //                 message: error,
+    //             })
+    //         } else {
+    //             res.json({
+    //                 status: 1,
+    //                 message: 'Gửi thành công !',
+    //             })
+    //         }
+    //     });
+    // },
+    sendEmail: async function (emailSend, emailRecive, subject, body, array) { //take this list for dropdown
+        var nodemailer = require('nodemailer');
+
+        var mail = nodemailer.createTransport({
+            host: "mail.ageless.vn",
+            port: 587,
+            secure: false,
+            ignoreTLS: true,
+            auth: {
+                user: emailSend.EmailSend,
+                pass: emailSend.Password,
+            }
+        });
+        let arraySend = []
+        for (let i = 0; i < array.length; i++) {
+            arraySend.push({
+                filename: array[i].name,
+                path: array[i].link,
+            })
+        }
+        console.log(emailSend.EmailSend, emailSend.Password);
+        var mailOptions = {
+            from: emailSend.EmailSend,
+            to: emailRecive,
+            subject: subject,
+            html: body,
+            attachments: arraySend
+        }
+        mail.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+
     },
 }
