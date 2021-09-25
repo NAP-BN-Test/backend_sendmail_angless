@@ -120,7 +120,7 @@ app.get('/crm/open_mail', someApiLimiter, emailList.addMailResponse);
 var io = require("socket.io")(server, {
     cors: {
         wsEngine: 'eiows',
-        origin: ["http://dbdev.namanphu.vn:8692", "http://localhost:4201", "http://dbdev.namanphu.vn:8693", "http://dbdev.namanphu.vn:8694"],
+        origin: ["http://dbdev.namanphu.vn:8692", "http://localhost:4201", "http://dbdev.namanphu.vn:8693", "http://dbdev.namanphu.vn:8689"],
         methods: ["GET", "POST"],
         credentials: true,
     }
