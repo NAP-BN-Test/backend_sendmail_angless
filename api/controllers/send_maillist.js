@@ -163,8 +163,9 @@ module.exports = {
                             ],
                             where: { EmailSend: emailSend.Email }
                         });
+                        console.log(mailUn, 12345);
                         if (!mailUn)
-                            mAmazon.sendEmail(emailSend, arrayEmail[i].name, Subject, bodyHtml, []).then(async response => {
+                            mAmazon.sendEmail(emailSend, arrayEmail[i].name, Subject, bodyHtml, [], req).then(async response => {
                                 if (response) {
                                     await mAdditionalInformation(db).update({
                                         Status: Constant.MAIL_RESPONSE_TYPE.SEND,
@@ -172,11 +173,11 @@ module.exports = {
                                     }, {
                                         where: { ID: informationID },
                                     })
+                                    console.log(response, 12345566);
                                 }
                             })
                         var emailR = arrayEmail[i].name;
                         mCheckMail.checkEmail(emailR, db).then(async (checkMailRes) => {
-                            console.log('checkMailRes: ', checkMailRes);
                             if (checkMailRes == false) {
                                 var responeExits = await mMailResponse(db).findOne({
                                     where: {

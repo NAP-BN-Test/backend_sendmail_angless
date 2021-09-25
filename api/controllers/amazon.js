@@ -10,7 +10,6 @@ var AWS = require('aws-sdk');
 AWS.config.update({ region: 'us-east-1' });
 var mailcomposer = require('mailcomposer')
 var ses = require('aws-sdk/clients/ses')
-
 module.exports = {
     amazonResponse: (req, res) => { //take this list for dropdown
         let body = '';
@@ -160,19 +159,29 @@ module.exports = {
     //         }
     //     });
     // },
-    sendEmail: async function (emailSend, emailRecive, subject, body, array) { //take this list for dropdown
+    sendEmail: async function (emailSend, emailRecive, subject, body, array, req = null) { //take this list for dropdown
         var nodemailer = require('nodemailer');
-
-        var mail = nodemailer.createTransport({
-            host: "mail.ageless.vn",
-            port: 587,
-            secure: false,
-            ignoreTLS: true,
-            auth: {
-                user: emailSend.EmailSend,
-                pass: emailSend.Password,
-            }
-        });
+        var mail;
+        if (emailSend.MailServer && emailSend.SMTPPort) {
+            mail = nodemailer.createTransport({
+                host: emailSend.MailServer,
+                port: emailSend.SMTPPort,
+                secure: false,
+                ignoreTLS: true, // bắt buộc phải có
+                auth: {
+                    user: emailSend.EmailSend,
+                    pass: emailSend.Password,
+                }
+            });
+        } else {
+            mail = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: emailSend.EmailSend,
+                    pass: emailSend.Password,
+                }
+            });
+        }
         let arraySend = []
         for (let i = 0; i < array.length; i++) {
             arraySend.push({
@@ -180,7 +189,6 @@ module.exports = {
                 path: array[i].link,
             })
         }
-        console.log(emailSend.EmailSend, emailSend.Password);
         var mailOptions = {
             from: emailSend.EmailSend,
             to: emailRecive,
@@ -188,9 +196,10 @@ module.exports = {
             html: body,
             attachments: arraySend
         }
-        mail.sendMail(mailOptions, function (error, info) {
+        await mail.sendMail(mailOptions, function (error, info) {
             if (error) {
-                console.log(error);
+                console.log(error + '');
+                req.session.cookie.io.sockets.emit("respone-send-mail", error + '')
             } else {
                 console.log('Email sent: ' + info.response);
             }

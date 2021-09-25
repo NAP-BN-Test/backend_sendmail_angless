@@ -10,6 +10,8 @@ module.exports = function (db) {
         EmailSend: Sequelize.STRING,
         Type: Sequelize.BOOLEAN,
         Password: Sequelize.STRING,
+        SMTPPort: Sequelize.STRING,
+        MailServer: Sequelize.STRING,
     });
 
     return table;

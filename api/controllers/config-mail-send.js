@@ -22,6 +22,8 @@ module.exports = {
                     mConfigEmailSend(db).create({
                         EmailSend: body.emailSend ? body.emailSend : '',
                         Password: body.password ? body.password : '',
+                        MailServer: body.mailServer ? body.mailServer : '',
+                        SMTPPort: body.smtpPort ? body.smtpPort : '',
                         Type: body.type ? body.type : true,
                     }).then(data => {
                         var result = {
@@ -42,6 +44,7 @@ module.exports = {
     // update_config_mail_send
     updateConfigMailSend: (req, res) => {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             if (db) {
                 try {
@@ -52,6 +55,10 @@ module.exports = {
                         update.push({ key: 'Password', value: body.password });
                     if (body.type || body.type === '')
                         update.push({ key: 'Type', value: body.type });
+                    if (body.mailServer || body.mailServer === '')
+                        update.push({ key: 'MailServer', value: body.mailServer });
+                    if (body.smtpPort || body.smtpPort === '')
+                        update.push({ key: 'SMTPPort', value: body.smtpPort });
                     database.updateTable(update, mConfigEmailSend(db), body.id).then(response => {
                         if (response == 1) {
                             res.json(Result.ACTION_SUCCESS);
@@ -104,6 +111,8 @@ module.exports = {
                                 id: Number(element.ID),
                                 emailSend: element.EmailSend ? element.EmailSend : '',
                                 password: element.Password ? element.Password : '',
+                                mailServer: element.MailServer ? element.MailServer : '',
+                                smtpPort: element.SMTPPort ? element.SMTPPort : '',
                                 type: element.Type == true ? 'Hoạt động' : 'kKông hoạt động',
                             }
                             array.push(obj);

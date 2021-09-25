@@ -7,24 +7,10 @@ const path = require('path');
 const express = require('express');
 const multer = require('multer');
 const bodyParser = require('body-parser')
-
 var mFileAttach = require('./api/tables/file-attach')
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-app.use(session({
-    name: 'user_sid',
-    secret: '00a2152372fa8e0e62edbb45dd82831a',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        expires: 600000,
-        maxAge: 3000000,
-        sameSite: true,
-        secure: true,
-        httpOnly: true
-    }
-}))
 
 app.use(cors())
 app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }))
@@ -131,10 +117,34 @@ app.get('/crm/open_mail', someApiLimiter, emailList.addMailResponse);
 //     });
 // })
 // -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+var io = require("socket.io")(server, {
+    cors: {
+        wsEngine: 'eiows',
+        origin: ["http://dbdev.namanphu.vn:8692", "http://localhost:4201", "http://dbdev.namanphu.vn:8693", "http://dbdev.namanphu.vn:8694"],
+        methods: ["GET", "POST"],
+        credentials: true,
+    }
+})
+app.use(session({
+    name: 'user_sid',
+    secret: '00a2152372fa8e0e62edbb45dd82831a',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        io: io,
+        expires: 600000,
+        maxAge: 3000000,
+        sameSite: true,
+        secure: true,
+        httpOnly: true
+    }
+}))
 let routes = require('./api/router') //importing route
 routes(app)
 
+
+var socket = require('./api/socket_io/socket');
+socket.sockketIO(io)
 const port = process.env.PORT || 3002
 const Result = require('./api/constants/result');
 var database = require('./api/db');
