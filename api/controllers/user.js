@@ -2,6 +2,7 @@
 const Op = require('sequelize').Op;
 const Constant = require('../constants/constant');
 const Result = require('../constants/result');
+var mConfigEmailSend = require('../tables/config-mail-send')
 
 var database = require('../db');
 var moment = require('moment');
@@ -275,15 +276,28 @@ module.exports = {
     },
     getNameEmailRoot: (req, res) => {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                mUser(db).findOne({ where: { Name: 'root' } }).then(data => {
-                    var result = {
-                        status: Constant.STATUS.SUCCESS,
-                        message: '',
-                        email: data.Email,
+                mUser(db).findOne({ where: { Name: 'root' } }).then(async data => {
+                    if (data) {
+                        let email = await mConfigEmailSend(db).findOne({
+                            where: {
+                                EmailSend: data.Email
+                            }
+                        })
+                        var result = {
+                            status: Constant.STATUS.SUCCESS,
+                            message: '',
+                            email: data.Email,
+                            id: email ? email.ID : null,
+                        }
+                    } else {
+                        var result = {
+                            status: Constant.STATUS.FAIL,
+                            message: "Email không tồn tại !",
+                        }
                     }
+                    console.log(result);
                     res.json(result)
                 })
 
