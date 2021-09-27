@@ -94,7 +94,7 @@ async function getCompanyIDFromCampaignID(db, campainID) {
     })
     return mCompanyIDs;
 }
-async function resetJob(db) {
+async function resetJob(db, req) {
     try {
         var campaign = await mMailCampain(db).findAll({
             where: {
@@ -134,7 +134,7 @@ async function resetJob(db) {
                         })
                         for (var f = 0; f < arrayEmail.length; f++) {
                             let emailReceived = arrayEmail[f].name;
-                            runJob(timeSend, body, mailListID, emailReceived, company, db);
+                            runJob(timeSend, body, mailListID, emailReceived, company, db, req);
                         }
                     }
                 }
@@ -248,7 +248,7 @@ async function deleteImageResidual(listLink, listLinkNew) {
 var mMailList = require('../tables/mail-list');
 var mHistorySendMailCampaign = require('../tables/HistorySendMailCampaign');
 const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require('constants');
-async function runJob(timeSend, body, mailListID, emailReceived, company, db) {
+async function runJob(timeSend, body, mailListID, emailReceived, company, db, req) {
     let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
 
     var schedule = require('node-schedule');
@@ -307,7 +307,7 @@ async function runJob(timeSend, body, mailListID, emailReceived, company, db) {
             where: { EmailSend: emailSend.Email }
         });
         if (!mainUn) {
-            await mAmazon.sendEmail(emailSend, emailReceived, body.subject, bodyHtml, arrayFile).then(async (sendMailRes) => {
+            await mAmazon.sendEmail(emailSend, emailReceived, body.subject, bodyHtml, arrayFile, req).then(async (sendMailRes) => {
                 if (sendMailRes) {
                     console.log(sendMailRes);
                 }
@@ -1432,7 +1432,7 @@ module.exports = {
                             MailCampainID: body.campainID,
                         })
                     }
-                    resetJob(db);
+                    resetJob(db, req);
                     res.json(Result.ACTION_SUCCESS)
                 }
             } catch (error) {
