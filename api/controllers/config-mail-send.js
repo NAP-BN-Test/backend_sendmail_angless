@@ -25,6 +25,9 @@ module.exports = {
                         MailServer: body.mailServer ? body.mailServer : '',
                         SMTPPort: body.smtpPort ? body.smtpPort : '',
                         Type: body.type ? body.type : true,
+                        OMPort: body.omPort ? body.omPort : '',
+                        IMPort: body.imPort ? body.imPort : 'true',
+                        SSL: body.sslChecked ? body.sslChecked : false,
                     }).then(data => {
                         var result = {
                             status: Constant.STATUS.SUCCESS,
@@ -51,6 +54,11 @@ module.exports = {
                     let update = [];
                     if (body.emailSend || body.emailSend === '')
                         update.push({ key: 'EmailSend', value: body.emailSend });
+                    if (body.omPort || body.omPort === '')
+                        update.push({ key: 'OMPort', value: body.omPort });
+                    if (body.imPort || body.imPort === '')
+                        update.push({ key: 'IMPort', value: body.imPort });
+                    update.push({ key: 'SSL', value: body.sslChecked });
                     if (body.password || body.password === '')
                         update.push({ key: 'Password', value: body.password });
                     if (body.type || body.type === '')
@@ -114,6 +122,10 @@ module.exports = {
                                 mailServer: element.MailServer ? element.MailServer : '',
                                 smtpPort: element.SMTPPort ? element.SMTPPort : '',
                                 type: element.Type == true ? 'Hoạt động' : 'kKông hoạt động',
+                                imPort: element.IMPort ? element.IMPort : '',
+                                omPort: element.OMPort ? element.OMPort : '',
+                                sslChecked: element.SSL ? element.SSL : false,
+                                sslDisplay: element.SSL == true ? 'Secure SSL/TLS Settings' : 'Non-SSL Settings',
                             }
                             array.push(obj);
                         });

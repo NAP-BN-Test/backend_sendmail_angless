@@ -12,6 +12,9 @@ module.exports = function (db) {
         Password: Sequelize.STRING,
         SMTPPort: Sequelize.STRING,
         MailServer: Sequelize.STRING,
+        IMPort: Sequelize.STRING,
+        OMPort: Sequelize.STRING,
+        SSL: Sequelize.BOOLEAN,
     });
 
     return table;

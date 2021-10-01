@@ -162,10 +162,10 @@ module.exports = {
     sendEmail: async function (emailSend, emailRecive, subject, body, array, req = null) { //take this list for dropdown
         var nodemailer = require('nodemailer');
         var mail;
-        if (emailSend.MailServer && emailSend.SMTPPort) {
+        if (emailSend.MailServer && emailSend.OMPort) {
             mail = nodemailer.createTransport({
                 host: emailSend.MailServer,
-                port: emailSend.SMTPPort,
+                port: emailSend.OMPort ? emailSend.OMPort : null,
                 secure: false,
                 ignoreTLS: true, // bắt buộc phải có
                 auth: {
@@ -196,14 +196,37 @@ module.exports = {
             html: body,
             attachments: arraySend
         }
+        // var params = {
+        //     Destination: {
+        //         BccAddresses: [], // bcc email
+        //         CcAddresses: [], // cc email
+        //         ToAddresses: [
+        //             emailRecive
+        //         ]
+        //     },
+        //     Message: {
+        //         Body: {
+        //             Html: {
+        //                 Charset: "UTF-8",
+        //                 Data: body
+        //             }
+        //         },
+        //         Subject: {
+        //             Charset: "UTF-8",
+        //             Data: subject
+        //         }
+        //     },
+        //     Source: "tung24041998@gmail.com",
+        //     ReplyToAddresses: [],
+        // };
         await mail.sendMail(mailOptions, function (error, info) {
             if (error) {
                 console.log(error + '');
-                req.session.cookie.io.sockets.emit("respone-send-mail", error + '')
+                if (req)
+                    req.session.cookie.io.sockets.emit("respone-send-mail", error + '')
             } else {
                 console.log('Email sent: ' + info.response);
             }
         });
-
     },
 }
