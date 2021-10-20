@@ -25,6 +25,7 @@ module.exports = function (db) {
         TimeSend: Sequelize.NOW,
         Active: Sequelize.BOOLEAN,
         listLink: Sequelize.STRING,
+        IsIRPR: Sequelize.BOOLEAN,
     });
 
     return table;

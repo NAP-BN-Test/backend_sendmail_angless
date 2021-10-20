@@ -22,7 +22,8 @@ module.exports = {
                     var obj = {
                         id: Number(element.ID),
                         name: element.Name,
-                        code: element.Code
+                        code: element.Code,
+                        isDefault: element.IsDefault || false
                     }
                     array.push(obj);
                 });

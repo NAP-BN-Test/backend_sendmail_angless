@@ -898,6 +898,7 @@ module.exports = {
                             TemplateReminderName: mailCampainData[i].TemplateRemider ? mailCampainData[i].TemplateRemider.Name : '',
                             NumberAddressBook: numberAddressBook,
                             Description: mailCampainData[i].Description,
+                            isIRPR: mailCampainData[i].IsIRPR || false,
                             nameMailList: listMailList,
                         })
                     }
@@ -1195,16 +1196,26 @@ module.exports = {
 
     addMailCampain: async function (req, res) {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
                 let now = moment().subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
+
                 data = {
                     Name: body.name,
                     TimeCreate: now,
                     TimeEnd: now,
                     OwnerID: Number(body.userID),
-                    Type: body.Type
+                    Type: body.Type,
+                    // IsIRPR: body.isIRPR || false,
                 }
+                let group = await mCampaignGroups(db).findOne({
+                    where: {
+                        ID: body.idGroup1
+                    }
+                })
+                if (group)
+                    data['IsIRPR'] = group.IsDefault == true ? true : false
                 var mailCampainData;
                 if (body.Type === "MailList") {
                     data['Subject'] = body.subject ? body.subject : null;
@@ -1218,7 +1229,8 @@ module.exports = {
 
                 var result = {
                     status: Constant.STATUS.SUCCESS,
-                    id: mailCampainData.ID
+                    id: mailCampainData.ID,
+                    isIRPR: group.IsDefault == true ? true : false
                 }
 
                 res.json(result);

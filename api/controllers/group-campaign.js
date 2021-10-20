@@ -14,7 +14,11 @@ module.exports = {
     getListGroupCampaign: (req, res) => {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(db => {
-            mGroupCampaign(db).findAll().then(data => {
+            mGroupCampaign(db).findAll({
+                where: {
+                    IsDelete: true
+                }
+            }).then(data => {
                 var array = [];
                 data.forEach(element => {
                     var obj = {
@@ -38,6 +42,7 @@ module.exports = {
             mGroupCampaign(db).create({
                 Name: body.name,
                 Code: body.code,
+                IsDelete: true,
             }).then(data => {
                 var obj = {
                     id: data.ID,

@@ -9,6 +9,7 @@ module.exports = function (db) {
         },
         Name: Sequelize.STRING,
         Code: Sequelize.STRING,
+        IsDelete: Sequelize.BOOLEAN,
     });
 
     return table;

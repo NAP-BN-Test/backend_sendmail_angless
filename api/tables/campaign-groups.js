@@ -10,6 +10,7 @@ module.exports = function (db) {
         Name: Sequelize.STRING,
         Code: Sequelize.STRING,
         IDGroup: Sequelize.BIGINT,
+        IsDefault: Sequelize.BOOLEAN,
     });
 
     return table;
