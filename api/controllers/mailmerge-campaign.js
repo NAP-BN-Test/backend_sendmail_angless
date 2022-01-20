@@ -133,6 +133,7 @@ module.exports = {
                             array.push({
                                 ID: item.ID,
                                 Name: item.Name,
+                                Subject: item.Subject ? item.Subject : null,
                                 body: item.body ? item.body : null,
                                 TimeStart: mModules.toDatetime(item.timeStart) ? item.timeStart : null,
                                 TimeRemind: mModules.toDatetime(item.timeRemind) ? item.timeRemind : null,
@@ -162,6 +163,7 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             mTemplate(db).create({
                 Name: body.Name,
+                Subject: body.Subject ? body.Subject : null,
                 body: body.body ? body.body : null,
                 TimeStart: moment(body.timeStart).format('YYYY-MM-DD HH:mm:ss.SSS') ? body.timeStart : null,
                 TimeRemind: body.timeRemind ? moment(body.timeRemind).format('YYYY-MM-DD HH:mm:ss.SSS') : null,
@@ -199,13 +201,13 @@ module.exports = {
     },
     updateMailmergeTemplate: (req, res) => {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
-
             try {
                 let update = [];
                 if (body.Name || body.Name === '')
                     update.push({ key: 'Name', value: body.Name });
+                if (body.Subject || body.Subject === '')
+                    update.push({ key: 'Subject', value: body.Subject });
                 if (body.Description || body.Description === '')
                     update.push({ key: 'Description', value: body.Description });
                 if (body.UserID || body.UserID === '')
@@ -218,6 +220,7 @@ module.exports = {
                     var listLink = await getListLinkImage(db, body.ID);
                     let text = body.body;
                     text = text.replace(/%20/g, ' ');
+                    text = text.replace(/%26/g, '&');
                     text = text.replace('data:image/png;base64,', "data:image/jpeg;base64,");
                     const re = RegExp('<img src="(.*?)">', 'g');
                     const keyField = []
@@ -245,22 +248,22 @@ module.exports = {
                     }
                     if (matchesList.length > 0) {
                         for (var j = 0; j < matchesList.length; j++) {
-                            var base64Data;
-                            text = text.replace(matchesList[j], linkImageList[j]);
-                            base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
-                            base64Data = base64Data.replace(/ /g, '+');
-                            var buf = new Buffer.from(base64Data, "base64");
-                            require("fs").writeFile(dirList[j], buf, function (err) {
-                                if (err) console.log(err + '');
-                            });
+                            if (matchesList[j].length > 10000) {
+                                var base64Data;
+                                text = text.replace(matchesList[j], linkImageList[j]);
+                                base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
+                                base64Data = base64Data.replace(/ /g, '+');
+                                var buf = new Buffer.from(base64Data, "base64");
+                                require("fs").writeFile(dirList[j], buf, function (err) {
+                                    if (err) console.log(err + '');
+                                });
+                            }
                         }
                     }
                     // có dòng text = text.replace(matches[1], linkImage); là k chạy qua/ not hiểu
-                    console.log(text);
                     update.push({ key: 'body', value: text });
                     await deleteImageResidual(listLink, listLinkNew);
                 }
-                console.log(update, body.ID);
                 database.updateTable(update, mTemplate(db), body.ID).then(response => {
                     console.log(response);
                     if (response == 1) {
@@ -278,7 +281,6 @@ module.exports = {
     },
     getDetailMailmergeTemplate: (req, res) => {
         let body = req.body;
-
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let Template = mTemplate(db);
             Template.belongsTo(mUser(db), { foreignKey: 'UserID', sourceKey: 'UserID', as: 'User' });
@@ -307,7 +309,6 @@ module.exports = {
                         message: '',
                         obj: obj
                     }
-                    console.log(obj);
                     res.json(result);
                 }
                 else {

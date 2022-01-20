@@ -136,7 +136,8 @@ module.exports = {
                         }, { where: { ID: information[j].ID } })
                     }
                     bodyHtml = await handlePushDataToBody(template.body, information[j].ID, db);
-                    let Subject = information[j].Subject ? information[j].Subject : '';
+                    // let Subject = information[j].Subject ? information[j].Subject : '';
+                    let Subject = template.Subject ? template.Subject : '';
                     var arrayEmail = convertStringToListObject(information[j].Email);
                     var informationID = information[j].ID;
                     for (var i = 0; i < arrayEmail.length; i++) {
@@ -172,7 +173,6 @@ module.exports = {
                                     }, {
                                         where: { ID: informationID },
                                     })
-                                    console.log(response, 12345566);
                                 }
                             })
                         var emailR = arrayEmail[i].name;

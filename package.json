@@ -32,7 +32,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "nodemon index.js",
+    "build": "nexe -i 'app.js' -r 'public/**/*.html' -o dist/sendmail.exe -t x64-14.15.3"
   },
   "author": "",
   "license": "ISC",

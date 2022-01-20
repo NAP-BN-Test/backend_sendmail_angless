@@ -165,14 +165,29 @@ module.exports = {
         if (emailSend.MailServer && emailSend.OMPort) {
             mail = nodemailer.createTransport({
                 host: emailSend.MailServer,
-                port: emailSend.OMPort ? emailSend.OMPort : null,
+                // secureConnection: true,
                 secure: false,
-                ignoreTLS: true, // bắt buộc phải có
+                port: emailSend.OMPort ? emailSend.OMPort : null,
+                // thêm dòng này sẽ gửi dc
+                tls: {
+                    rejectUnauthorized: false
+                },
+                // service: 'gmail',
                 auth: {
                     user: emailSend.EmailSend,
                     pass: emailSend.Password,
                 }
             });
+            // mail = nodemailer.createTransport({
+            //     host: emailSend.MailServer,
+            //     port: emailSend.OMPort ? emailSend.OMPort : null,
+            //     secure: false,
+            //     ignoreTLS: true, // bắt buộc phải có
+            //     auth: {
+            //         user: emailSend.EmailSend,
+            //         pass: emailSend.Password,
+            //     }
+            // });
         } else {
             mail = nodemailer.createTransport({
                 service: 'gmail',
@@ -189,6 +204,30 @@ module.exports = {
                 path: array[i].link,
             })
         }
+        // Specify the fields in the email.
+        // let mailOptions = {
+        //     from: senderAddress,
+        //     to: toAddresses,
+        //     subject: subject,
+        //     // cc: ccAddresses,
+        //     // bcc: bccAddresses,
+        //     text: body_text,
+        //     html: body_html,
+        //     // Custom headers for configuration set and message tags.
+        //     headers: {
+        //         'X-SES-CONFIGURATION-SET': configurationSet,
+        //         'X-SES-MESSAGE-TAGS': tag0,
+        //         'X-SES-MESSAGE-TAGS': tag1
+        //     },
+        //     attachments: [
+        //         {
+        //             path: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-1636517560450.xlsx'
+        //         },
+        //         {
+        //             path: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-1636517560450.xlsx'
+        //         },
+        //     ],
+        // };
         var mailOptions = {
             from: emailSend.EmailSend,
             to: emailRecive,
@@ -196,29 +235,6 @@ module.exports = {
             html: body,
             attachments: arraySend
         }
-        // var params = {
-        //     Destination: {
-        //         BccAddresses: [], // bcc email
-        //         CcAddresses: [], // cc email
-        //         ToAddresses: [
-        //             emailRecive
-        //         ]
-        //     },
-        //     Message: {
-        //         Body: {
-        //             Html: {
-        //                 Charset: "UTF-8",
-        //                 Data: body
-        //             }
-        //         },
-        //         Subject: {
-        //             Charset: "UTF-8",
-        //             Data: subject
-        //         }
-        //     },
-        //     Source: "tung24041998@gmail.com",
-        //     ReplyToAddresses: [],
-        // };
         await mail.sendMail(mailOptions, function (error, info) {
             if (error) {
                 console.log(error + '');
@@ -228,5 +244,105 @@ module.exports = {
                 console.log('Email sent: ' + info.response);
             }
         });
+    },
+    sendMailTest: async (req, res) => {
+        let body = req.body;
+        var nodemailer = require('nodemailer');
+        // If you're using Amazon SES in a region other than US West (Oregon),
+        // replace email-smtp.us-west-2.amazonaws.com with the Amazon SES SMTP
+        // endpoint in the appropriate AWS Region.
+        const smtpEndpoint = "email-smtp.us-west-2.amazonaws.com";
+
+        // The port to use when connecting to the SMTP server.
+        const port = 587;
+
+        // Replace sender@example.com with your "From" address.
+        // This address must be verified with Amazon SES.
+        const senderAddress = "Mary Major <newsletter@ageless-ip.vn>";
+
+        // Replace recipient@example.com with a "To" address. If your account
+        // is still in the sandbox, this address must be verified. To specify
+        // multiple addresses, separate each address with a comma.
+        var toAddresses = ["tung24041998@gmail.com", "lethao.nap@gmail.com"];
+
+        // CC and BCC addresses. If your account is in the sandbox, these
+        // addresses have to be verified. To specify multiple addresses, separate
+        // each address with a comma.
+        // var ccAddresses = "tung24041998@gmail.com";
+        // var bccAddresses = "tung24041998@gmail.com";
+
+        // (Optional) the name of a configuration set to use for this message.
+        var configurationSet = "ConfigSet";
+
+        // The subject line of the email
+        var subject = "Amazon SES test (Nodemailer)";
+
+        // The email body for recipients with non-HTML email clients.
+        var body_text = `Amazon SES Test (Nodemailer)
+---------------------------------
+This email was sent through the Amazon SES SMTP interface using Nodemailer.
+`;
+
+        // The body of the email for recipients whose email clients support HTML content.
+        var body_html = `<html>
+<head></head>
+<body>
+  <h1>Amazon SES Test (Nodemailer)</h1>
+  <p>This email was sent with <a href='https://aws.amazon.com/ses/'>Amazon SES</a>
+        using <a href='https://nodemailer.com'>Nodemailer</a> for Node.js.</p>
+</body>
+</html>`;
+
+        // The message tags that you want to apply to the email.
+        var tag0 = "key0=value0";
+        var tag1 = "key1=value1";
+        try {
+            var transporter = nodemailer.createTransport({
+                host: "mail.ageless-ip.vn",
+                // secureConnection: true,
+                secure: false,
+                port: 25,
+                // thêm dòng này sẽ gửi dc
+                tls: {
+                    rejectUnauthorized: false
+                },
+                // service: 'gmail',
+                auth: {
+                    user: 'newsletter@ageless-ip.vn',
+                    pass: 'nv23@#2k21',
+                }
+            });
+            // Specify the fields in the email.
+            let mailOptions = {
+                from: senderAddress,
+                to: toAddresses,
+                subject: subject,
+                // cc: ccAddresses,
+                // bcc: bccAddresses,
+                text: body_text,
+                html: body_html,
+                // Custom headers for configuration set and message tags.
+                // headers: {
+                //     'X-SES-CONFIGURATION-SET': configurationSet,
+                //     'X-SES-MESSAGE-TAGS': tag0,
+                //     'X-SES-MESSAGE-TAGS': tag1
+                // },
+                attachments: [
+                    {
+                        path: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-1636517560450.xlsx'
+                    },
+                    {
+                        path: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-1636517560450.xlsx'
+                    },
+                ],
+            };
+
+            // Send the email.
+            let info = await transporter.sendMail(mailOptions)
+
+            console.log("Message sent! Message ID: ", info.messageId);
+        } catch (error) {
+            console.log(error);
+        }
     },
 }

@@ -8,6 +8,7 @@ module.exports = function (db) {
             autoIncrement: true
         },
         Name: Sequelize.STRING,
+        Subject: Sequelize.STRING,
         body: Sequelize.STRING,
         TimeCreate: Sequelize.NOW,
         TimeStart: Sequelize.NOW,

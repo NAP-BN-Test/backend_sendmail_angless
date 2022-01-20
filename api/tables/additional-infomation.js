@@ -35,6 +35,10 @@ module.exports = function (db) {
         DateReminder: Sequelize.DATE,
         Result: Sequelize.STRING,
         DateSend: Sequelize.DATE,
+        Representative: Sequelize.STRING,
+        HolderName: Sequelize.STRING,
+        MarkName: Sequelize.STRING,
+        MarkN0: Sequelize.STRING,
     });
 
     return table;

@@ -121,7 +121,11 @@ module.exports = {
                                 TimeUpdate: mModules.toDatetime(data[i].TimeUpdate),
                                 Description: data[i].description,
                                 checkDuplicate: check[0] ? true : false,
-                                nameCampaign: listNameCampaign
+                                nameCampaign: listNameCampaign,
+                                markN: data[i].MarkN0 ? data[i].MarkN0 : null,
+                                markName: data[i].MarkName ? data[i].MarkName : null,
+                                holderName: data[i].HolderName ? data[i].HolderName : null,
+                                representative: data[i].Representative ? data[i].Representative : null,
                             });
 
                         }
@@ -148,6 +152,7 @@ module.exports = {
     },
     addAdditionalInformation: (req, res) => {
         let body = req.body;
+        console.log(body);
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             let errorEmail = '';
@@ -176,7 +181,7 @@ module.exports = {
                     order: [
                         Sequelize.literal('max(TimeCreate) DESC'),
                     ],
-                    group: ['OurRef', 'ContactID', 'CampaignID', 'ID', 'PAT', 'Applicant', 'ApplicationNo', 'ClassA', 'FilingDate', 'DateSend', 'Result', 'DateReminder', 'PriorTrademark', 'CampaignID', 'Description', 'TimeUpdate', 'TimeCreate', 'TimeRemind', 'TimeStart', 'UserID', 'Rerminder', 'Status', 'Email', 'Fax', 'Tel', 'Address', 'Firm', 'ClassB', 'RegNo', 'Owner'],
+                    group: ['MarkN0', 'MarkName', 'HolderName', 'Representative', 'OurRef', 'ContactID', 'CampaignID', 'ID', 'PAT', 'Applicant', 'ApplicationNo', 'ClassA', 'FilingDate', 'DateSend', 'Result', 'DateReminder', 'PriorTrademark', 'CampaignID', 'Description', 'TimeUpdate', 'TimeCreate', 'TimeRemind', 'TimeStart', 'UserID', 'Rerminder', 'Status', 'Email', 'Fax', 'Tel', 'Address', 'Firm', 'ClassB', 'RegNo', 'Owner'],
                 }
             );
             if (addInf)
@@ -212,6 +217,10 @@ module.exports = {
                 TimeUpdate: now,
                 Description: body.description,
                 CampaignID: Number(body.mailMergeCampaignID),
+                Representative: body.representative ? body.representative : null,
+                HolderName: body.holderName ? body.holderName : null,
+                MarkName: body.markName ? body.markName : null,
+                MarkN0: body.markN ? body.markN : null,
             }).then(async data => {
                 obj = {
                     OurRef: data.OurRef ? data.OurRef : null,
@@ -269,6 +278,14 @@ module.exports = {
                         update.push({ key: 'PAT', value: body.PAT.toString() });
                     if (body.Applicant || body.Applicant === '')
                         update.push({ key: 'Applicant', value: body.Applicant });
+                    if (body.representative || body.representative === '')
+                        update.push({ key: 'Representative', value: body.representative });
+                    if (body.holderName || body.holderName === '')
+                        update.push({ key: 'HolderName', value: body.holderName });
+                    if (body.markName || body.markName === '')
+                        update.push({ key: 'MarkName', value: body.markName });
+                    if (body.markN || body.markN === '')
+                        update.push({ key: 'MarkN0', value: body.markN });
                     if (body.ApplicationNo || body.ApplicationNo === '')
                         update.push({ key: 'ApplicationNo', value: body.ApplicationNo });
                     if (body.ClassA || body.ClassA === '')

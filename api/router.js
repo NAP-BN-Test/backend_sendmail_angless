@@ -281,6 +281,7 @@ module.exports = function (app) {
     let amazonSend = require('./controllers/amazon')
     app.route('/crm/send_mail').post(amazonSend.sendMail);
 
+    app.route('/crm/send_mail_test').post(amazonSend.sendMailTest);
 
     //Aws http
     app.route('/aws/mail_response').post(amazon.amazonResponse);
