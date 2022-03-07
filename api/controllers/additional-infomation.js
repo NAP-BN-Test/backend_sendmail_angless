@@ -91,6 +91,7 @@ module.exports = {
                                         count > 1 ? listNameCampaign += ', [' + item.Campaign.Name + ']' : listNameCampaign += '[' + item.Campaign.Name + ']';
                                     }
                                 })
+                            console.log(data[i]);
                             array.push({
                                 ID: data[i].ID,
                                 OurRef: data[i].OurRef,
@@ -556,12 +557,16 @@ module.exports = {
                     var array = [];
                     if (data) {
                         array.push({
-                            name: data.Email
+                            name: data.Email,
+                            phone: data.Phone,
+                            fax: data.Fax
                         })
                         await mContact(db).findAll({ where: { CompanyID: body.id } }).then(contact => {
                             contact.forEach(item => {
                                 array.push({
-                                    name: item.Email
+                                    name: item.Email,
+                                    phone: data.Phone,
+                                    fax: data.Fax
                                 })
                             })
                         })
