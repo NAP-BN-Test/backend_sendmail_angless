@@ -41,15 +41,16 @@ function convertStringToListObject(string) {
     }
     return resultArray;
 }
+
 function convertStringToListObjectEmail(string) {
     let result = [];
     let resultArray = [];
     if (string) {
         result = string.split(";")
         result.forEach(item => {
-            let resultObj = {};
-            resultObj.name = item;
-            resultArray.push(resultObj);
+            // let resultObj = {};
+            // resultObj.name = item;
+            resultArray.push(item);
         })
     }
     return resultArray;
@@ -79,14 +80,14 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             mHistoryContact(db).findAll({
                 include: [{
-                    model: mUser(db),
-                    as: 'User'
-                    // require: true
-                },
-                {
-                    model: mContact(db),
-                    as: 'Contact'
-                }
+                        model: mUser(db),
+                        as: 'User'
+                            // require: true
+                    },
+                    {
+                        model: mContact(db),
+                        as: 'Contact'
+                    }
                 ],
                 where,
             }).then(data => {
@@ -138,7 +139,9 @@ module.exports = {
                         where: {
                             CompanyID: body.CompanyID,
                         },
-                        order: [['ID', 'DESC']],
+                        order: [
+                            ['ID', 'DESC']
+                        ],
                         offset: Number(body.itemPerPage) * (Number(body.page) - 1),
                         limit: Number(body.itemPerPage)
                     }).then(data => {
@@ -215,7 +218,7 @@ module.exports = {
         })
     },
 
-    getListContact: (req, res) => {//take this list for dropdown
+    getListContact: (req, res) => { //take this list for dropdown
         let body = req.body;
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -260,16 +263,38 @@ module.exports = {
 
                     let whereSearch = [];
                     if (body.searchKey) {
-                        whereSearch = [
-                            { Name: { [Op.like]: '%' + body.searchKey + '%' } },
-                            { Address: { [Op.like]: '%' + body.searchKey + '%' } },
-                            { Phone: { [Op.like]: '%' + body.searchKey + '%' } },
+                        whereSearch = [{
+                                Name: {
+                                    [Op.like]: '%' + body.searchKey + '%'
+                                }
+                            },
+                            {
+                                Address: {
+                                    [Op.like]: '%' + body.searchKey + '%'
+                                }
+                            },
+                            {
+                                Phone: {
+                                    [Op.like]: '%' + body.searchKey + '%'
+                                }
+                            },
                         ];
                     } else {
-                        whereSearch = [
-                            { Name: { [Op.ne]: '%%' } },
-                            { Address: { [Op.like]: '%%' } },
-                            { Phone: { [Op.like]: '%%' } },
+                        whereSearch = [{
+                                Name: {
+                                    [Op.ne]: '%%'
+                                }
+                            },
+                            {
+                                Address: {
+                                    [Op.like]: '%%'
+                                }
+                            },
+                            {
+                                Phone: {
+                                    [Op.like]: '%%'
+                                }
+                            },
                         ];
                     }
 
@@ -288,31 +313,45 @@ module.exports = {
                     let whereFollow
                     if (body.timeFrom) {
                         whereAll = {
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.or]: whereSearch,
                             [Op.and]: userFind
                         };
                         whereAllAssign = {
-                            UserID: { [Op.ne]: null },
+                            UserID: {
+                                [Op.ne]: null
+                            },
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         };
                         whereAssign = {
                             UserID: body.userID,
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         };
                         whereUnAssign = {
-                            UserID: { [Op.eq]: null },
+                            UserID: {
+                                [Op.eq]: null
+                            },
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         };
                         whereFollow = {
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         }
                     } else {
@@ -321,7 +360,9 @@ module.exports = {
                             [Op.and]: userFind
                         };
                         whereAllAssign = {
-                            UserID: { [Op.ne]: null },
+                            UserID: {
+                                [Op.ne]: null
+                            },
                             [Op.or]: whereSearch,
                             [Op.and]: userFind
                         };
@@ -331,7 +372,9 @@ module.exports = {
                             [Op.and]: userFind
                         };
                         whereUnAssign = {
-                            UserID: { [Op.eq]: null },
+                            UserID: {
+                                [Op.eq]: null
+                            },
                             [Op.or]: whereSearch,
                             [Op.and]: userFind
                         };
@@ -354,31 +397,29 @@ module.exports = {
                                     where: whereAssign,
                                 }).then(assign => {
                                     contact.count({
-                                        include: [
-                                            {
-                                                model: mUserFollow(db),
-                                                where: { UserID: body.userID, Type: 2, Follow: true }
-                                            }
-                                        ],
+                                        include: [{
+                                            model: mUserFollow(db),
+                                            where: { UserID: body.userID, Type: 2, Follow: true }
+                                        }],
                                         where: whereFollow,
                                     }).then(follow => {
                                         let where;
                                         if (body.searchKey) {
-                                            if (body.contactType == 2) {//unassign
+                                            if (body.contactType == 2) { //unassign
                                                 where = whereUnAssign
-                                            } else if (body.contactType == 4) {//assign
+                                            } else if (body.contactType == 4) { //assign
                                                 where = whereAssign
-                                            } else if (body.contactType == 5) {//assign all
+                                            } else if (body.contactType == 5) { //assign all
                                                 where = whereAllAssign
                                             } else { // all
                                                 where = whereAll
                                             }
                                         } else {
-                                            if (body.contactType == 2) {//unassign
+                                            if (body.contactType == 2) { //unassign
                                                 where = whereUnAssign
-                                            } else if (body.contactType == 4) {//assign
+                                            } else if (body.contactType == 4) { //assign
                                                 where = whereAssign
-                                            } else {// all
+                                            } else { // all
                                                 where = whereAll
                                             }
                                         }
@@ -396,7 +437,9 @@ module.exports = {
                                                 { model: mCompany(db), required: false }
                                             ],
                                             where: where,
-                                            order: [['ID', 'DESC']],
+                                            order: [
+                                                ['ID', 'DESC']
+                                            ],
                                             offset: Number(body.itemPerPage) * (Number(body.page) - 1),
                                             limit: Number(body.itemPerPage)
                                         }).then(data => {
@@ -430,7 +473,11 @@ module.exports = {
                                                 status: Constant.STATUS.SUCCESS,
                                                 message: '',
                                                 array: array,
-                                                all, unassign, assign, follow, assignAll
+                                                all,
+                                                unassign,
+                                                assign,
+                                                follow,
+                                                assignAll
                                             }
                                             res.json(result)
                                         })
@@ -499,10 +546,7 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
 
 
-            mContact(db).update(
-                { CompanyID: body.companyID },
-                { where: { ID: body.contactID } }
-            ).then(() => {
+            mContact(db).update({ CompanyID: body.companyID }, { where: { ID: body.contactID } }).then(() => {
                 mContact(db).findOne({ where: { ID: body.contactID } }).then(data => {
                     var obj = {
                         id: data.ID,
@@ -530,7 +574,11 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
 
             user.checkUser(body.ip, body.dbName, body.userID).then(role => {
-                let where = [{ Name: { [Op.like]: "%" + body.searchKey + "%" } }];
+                let where = [{
+                    Name: {
+                        [Op.like]: "%" + body.searchKey + "%"
+                    }
+                }];
 
                 if (role != Constant.USER_ROLE.MANAGER) {
                     where.push({ UserID: body.userID })
@@ -666,10 +714,13 @@ module.exports = {
                     listContactID.push(Number(item + ""));
                 })
 
-                mContact(db).update(
-                    { AssignID: body.assignID },
-                    { where: { ID: { [Op.in]: listContactID } } }
-                ).then(data => {
+                mContact(db).update({ AssignID: body.assignID }, {
+                    where: {
+                        ID: {
+                            [Op.in]: listContactID
+                        }
+                    }
+                }).then(data => {
                     if (data) {
                         mUser(db).findOne({ where: { ID: body.assignID } }).then(user => {
                             var obj = {
@@ -707,39 +758,69 @@ module.exports = {
 
                 mUser(db).findOne({ where: { ID: body.userID } }).then(user => {
                     if (user.Roles == Constant.USER_ROLE.MANAGER) {
-                        rmCallAssciate(db).update(
-                            { ContactID: null },
-                            { where: { ContactID: { [Op.in]: listContactID } } }
-                        ).then(() => {
-                            rmEmailAssciate(db).update(
-                                { ContactID: null },
-                                { where: { ContactID: { [Op.in]: listContactID } } }
-                            ).then(() => {
-                                rmMeetAssciate(db).update(
-                                    { ContactID: null },
-                                    { where: { ContactID: { [Op.in]: listContactID } } }
-                                ).then(() => {
-                                    rmNoteAssciate(db).update(
-                                        { ContactID: null },
-                                        { where: { ContactID: { [Op.in]: listContactID } } }
-                                    ).then(() => {
-                                        rmTaskAssciate(db).update(
-                                            { ContactID: null },
-                                            { where: { ContactID: { [Op.in]: listContactID } } }
-                                        ).then(() => {
-                                            rmUserFollow(db).update(
-                                                { ContactID: null },
-                                                { where: { ContactID: { [Op.in]: listContactID } } }
-                                            ).then(() => {
-                                                rmDeal(db).update(
-                                                    { ContactID: null },
-                                                    { where: { ContactID: { [Op.in]: listContactID } } }
-                                                ).then(() => {
-                                                    rmMeetContact(db).update(
-                                                        { ContactID: null },
-                                                        { where: { ContactID: { [Op.in]: listContactID } } }
-                                                    ).then(() => {
-                                                        mContact(db).destroy({ where: { ID: { [Op.in]: listContactID } } }).then(() => {
+                        rmCallAssciate(db).update({ ContactID: null }, {
+                            where: {
+                                ContactID: {
+                                    [Op.in]: listContactID
+                                }
+                            }
+                        }).then(() => {
+                            rmEmailAssciate(db).update({ ContactID: null }, {
+                                where: {
+                                    ContactID: {
+                                        [Op.in]: listContactID
+                                    }
+                                }
+                            }).then(() => {
+                                rmMeetAssciate(db).update({ ContactID: null }, {
+                                    where: {
+                                        ContactID: {
+                                            [Op.in]: listContactID
+                                        }
+                                    }
+                                }).then(() => {
+                                    rmNoteAssciate(db).update({ ContactID: null }, {
+                                        where: {
+                                            ContactID: {
+                                                [Op.in]: listContactID
+                                            }
+                                        }
+                                    }).then(() => {
+                                        rmTaskAssciate(db).update({ ContactID: null }, {
+                                            where: {
+                                                ContactID: {
+                                                    [Op.in]: listContactID
+                                                }
+                                            }
+                                        }).then(() => {
+                                            rmUserFollow(db).update({ ContactID: null }, {
+                                                where: {
+                                                    ContactID: {
+                                                        [Op.in]: listContactID
+                                                    }
+                                                }
+                                            }).then(() => {
+                                                rmDeal(db).update({ ContactID: null }, {
+                                                    where: {
+                                                        ContactID: {
+                                                            [Op.in]: listContactID
+                                                        }
+                                                    }
+                                                }).then(() => {
+                                                    rmMeetContact(db).update({ ContactID: null }, {
+                                                        where: {
+                                                            ContactID: {
+                                                                [Op.in]: listContactID
+                                                            }
+                                                        }
+                                                    }).then(() => {
+                                                        mContact(db).destroy({
+                                                            where: {
+                                                                ID: {
+                                                                    [Op.in]: listContactID
+                                                                }
+                                                            }
+                                                        }).then(() => {
                                                             res.json(Result.ACTION_SUCCESS);
                                                         })
                                                     })
@@ -750,9 +831,14 @@ module.exports = {
                                 })
                             })
                         })
-                    }
-                    else {
-                        mContact(db).update({ UserID: null }, { where: { ID: { [Op.in]: listContactID } } }).then(() => {
+                    } else {
+                        mContact(db).update({ UserID: null }, {
+                            where: {
+                                ID: {
+                                    [Op.in]: listContactID
+                                }
+                            }
+                        }).then(() => {
                             res.json(Result.ACTION_SUCCESS);
                         })
                     }
@@ -770,10 +856,7 @@ module.exports = {
 
             mUserFollow(db).findOne({ where: { UserID: body.userID, ContactID: body.contactID, Type: 2 } }).then(data => {
                 if (data) {
-                    mUserFollow(db).update(
-                        { Follow: Boolean(body.follow) },
-                        { where: { UserID: body.userID, ContactID: body.contactID, Type: 2 } }
-                    ).then(() => {
+                    mUserFollow(db).update({ Follow: Boolean(body.follow) }, { where: { UserID: body.userID, ContactID: body.contactID, Type: 2 } }).then(() => {
                         var result = {
                             status: Constant.STATUS.SUCCESS,
                             message: Constant.MESSAGE.ACTION_SUCCESS,
@@ -833,7 +916,9 @@ module.exports = {
                         where: {
                             CompanyID: body.CompanyID,
                         },
-                        order: [['ID', 'DESC']],
+                        order: [
+                            ['ID', 'DESC']
+                        ],
                         offset: Number(body.itemPerPage) * (Number(body.page) - 1),
                         limit: Number(body.itemPerPage)
                     }).then(async data => {
@@ -842,7 +927,7 @@ module.exports = {
                             let arrayMail = convertStringToListObjectEmail(data[d].Email)
                             let arrayStatusMail = []
                             for (let i = 0; i < arrayMail.length; i++) {
-                                let checkUn = await checkUnsubsctibe(db, arrayMail[i].name)
+                                let checkUn = await checkUnsubsctibe(db, arrayMail[i])
                                 let status = checkUn == false ? 'Subcribe' : 'Unsubcribe'
                                 arrayStatusMail.push(status)
                             }

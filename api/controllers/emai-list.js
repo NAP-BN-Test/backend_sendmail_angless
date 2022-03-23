@@ -85,7 +85,9 @@ async function getCompanyIDFromCampaignID(db, campainID) {
     var mCompanyIDs = [];
     await mCompanyMailList(db).findAll({
         where: {
-            MailListID: { [Op.in]: mMailListID }
+            MailListID: {
+                [Op.in]: mMailListID
+            }
         }
     }).then(company => {
         company.forEach(item => {
@@ -98,10 +100,17 @@ async function resetJob(db, req) {
     try {
         var campaign = await mMailCampain(db).findAll({
             where: {
-                [Op.and]: [
-                    { TimeSend: { [Op.ne]: null } },
+                [Op.and]: [{
+                        TimeSend: {
+                            [Op.ne]: null
+                        }
+                    },
                     { Active: true },
-                    { ResBody: { [Op.ne]: null } }
+                    {
+                        ResBody: {
+                            [Op.ne]: null
+                        }
+                    }
                 ]
             }
         })
@@ -231,6 +240,7 @@ async function getListLinkImage(db, idCampaign) {
     }
     return keyField;
 }
+
 function checkDuplicate(array, elm) {
     var check = false;
     array.forEach(item => {
@@ -252,7 +262,7 @@ async function runJob(timeSend, body, mailListID, emailReceived, company, db, re
     let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
 
     var schedule = require('node-schedule');
-    var job = schedule.scheduleJob(timeSend, async function () {
+    var job = schedule.scheduleJob(timeSend, async function() {
         let tokenHttpTrack = `ip=${body.ip}&dbName=${body.dbName}&campainID=${mailListID}&type=Maillist&idGetInfo=${body.userID}&email=${emailReceived}&TickSendMail=${Math.floor(Math.random() * 1000000)}`;
         let tokenHttpTrackEncrypt = mModules.encryptKey(tokenHttpTrack);
         let httpTrack = `<img src="http://dbdev.namanphu.vn:3002/crm/open_mail?token=${tokenHttpTrackEncrypt}" height="1" width="1""/>`
@@ -263,7 +273,7 @@ async function runJob(timeSend, body, mailListID, emailReceived, company, db, re
         bodyHtml = httpTrack + bodyHtml;
         bodyHtml = bodyHtml + unSubscribe;
         bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
-        mCheckMail.checkEmail(emailReceived, db).then(async (checkMailRes) => {
+        mCheckMail.checkEmail(emailReceived, db).then(async(checkMailRes) => {
             if (checkMailRes == false) {
                 var responeExits = await mMailResponse(db).findOne({
                     where: {
@@ -307,7 +317,7 @@ async function runJob(timeSend, body, mailListID, emailReceived, company, db, re
             where: { EmailSend: emailSend.Email }
         });
         if (!mainUn) {
-            await mAmazon.sendEmail(emailSend, emailReceived, body.subject, bodyHtml, arrayFile, req).then(async (sendMailRes) => {
+            await mAmazon.sendEmail(emailSend, emailReceived, body.subject, bodyHtml, arrayFile, req).then(async(sendMailRes) => {
                 if (sendMailRes) {
                     console.log(sendMailRes);
                 }
@@ -328,7 +338,7 @@ module.exports = {
     resetJob,
     getCompanyIDFromCampaignID,
     deleteCampaign,
-    copyMailCampaign: async function (req, res) {
+    copyMailCampaign: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             mMailCampain(db).findOne({ where: { ID: body.id } }).then(async data => {
@@ -368,7 +378,7 @@ module.exports = {
             })
         })
     },
-    getListNameMailcampaignFromGroup: async function (req, res) {
+    getListNameMailcampaignFromGroup: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -428,7 +438,7 @@ module.exports = {
             res.json(error)
         })
     },
-    getMailList: async function (req, res) {
+    getMailList: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -439,20 +449,26 @@ module.exports = {
                 let arraySearchNot = [];
 
                 if (data.search) {
-                    where = [
-                        { Name: { [Op.like]: '%' + data.search + '%' } },
-                    ];
+                    where = [{
+                        Name: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    }, ];
                 } else {
-                    where = [
-                        { Name: { [Op.ne]: '%%' } },
-                    ];
+                    where = [{
+                        Name: {
+                            [Op.ne]: '%%'
+                        }
+                    }, ];
                 }
                 arraySearchOr.push(where)
                 if (data.items) {
                     for (var i = 0; i < data.items.length; i++) {
                         let userFind = {};
                         if (data.items[i].fields['name'] === 'Tên danh sách') {
-                            userFind['Name'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                            userFind['Name'] = {
+                                [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                            }
                             if (data.items[i].conditionFields['name'] == 'And') {
                                 arraySearchAnd.push(userFind)
                             }
@@ -466,14 +482,18 @@ module.exports = {
                         if (data.items[i].fields['name'] === 'Người tạo') {
                             var owner = await mUser(db).findAll({
                                 where: {
-                                    Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                    Name: {
+                                        [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                    }
                                 }
                             })
                             var listOwner = [];
                             owner.forEach(item => {
                                 listOwner.push(item.ID)
                             })
-                            userFind['OwnerID'] = { [Op.in]: listOwner }
+                            userFind['OwnerID'] = {
+                                [Op.in]: listOwner
+                            }
                             if (data.items[i].conditionFields['name'] == 'And') {
                                 arraySearchAnd.push(userFind)
                             }
@@ -527,7 +547,11 @@ module.exports = {
                         })
                     })
                     var mCompanyCount = await mCompany(db).count({
-                        where: { ID: { [Op.in]: listCompanyID } }
+                        where: {
+                            ID: {
+                                [Op.in]: listCompanyID
+                            }
+                        }
                     })
                     array.push({
                         id: Number(mMailListData[mailList].ID),
@@ -556,7 +580,7 @@ module.exports = {
 
     },
 
-    getMailListDetail: async function (req, res) {
+    getMailListDetail: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -570,22 +594,37 @@ module.exports = {
                     })
                 })
                 if (data.search) {
-                    where = [
-                        { Name: { [Op.like]: '%' + data.search + '%' } },
-                        { ID: { [Op.in]: listCompanyID } }
+                    where = [{
+                            Name: {
+                                [Op.like]: '%' + data.search + '%'
+                            }
+                        },
+                        {
+                            ID: {
+                                [Op.in]: listCompanyID
+                            }
+                        }
                     ];
                 } else {
                     where = [
                         // { Name: { [Op.like]: '%%' } },
-                        { ID: { [Op.in]: listCompanyID } }
+                        {
+                            ID: {
+                                [Op.in]: listCompanyID
+                            }
+                        }
                     ];
                 }
-                let whereOjb = { [Op.and]: where };
+                let whereOjb = {
+                    [Op.and]: where
+                };
                 if (data.items) {
                     for (var i = 0; i < data.items.length; i++) {
                         let userFind = {};
                         if (data.items[i].fields['name'] === 'Name') {
-                            userFind['Name'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                            userFind['Name'] = {
+                                [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                            }
                             if (data.items[i].conditionFields['name'] == 'And') {
                                 whereOjb[Op.and] = userFind
                             }
@@ -597,7 +636,9 @@ module.exports = {
                             }
                         }
                         if (data.items[i].fields['name'] === 'Email') {
-                            userFind['Email'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                            userFind['Email'] = {
+                                [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                            }
                             if (data.items[i].conditionFields['name'] == 'And') {
                                 whereOjb[Op.and] = userFind
                             }
@@ -692,7 +733,7 @@ module.exports = {
 
     },
 
-    getListMailCampain: async function (req, res) {
+    getListMailCampain: async function(req, res) {
         let body = req.body;
         console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -711,8 +752,7 @@ module.exports = {
                             { IDGroup1: body.idGroup1 },
                             { Type: 'MailMerge' }
                         ]
-                    }
-                    else {
+                    } else {
                         var array = [
                             // where,
                             { Type: 'MailMerge' }
@@ -747,20 +787,38 @@ module.exports = {
                         let ownerIDs = []
                         await mUser(db).findAll({
                             where: {
-                                Name: { [Op.like]: '%' + data.search + '%' },
+                                Name: {
+                                    [Op.like]: '%' + data.search + '%'
+                                },
                             }
                         }).then(data => {
                             data.forEach(item => {
                                 ownerIDs.push(item.ID)
                             })
                         })
-                        arraySearchOr.push({ Name: { [Op.like]: '%' + data.search + '%' } })
-                        arraySearchOr.push({ Subject: { [Op.like]: '%' + data.search + '%' } })
-                        arraySearchOr.push({ OwnerID: { [Op.in]: ownerIDs } })
+                        arraySearchOr.push({
+                            Name: {
+                                [Op.like]: '%' + data.search + '%'
+                            }
+                        })
+                        arraySearchOr.push({
+                            Subject: {
+                                [Op.like]: '%' + data.search + '%'
+                            }
+                        })
+                        arraySearchOr.push({
+                            OwnerID: {
+                                [Op.in]: ownerIDs
+                            }
+                        })
                         arraySearchAnd.push({ Type: 'MailList' })
                     } else {
                         arraySearchAnd.push({ Type: 'MailList' })
-                        arraySearchAnd.push({ ID: { [Op.ne]: null } })
+                        arraySearchAnd.push({
+                            ID: {
+                                [Op.ne]: null
+                            }
+                        })
                     }
                     if (data.items) {
                         for (var i = 0; i < data.items.length; i++) {
@@ -797,7 +855,9 @@ module.exports = {
                                 let ownerIDs = []
                                 await mUser(db).findAll({
                                     where: {
-                                        Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' },
+                                        Name: {
+                                            [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                        },
                                     }
                                 }).then(data => {
                                     data.forEach(item => {
@@ -859,13 +919,12 @@ module.exports = {
                         var numberAddressBook = await mAdditionalInformation(db).count({
                             where: { CampaignID: mailCampainData[i].ID }
                         });
-                        var nearestSend = await mMailResponse(db).findOne(
-                            {
-                                order: [
-                                    Sequelize.literal('max(TimeCreate) DESC'),
-                                ],
-                                group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo', 'Email', 'TickSendMail'],
-                            }, {
+                        var nearestSend = await mMailResponse(db).findOne({
+                            order: [
+                                Sequelize.literal('max(TimeCreate) DESC'),
+                            ],
+                            group: ['MailListDetailID', 'MailCampainID', 'ID', 'Type', 'Reason', 'CompanyID', 'TypeSend', 'MaillistID', 'TimeCreate', 'IDGetInfo', 'Email', 'TickSendMail'],
+                        }, {
                             where: {
                                 MailCampainID: mailCampainData[i].ID,
                                 Type: Constant.MAIL_RESPONSE_TYPE.SEND,
@@ -920,7 +979,7 @@ module.exports = {
 
     },
 
-    getMailCampainDetail: async function (req, res) {
+    getMailCampainDetail: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -987,7 +1046,7 @@ module.exports = {
 
     },
 
-    addMailList: async function (req, res) {
+    addMailList: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1029,7 +1088,7 @@ module.exports = {
         })
     },
 
-    deleteMailList: async function (req, res) {
+    deleteMailList: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1110,7 +1169,7 @@ module.exports = {
         })
     },
 
-    addCompanyTodMailList: async function (req, res) {
+    addCompanyTodMailList: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1148,7 +1207,7 @@ module.exports = {
         })
     },
 
-    deleteMailCampain: async function (req, res) {
+    deleteMailCampain: async function(req, res) {
         let body = req.body;
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1168,7 +1227,7 @@ module.exports = {
         })
     },
 
-    deleteMailListDetail: async function (req, res) {
+    deleteMailListDetail: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1178,7 +1237,11 @@ module.exports = {
                         where: {
                             [Op.and]: [
                                 { MailListID: body.mailListID },
-                                { CompanyID: { [Op.in]: listID } }
+                                {
+                                    CompanyID: {
+                                        [Op.in]: listID
+                                    }
+                                }
                             ]
                         }
                     })
@@ -1194,7 +1257,7 @@ module.exports = {
         })
     },
 
-    addMailCampain: async function (req, res) {
+    addMailCampain: async function(req, res) {
         let body = req.body;
         console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1209,13 +1272,17 @@ module.exports = {
                     Type: body.Type,
                     // IsIRPR: body.isIRPR || false,
                 }
-                let group = await mCampaignGroups(db).findOne({
-                    where: {
-                        ID: body.idGroup1
-                    }
-                })
-                if (group)
-                    data['IsIRPR'] = group.IsDefault == true ? true : false
+                let group
+                if (body.idGroup1 != "undefined") {
+                    group = await mCampaignGroups(db).findOne({
+                        where: {
+                            ID: body.idGroup1
+                        }
+                    })
+                    if (group)
+                        data['IsIRPR'] = group.IsDefault == true ? true : false
+                }
+
                 var mailCampainData;
                 if (body.Type === "MailList") {
                     data['Subject'] = body.subject ? body.subject : null;
@@ -1230,7 +1297,7 @@ module.exports = {
                 var result = {
                     status: Constant.STATUS.SUCCESS,
                     id: mailCampainData.ID,
-                    isIRPR: group.IsDefault == true ? true : false
+                    isIRPR: group ? group.IsDefault == true ? true : false : false
                 }
 
                 res.json(result);
@@ -1244,7 +1311,7 @@ module.exports = {
             res.json(error)
         })
     },
-    addMailResponse: async function (req, res) {
+    addMailResponse: async function(req, res) {
         let query = req._parsedUrl.query;
         let queryDecrypt = mModules.decryptKey(query.replace("token=", ""));
         let params = queryDecrypt.split('&');
@@ -1312,7 +1379,7 @@ module.exports = {
         })
     },
 
-    addMailClickLink: async function (req, res) {
+    addMailClickLink: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1334,7 +1401,7 @@ module.exports = {
         })
     },
 
-    addMailSend: async function (req, res) {
+    addMailSend: async function(req, res) {
         let body = req.body;
         body.body = body.body.replace(/%20/g, ' ');
         let now = moment().format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -1370,8 +1437,7 @@ module.exports = {
                                 linkImageList.push(linkImage);
                                 keyField.push(matches[1].replace(/ /g, '+'));
                                 listLinkNew.push(linkImage);
-                            }
-                            else {
+                            } else {
                                 listLinkNew.push(matches[1]);
                             }
                         }
@@ -1382,7 +1448,7 @@ module.exports = {
                                     var base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
                                     base64Data = base64Data.replace(/ /g, '+');
                                     var buf = new Buffer.from(base64Data, "base64");
-                                    require("fs").writeFile(dirList[j], buf, function (err) {
+                                    require("fs").writeFile(dirList[j], buf, function(err) {
                                         if (err) console.log(err + '');
                                     });
                                 }
@@ -1456,7 +1522,7 @@ module.exports = {
             res.json(error)
         })
     },
-    sendMailNow: async function (req, res) {
+    sendMailNow: async function(req, res) {
         let body = req.body;
         body.body = body.body.replace(/%20/g, ' ');
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1508,7 +1574,7 @@ module.exports = {
                             bodyHtml = bodyHtml + unSubscribe;
                             bodyHtml = bodyHtml.replace(/#ten/g, company.Name);
                             // let emailSend = await mUser(db).findOne({ where: { Username: 'root' } });
-                            mCheckMail.checkEmail(emailReceived, db).then(async (checkMailRes) => {
+                            mCheckMail.checkEmail(emailReceived, db).then(async(checkMailRes) => {
                                 if (checkMailRes == false) {
                                     var responeExits = await mMailResponse(db).findOne({
                                         where: {
@@ -1551,7 +1617,7 @@ module.exports = {
                                 where: { EmailSend: emailSend.Email }
                             });
                             if (!mainUn)
-                                await mAmazon.sendEmail(emailSend, emailReceived, body.subject, bodyHtml).then(async (sendMailRes) => {
+                                await mAmazon.sendEmail(emailSend, emailReceived, body.subject, bodyHtml).then(async(sendMailRes) => {
                                     if (sendMailRes) {
                                         console.log(sendMailRes);
                                     }
@@ -1575,7 +1641,7 @@ module.exports = {
         })
     },
 
-    getMailListOption: async function (req, res) {
+    getMailListOption: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1606,7 +1672,7 @@ module.exports = {
     },
 
 
-    updateMailCampain: async function (req, res) {
+    updateMailCampain: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1663,8 +1729,7 @@ module.exports = {
                                 linkImageList.push(linkImage);
                                 keyField.push(matches[1].replace(/ /g, '+'));
                                 listLinkNew.push(linkImage);
-                            }
-                            else {
+                            } else {
                                 listLinkNew.push(matches[1]);
                             }
                         }
@@ -1676,7 +1741,7 @@ module.exports = {
                                     base64Data = matchesList[j].replace('data:image/jpeg;base64,', "");
                                     base64Data = base64Data.replace(/ /g, '+');
                                     var buf = new Buffer.from(base64Data, "base64");
-                                    require("fs").writeFile(dirList[j], buf, function (err) {
+                                    require("fs").writeFile(dirList[j], buf, function(err) {
                                         if (err) console.log(err + '');
                                     });
                                 }
@@ -1722,7 +1787,7 @@ module.exports = {
 
     },
 
-    reportEmailDetail: async function (req, res) {
+    reportEmailDetail: async function(req, res) {
         let body = req.body;
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -1778,7 +1843,7 @@ module.exports = {
             res.json(error)
         })
     },
-    checkDuplicateAddressbook: async function (req, res) {
+    checkDuplicateAddressbook: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
@@ -1793,13 +1858,11 @@ module.exports = {
                         where: {
                             CompanyID: listID[i],
                         },
-                        include: [
-                            {
-                                model: mCompany(db),
-                                required: false,
-                                as: 'company'
-                            },
-                        ],
+                        include: [{
+                            model: mCompany(db),
+                            required: false,
+                            as: 'company'
+                        }, ],
                     }).then(async data => {
                         if (data) {
                             let arrayGroup = []
@@ -1829,8 +1892,7 @@ module.exports = {
                                             address = data[d].company ? data[d].company.Address : ''
                                             shortName = data[d].company ? data[d].company.ShortName : ''
                                             phone = data[d].company ? data[d].company.Phone : ''
-                                        }
-                                        else
+                                        } else
                                             groupName += ', ' + group.Name
                                         groupID.push(group.ID)
                                         check = 1
@@ -1876,7 +1938,7 @@ module.exports = {
         })
     },
 
-    getHistorySendMailCampaign: async function (req, res) {
+    getHistorySendMailCampaign: async function(req, res) {
         let body = req.body;
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {

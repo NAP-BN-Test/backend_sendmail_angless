@@ -65,7 +65,9 @@ async function getDetailCompanyOld(db, companyNewID) {
             },
             { model: mCity(db), required: false },
         ],
-        order: [['ID', 'DESC']],
+        order: [
+            ['ID', 'DESC']
+        ],
     });
     let obj = {}
     if (data)
@@ -128,11 +130,10 @@ module.exports = {
                     }
                     var countryID = null;
                     if (data[i]['Country']) {
-                        var countryObj = await mCountry(db).findOne({ where: { Code: data[i]['Country'] } });
+                        var countryObj = await mCountry(db).findOne({ where: { Name: data[i]['Country'] } });
                         if (countryObj) {
                             countryID = countryObj.ID
-                        }
-                        else {
+                        } else {
                             await mCountry(db).create({
                                 Code: data[i]['Country'],
                             }).then(data => {
@@ -162,22 +163,21 @@ module.exports = {
                             Note: data[i].Note ? data[i].Note : '',
                         })
                         await mContact(db).create({
-                            Email: data[i]['Contact Persons1'] ? data[i]['Contact Persons1'] : '',
-                            Name: data[i]['Email1'] ? data[i]['Email1'] : '',
+                            Name: data[i]['Contact Persons1'] ? data[i]['Contact Persons1'] : '',
+                            Email: data[i]['Email1'] ? data[i]['Email1'] : '',
                             CompanyID: companyObj.ID,
                         })
                         await mContact(db).create({
-                            Email: data[i]['Contact Persons2'] ? data[i]['Contact Persons2'] : '',
-                            Name: data[i]['Email2'] ? data[i]['Email2'] : '',
+                            Name: data[i]['Contact Persons2'] ? data[i]['Contact Persons2'] : '',
+                            Email: data[i]['Email2'] ? data[i]['Email2'] : '',
                             CompanyID: companyObj.ID,
                         })
                         await mContact(db).create({
-                            Email: data[i]['Contact Persons3'] ? data[i]['Contact Persons3'] : '',
-                            Name: data[i]['Email3'] ? data[i]['Email3'] : '',
+                            Name: data[i]['Contact Persons3'] ? data[i]['Contact Persons3'] : '',
+                            Email: data[i]['Email3'] ? data[i]['Email3'] : '',
                             CompanyID: companyObj.ID,
                         })
-                    }
-                    else {
+                    } else {
                         let arrayContact = []
                         arrayContact.push({
                             Email: data[i]['Contact Persons1'] ? data[i]['Contact Persons1'] : '',
@@ -242,8 +242,10 @@ module.exports = {
             try {
                 user.checkUser(body.ip, body.dbName, body.userID).then(async role => {
                     var data = await mCompany(db).findAll({
-                        order: [['ID', 'DESC']],
-                        where: { NewCompanyID: null },
+                        order: [
+                            ['ID', 'DESC']
+                        ],
+                        // where: { NewCompanyID: null },
                         limit: 1000,
                     });
                     var array = [];
@@ -288,18 +290,48 @@ module.exports = {
 
                     let whereSearch = [];
                     if (body.searchKey) {
-                        whereSearch = [
-                            { Name: { [Op.like]: '%' + body.searchKey + '%' } },
-                            { Address: { [Op.like]: '%' + body.searchKey + '%' } },
-                            { Phone: { [Op.like]: '%' + body.searchKey + '%' } },
-                            { ShortName: { [Op.like]: '%' + body.searchKey + '%' } },
+                        whereSearch = [{
+                                Name: {
+                                    [Op.like]: '%' + body.searchKey + '%'
+                                }
+                            },
+                            {
+                                Address: {
+                                    [Op.like]: '%' + body.searchKey + '%'
+                                }
+                            },
+                            {
+                                Phone: {
+                                    [Op.like]: '%' + body.searchKey + '%'
+                                }
+                            },
+                            {
+                                ShortName: {
+                                    [Op.like]: '%' + body.searchKey + '%'
+                                }
+                            },
                         ];
                     } else {
-                        whereSearch = [
-                            { Name: { [Op.ne]: '%%' } },
-                            { Address: { [Op.like]: '%%' } },
-                            { Phone: { [Op.like]: '%%' } },
-                            { ShortName: { [Op.like]: '%%' } },
+                        whereSearch = [{
+                                Name: {
+                                    [Op.ne]: '%%'
+                                }
+                            },
+                            {
+                                Address: {
+                                    [Op.like]: '%%'
+                                }
+                            },
+                            {
+                                Phone: {
+                                    [Op.like]: '%%'
+                                }
+                            },
+                            {
+                                ShortName: {
+                                    [Op.like]: '%%'
+                                }
+                            },
                         ];
                     }
 
@@ -318,10 +350,18 @@ module.exports = {
                     }
 
                     if (body.logistic)
-                        userFind.push({ Name: { [Op.like]: '%logistic%' } })
+                        userFind.push({
+                            Name: {
+                                [Op.like]: '%logistic%'
+                            }
+                        })
 
                     if (body.transport)
-                        userFind.push({ Name: { [Op.like]: '%transport%' } })
+                        userFind.push({
+                            Name: {
+                                [Op.like]: '%transport%'
+                            }
+                        })
 
                     let whereAll;
                     let whereAllAssign;
@@ -332,37 +372,53 @@ module.exports = {
 
                     if (body.timeFrom) {
                         whereAll = {
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.or]: whereSearch,
                             [Op.and]: userFind
                         };
                         whereAllAssign = {
-                            UserID: { [Op.ne]: null },
+                            UserID: {
+                                [Op.ne]: null
+                            },
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         };
                         whereAssign = {
                             UserID: body.userID,
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         };
                         whereUnAssign = {
-                            UserID: { [Op.eq]: null },
+                            UserID: {
+                                [Op.eq]: null
+                            },
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         };
                         whereFollow = {
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         }
                         whereCustomer = {
                             // StageID: 8,
                             [Op.or]: whereSearch,
-                            TimeCreate: { [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)] },
+                            TimeCreate: {
+                                [Op.between]: [new Date(body.timeFrom), new Date(body.timeTo)]
+                            },
                             [Op.and]: userFind
                         }
                     } else {
@@ -371,7 +427,9 @@ module.exports = {
                             [Op.and]: userFind
                         };
                         whereAllAssign = {
-                            UserID: { [Op.ne]: null },
+                            UserID: {
+                                [Op.ne]: null
+                            },
                             [Op.or]: whereSearch,
                             [Op.and]: userFind
                         };
@@ -381,7 +439,9 @@ module.exports = {
                             [Op.and]: userFind
                         };
                         whereUnAssign = {
-                            UserID: { [Op.eq]: null },
+                            UserID: {
+                                [Op.eq]: null
+                            },
                             [Op.or]: whereSearch,
                             [Op.and]: userFind
                         };
@@ -402,34 +462,32 @@ module.exports = {
                     var assign = await company.count({ where: whereAssign });
                     var customer = await company.count({ where: whereCustomer });
                     var follow = await company.count({
-                        include: [
-                            {
-                                model: mUserFollow(db),
-                                where: { UserID: body.userID, Type: 1, Follow: true }
-                            }
-                        ],
+                        include: [{
+                            model: mUserFollow(db),
+                            where: { UserID: body.userID, Type: 1, Follow: true }
+                        }],
                         where: whereFollow,
                     });
 
                     let where;
                     if (body.searchKey) {
-                        if (body.companyType == 2) {//unassign
+                        if (body.companyType == 2) { //unassign
                             where = whereUnAssign
-                        } else if (body.companyType == 4) {//assign
+                        } else if (body.companyType == 4) { //assign
                             where = whereAssign
-                        } else if (body.companyType == 5) {//assign all
+                        } else if (body.companyType == 5) { //assign all
                             where = whereAllAssign
-                        } else if (body.companyType == 6) {//assign all
+                        } else if (body.companyType == 6) { //assign all
                             where = whereCustomer
                         } else { // all
                             where = whereAll
                         }
                     } else {
-                        if (body.companyType == 2) {//unassign
+                        if (body.companyType == 2) { //unassign
                             where = whereUnAssign
-                        } else if (body.companyType == 4) {//assign
+                        } else if (body.companyType == 4) { //assign
                             where = whereAssign
-                        } else {// all
+                        } else { // all
                             where = whereAll
                         }
                     }
@@ -450,7 +508,9 @@ module.exports = {
                             // },
                         ],
                         where: where,
-                        order: [['ID', 'DESC']],
+                        order: [
+                            ['ID', 'DESC']
+                        ],
                         offset: Number(body.itemPerPage) * (Number(body.page) - 1),
                         limit: Number(body.itemPerPage)
                     });
@@ -494,7 +554,12 @@ module.exports = {
                         status: Constant.STATUS.SUCCESS,
                         message: '',
                         array: array,
-                        all, unassign, assign, follow, assignAll, customer
+                        all,
+                        unassign,
+                        assign,
+                        follow,
+                        assignAll,
+                        customer
                     }
                     res.json(result)
                 })
@@ -521,8 +586,7 @@ module.exports = {
 
             company.findOne({
                 where: { ID: body.companyID },
-                include: [
-                    {
+                include: [{
                         model: mUserFollow(db),
                         required: false,
                         where: { UserID: body.userID, Type: 1 }
@@ -554,7 +618,9 @@ module.exports = {
                     if (listGroupID)
                         await mMailList(db).findAll({
                             where: {
-                                ID: { [Op.in]: listGroupID },
+                                ID: {
+                                    [Op.in]: listGroupID
+                                },
                             }
                         }).then(maillist => {
                             if (maillist)
@@ -775,8 +841,7 @@ module.exports = {
             if (items.length > 0) {
                 await mCompanyRelationship(db).destroy({
                     where: {
-                        [Op.or]: [
-                            {
+                        [Op.or]: [{
                                 CompanyID: body.companyID,
                             },
                             {
@@ -818,6 +883,79 @@ module.exports = {
             for (let field of listUpdate) {
                 update[field.key] = field.value
             }
+            // nếu chọn công ty mới là cty mới của cty khác thì xóa cty mới của cty khác đó
+            mCompany(db).findOne({
+                where: {
+                    [Op.and]: [{
+                        NewCompanyID: body.newCompanyID
+                    }, {
+                        ID: {
+                            [Op.ne]: body.companyID
+                        }
+                    }]
+                }
+            }).then(data => {
+                if (data)
+                    mCompany(db).update({
+                        NewCompanyID: null
+                    }, { where: { ID: data.ID } })
+            })
+
+            // nếu chọn công ty cũ là cty cũ của cty khác thì xóa cty cũ của cty khác đó
+            mCompany(db).findOne({
+                where: {
+                    [Op.and]: [{
+                        OldCompanyID: body.oldCompanyID
+                    }, {
+                        ID: {
+                            [Op.ne]: body.companyID
+                        }
+                    }]
+                }
+            }).then(data => {
+                if (data) {
+                    mCompany(db).update({
+                        OldCompanyID: null
+                    }, { where: { ID: data.ID } })
+                }
+            })
+
+            // nếu chọn công ty mới thì update công ty mới đó có cty cũ là cty đang thao tác
+            if (body.newCompanyID) {
+                await mCompany(db).findOne({
+                    where: {
+                        OldCompanyID: body.companyID
+                    }
+                }).then(data => {
+                    if (data) {
+                        mCompany(db).update({
+                            OldCompanyID: null
+                        }, { where: { ID: data.ID } })
+                    }
+                })
+                mCompany(db).update({
+                    OldCompanyID: body.companyID
+                }, { where: { ID: body.newCompanyID } })
+            }
+
+            // nếu chọn công ty cũ thì update công ty cũ đó có cty mới là cty đang thao tác
+            if (body.oldCompanyID) {
+                await mCompany(db).findOne({
+                    where: {
+                        NewCompanyID: body.companyID
+                    }
+                }).then(data => {
+                    if (data) {
+                        mCompany(db).update({
+                            NewCompanyID: null
+                        }, { where: { ID: data.ID } })
+                    }
+                })
+                mCompany(db).update({
+                    NewCompanyID: body.companyID
+                }, { where: { ID: body.oldCompanyID } })
+            }
+
             mCompany(db).update(update, { where: { ID: body.companyID } }).then(() => {
                 res.json(Result.ACTION_SUCCESS)
             }).catch(() => {
@@ -836,7 +974,11 @@ module.exports = {
 
             user.checkUser(body.ip, body.dbName, body.userID).then(role => {
 
-                let where = [{ Name: { [Op.like]: "%" + body.searchKey + "%" } }]
+                let where = [{
+                    Name: {
+                        [Op.like]: "%" + body.searchKey + "%"
+                    }
+                }]
                 if (role != Constant.USER_ROLE.MANAGER) {
                     where.push({ UserID: body.userID })
                 }
@@ -888,14 +1030,15 @@ module.exports = {
                     where: [
                         { Name: body.name },
                         { Address: body.address },
+                        { Email: body.email },
                     ]
                 })
                 let role = JSON.parse(body.properties)
                 let roleString = ''
                 for (let i = 0; i < role.length; i++) {
                     roleString += role[i] + ','
-                    if (i == (role.length - 1))
-                        roleString += role[i]
+                        // if (i == (role.length - 1))
+                        //     roleString += role[i]
 
                 }
                 let now = moment().subtract(7, 'hours').format('YYYY-MM-DD HH:mm:ss.SSS');
@@ -914,7 +1057,7 @@ module.exports = {
                         Type: 1,
                         CountryID: body.CountryID ? body.CountryID : null,
                         Fax: body.Fax ? body.Fax.replace(/plus/g, '+') : '',
-                        Role: roleString,
+                        Role: roleString.slice(0, roleString.length - 1),
                         NoteCompany: body.noteCompany ? body.noteCompany : '',
                         OldCompanyID: body.oldCompanyID ? body.oldCompanyID : null,
                     }).then(async data => {
@@ -987,10 +1130,7 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
 
 
-            mCompany(db).update(
-                { ParentID: body.companyAddID },
-                { where: { ID: body.companyID } }
-            ).then(result => {
+            mCompany(db).update({ ParentID: body.companyAddID }, { where: { ID: body.companyID } }).then(result => {
                 mCompany(db).findOne({ where: { ID: body.companyAddID } }).then(data => {
                     var obj = {
                         id: data.ID,
@@ -1056,10 +1196,13 @@ module.exports = {
                     listCompanyID.push(Number(item + ""));
                 })
 
-                mCompany(db).update(
-                    { AssignID: body.assignID != -1 ? body.assignID : null },
-                    { where: { ID: { [Op.in]: listCompanyID } } }
-                ).then(data => {
+                mCompany(db).update({ AssignID: body.assignID != -1 ? body.assignID : null }, {
+                    where: {
+                        ID: {
+                            [Op.in]: listCompanyID
+                        }
+                    }
+                }).then(data => {
                     if (data) {
                         if (body.assignID != -1) {
                             mUser(db).findOne({ where: { ID: body.assignID } }).then(user => {
@@ -1094,10 +1237,7 @@ module.exports = {
 
             mUserFollow(db).findOne({ where: { UserID: body.userID, CompanyID: body.companyID, Type: 1 } }).then(data => {
                 if (data) {
-                    mUserFollow(db).update(
-                        { Follow: Boolean(body.follow) },
-                        { where: { UserID: body.userID, CompanyID: body.companyID, Type: 1 } }
-                    ).then(() => {
+                    mUserFollow(db).update({ Follow: Boolean(body.follow) }, { where: { UserID: body.userID, CompanyID: body.companyID, Type: 1 } }).then(() => {
                         var result = {
                             status: Constant.STATUS.SUCCESS,
                             message: Constant.MESSAGE.ACTION_SUCCESS,
@@ -1141,62 +1281,110 @@ module.exports = {
                         // if (user.Roles == Constant.USER_ROLE.MANAGER) {
                         await mMailResponse(db).destroy({
                             where: {
-                                CompanyID: { [Op.in]: listcompanyID }
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
                             }
                         })
                         await mCompanyMailList(db).destroy({
                             where: {
-                                CompanyID: { [Op.in]: listcompanyID },
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                },
                             }
                         })
-                        await rmCompanyChild(db).destroy(
-                            {
-                                where: {
-                                    [Op.or]: {
-                                        ParentID: { [Op.in]: listcompanyID },
-                                        ChildID: { [Op.in]: listcompanyID }
+                        await rmCompanyChild(db).destroy({
+                            where: {
+                                [Op.or]: {
+                                    ParentID: {
+                                        [Op.in]: listcompanyID
+                                    },
+                                    ChildID: {
+                                        [Op.in]: listcompanyID
                                     }
                                 }
                             }
-                        );
+                        });
                         await rmCall(db).destroy({
-                            where: { CompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await rmEmail(db).destroy({
-                            where: { CompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await rmMeet(db).destroy({
-                            where: { CompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await rmNote(db).destroy({
-                            where: { CompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await rmContact(db).destroy({
-                            where: { CompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await rmDeal(db).destroy({
-                            where: { CompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await rmUserFlow(db).destroy({
-                            where: { CompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await mCompanyRelationship(db).destroy({
                             where: {
-                                CompanyID: { [Op.in]: listcompanyID }
+                                CompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
                             }
                         })
                         await mCompany(db).update({
                             NewCompanyID: null
                         }, {
-                            where: { NewCompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                NewCompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await mCompany(db).update({
                             OldCompanyID: null
                         }, {
-                            where: { OldCompanyID: { [Op.in]: listcompanyID } }
+                            where: {
+                                OldCompanyID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
                         await mCompany(db).destroy({
-                            where: { ID: { [Op.in]: listcompanyID } }
+                            where: {
+                                ID: {
+                                    [Op.in]: listcompanyID
+                                }
+                            }
                         });
 
                         res.json(Result.ACTION_SUCCESS);
@@ -1224,10 +1412,7 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
 
 
-            rmContact(db).update(
-                { CompanyID: null },
-                { where: { ID: body.contactID } }
-            ).then(() => {
+            rmContact(db).update({ CompanyID: null }, { where: { ID: body.contactID } }).then(() => {
                 res.json(Result.ACTION_SUCCESS)
             })
 
@@ -1241,14 +1426,10 @@ module.exports = {
 
 
             if (body.role == Constant.COMPANY_ROLE.PARENT) {
-                mCompany(db).update(
-                    { ParentID: null },
-                    { where: { ID: body.companyID } }
-                ).then(() => {
+                mCompany(db).update({ ParentID: null }, { where: { ID: body.companyID } }).then(() => {
                     res.json(Result.ACTION_SUCCESS)
                 });
-            }
-            else if (body.role == Constant.COMPANY_ROLE.CHILD) {
+            } else if (body.role == Constant.COMPANY_ROLE.CHILD) {
                 mCompanyChild(db).destroy({
                     where: { ParentID: body.companyID, ChildID: body.companyIDRemove }
                 }).then(() => {
@@ -1335,9 +1516,16 @@ module.exports = {
                     var city = [];
                     await mCity(db).findAll({
                         where: {
-                            [Op.or]: [
-                                { Name: { [Op.like]: '%' + data.search + '%' } },
-                                { code: { [Op.like]: '%' + data.search + '%' } },
+                            [Op.or]: [{
+                                    Name: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                                {
+                                    code: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
                             ]
                         }
                     }).then(data => {
@@ -1348,9 +1536,16 @@ module.exports = {
                     var country = [];
                     await mCountry(db).findAll({
                         where: {
-                            [Op.or]: [
-                                { Name: { [Op.like]: '%' + data.search + '%' } },
-                                { code: { [Op.like]: '%' + data.search + '%' } },
+                            [Op.or]: [{
+                                    Name: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
+                                {
+                                    code: {
+                                        [Op.like]: '%' + data.search + '%'
+                                    }
+                                },
                             ]
                         }
                     }).then(data => {
@@ -1358,20 +1553,62 @@ module.exports = {
                             country.push(item.ID);
                         })
                     })
-                    arraySearchOr.push({ Name: { [Op.like]: '%' + data.search + '%' } })
-                    arraySearchOr.push({ Email: { [Op.like]: '%' + data.search + '%' } })
-                    arraySearchOr.push({ Fax: { [Op.like]: '%' + data.search + '%' } })
-                    arraySearchOr.push({ Role: { [Op.like]: '%' + data.search + '%' } })
-                    arraySearchOr.push({ Note: { [Op.like]: '%' + data.search + '%' } })
-                    arraySearchOr.push({ Phone: { [Op.like]: '%' + data.search + '%' } })
-                    arraySearchOr.push({ Address: { [Op.like]: '%' + data.search + '%' } })
-                    arraySearchOr.push({ Relationship: { [Op.like]: '%' + data.search + '%' } })
-                    arraySearchOr.push({ CountryID: { [Op.in]: country } })
-                    arraySearchOr.push({ CityID: { [Op.in]: city } })
+                    arraySearchOr.push({
+                        Name: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    })
+                    arraySearchOr.push({
+                        Email: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    })
+                    arraySearchOr.push({
+                        Fax: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    })
+                    arraySearchOr.push({
+                        Role: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    })
+                    arraySearchOr.push({
+                        Note: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    })
+                    arraySearchOr.push({
+                        Phone: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    })
+                    arraySearchOr.push({
+                        Address: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    })
+                    arraySearchOr.push({
+                        Relationship: {
+                            [Op.like]: '%' + data.search + '%'
+                        }
+                    })
+                    arraySearchOr.push({
+                        CountryID: {
+                            [Op.in]: country
+                        }
+                    })
+                    arraySearchOr.push({
+                        CityID: {
+                            [Op.in]: city
+                        }
+                    })
                 } else {
-                    where = [
-                        { ID: { [Op.ne]: null } },
-                    ];
+                    where = [{
+                        ID: {
+                            [Op.ne]: null
+                        }
+                    }, ];
                 }
                 arraySearchOr.push(where)
                 if (data.items) {
@@ -1379,7 +1616,9 @@ module.exports = {
                         if (data.items[i].fields) {
                             let userFind = {};
                             if (data.items[i].fields['name'] === 'Full Name') {
-                                userFind['Name'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Name'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1391,7 +1630,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Email') {
-                                userFind['Email'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Email'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1403,7 +1644,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Address') {
-                                userFind['Address'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Address'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1415,7 +1658,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'ShortName') {
-                                userFind['ShortName'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['ShortName'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1427,7 +1672,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Phone') {
-                                userFind['Phone'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Phone'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1439,7 +1686,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Website') {
-                                userFind['Website'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Website'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1451,7 +1700,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Source') {
-                                userFind['Source'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Source'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1463,7 +1714,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Note') {
-                                userFind['Note'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Note'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1478,9 +1731,11 @@ module.exports = {
                                 var mailList = [];
                                 await mMailList(db).findAll({
                                     where: {
-                                        [Op.or]: [
-                                            { Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' } },
-                                        ]
+                                        [Op.or]: [{
+                                            Name: {
+                                                [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                            }
+                                        }, ]
                                     }
                                 }).then(data => {
                                     data.forEach(item => {
@@ -1490,14 +1745,18 @@ module.exports = {
                                 let companyList = [];
                                 await mCompanyMailList(db).findAll({
                                     where: {
-                                        MailListID: { [Op.in]: mailList }
+                                        MailListID: {
+                                            [Op.in]: mailList
+                                        }
                                     }
                                 }).then(data => {
                                     data.forEach(item => {
                                         companyList.push(item.CompanyID);
                                     })
                                 })
-                                userFind['ID'] = { [Op.in]: companyList }
+                                userFind['ID'] = {
+                                    [Op.in]: companyList
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1509,7 +1768,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Properties') {
-                                userFind['Role'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Role'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1521,7 +1782,9 @@ module.exports = {
                                 }
                             }
                             if (data.items[i].fields['name'] === 'Fax') {
-                                userFind['Fax'] = { [Op.like]: '%' + data.items[i]['searchFields'] + '%' }
+                                userFind['Fax'] = {
+                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     arraySearchAnd.push(userFind)
                                 }
@@ -1548,9 +1811,16 @@ module.exports = {
                                 var city = [];
                                 await mCity(db).findAll({
                                     where: {
-                                        [Op.or]: [
-                                            { Name: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' } },
-                                            { code: { [Op.like]: '%' + data.items[i]['searchFields'] + '%' } },
+                                        [Op.or]: [{
+                                                Name: {
+                                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                                }
+                                            },
+                                            {
+                                                code: {
+                                                    [Op.like]: '%' + data.items[i]['searchFields'] + '%'
+                                                }
+                                            },
                                         ]
                                     }
                                 }).then(data => {
@@ -1558,7 +1828,9 @@ module.exports = {
                                         city.push(item.ID);
                                     })
                                 })
-                                userFind['CityID'] = { [Op.in]: city }
+                                userFind['CityID'] = {
+                                    [Op.in]: city
+                                }
                                 if (data.items[i].conditionFields['name'] == 'And') {
                                     whereOjb[Op.and] = userFind
                                 }
@@ -1602,9 +1874,11 @@ module.exports = {
                         },
                         { model: mCity(db), required: false },
                     ],
-                    order: [['ID', 'DESC']],
-                    offset: Number(itemPerPage) * (Number(page) - 1),
-                    limit: Number(itemPerPage)
+                    order: [
+                        ['ID', 'DESC']
+                    ],
+                    offset: body.page == 0 ? 0 : Number(itemPerPage) * (Number(page) - 1),
+                    limit: body.page == 0 ? 10000000000 : Number(itemPerPage)
                 });
                 var array = [];
                 var all = await company.count({ where: whereObj });
