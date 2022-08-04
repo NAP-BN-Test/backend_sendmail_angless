@@ -1027,11 +1027,13 @@ module.exports = {
                     where: { Name: body.name }
                 })
                 var companyExits = await company.findAll({
-                    where: [
-                        { Name: body.name },
-                        { Address: body.address },
-                        { Email: body.email },
-                    ]
+                    where: {
+                        [Op.or]: [
+                            { Name: body.name },
+                            { Address: body.address },
+                            { Email: body.email }
+                        ]
+                    }
                 })
                 let role = JSON.parse(body.properties)
                 let roleString = ''

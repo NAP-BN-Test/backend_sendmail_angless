@@ -23,7 +23,8 @@ module.exports = {
                 data.forEach(element => {
                     var obj = {
                         id: Number(element.ID),
-                        name: element.Name
+                        name: element.Name,
+                        code: element.Code
                     }
                     array.push(obj);
                 });

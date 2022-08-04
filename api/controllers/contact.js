@@ -34,9 +34,9 @@ function convertStringToListObject(string) {
     if (string) {
         result = string.split(";")
         result.forEach(item => {
-            let resultObj = {};
-            resultObj.name = item;
-            resultArray.push(resultObj);
+            // let resultObj = {};
+            // resultObj.name = item;
+            resultArray.push(item);
         })
     }
     return resultArray;

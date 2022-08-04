@@ -13,6 +13,7 @@ var mContact = require('../tables/contact');
 var mCheckMail = require('../controllers/check-mail');
 var mUserFollow = require('../tables/user-follow');
 var mMailCampain = require('../tables/mail-campain');
+let mTemplate = require('../tables/template');
 const fs = require('fs');
 let mAdditionalInformation = require('../tables/additional-infomation');
 var mMailListDetail = require('../tables/mail-list-detail');
@@ -38,7 +39,8 @@ module.exports = {
             let AdditionalInformation = mAdditionalInformation(db);
             AdditionalInformation.belongsTo(mUser(db), { foreignKey: 'UserID', sourceKey: 'UserID', as: 'User' });
             AdditionalInformation.belongsTo(mMailCampain(db), { foreignKey: 'CampaignID', sourceKey: 'CampaignID', as: 'Campaign' });
-
+            let MailCampain = mMailCampain(db)
+            MailCampain.belongsTo(mTemplate(db), { foreignKey: 'TemplateID', sourceKey: 'TemplateID', as: 'Template' });
             var where = []
             if (body.CampaignID)
                 where.push({
@@ -49,7 +51,9 @@ module.exports = {
                     include: [
                         { model: mUser(db), required: false, as: 'User' },
                     ],
-                    order: [['TimeCreate', 'DESC']],
+                    order: [
+                        ['TimeCreate', 'DESC']
+                    ],
                     offset: Number(body.itemPerPage) * (Number(body.page) - 1),
                     limit: Number(body.itemPerPage),
                     where
@@ -75,7 +79,7 @@ module.exports = {
                             let count = 0;
                             var check = await AdditionalInformation.findAll({
                                 include: [
-                                    { model: mMailCampain(db), required: false, as: 'Campaign' }
+                                    { model: MailCampain, required: false, as: 'Campaign' }
                                 ],
                                 where: {
                                     ContactID: data[i].ContactID,
@@ -130,20 +134,25 @@ module.exports = {
                             });
 
                         }
-                        let nameCampaign = await mMailCampain(db).findOne({
-                            where: { ID: body.CampaignID }
-                        })
-                        var status = await mMailCampain(db).findOne({
-                            where: {
-                                ID: body.CampaignID,
-                            }
-                        })
+                        let nameCampaign = await MailCampain.findOne({
+                                where: { ID: body.CampaignID },
+                                include: [
+                                    { model: mTemplate(db), required: false, as: 'Template' },
+                                ],
+                            })
+                            // var status = await MailCampain.findOne({
+                            //     where: {
+                            //         ID: body.CampaignID,
+                            //     }
+                            // })
                         var result = {
                             status: Constant.STATUS.SUCCESS,
                             message: '',
-                            array, all,
-                            statusCampaign: status.StatusCampaign,
-                            nameCampaign: nameCampaign ? nameCampaign.Name : ''
+                            array,
+                            all,
+                            statusCampaign: nameCampaign.StatusCampaign,
+                            bodyCampaign: nameCampaign.Template ? nameCampaign.Template.body : '',
+                            nameCampaign: nameCampaign ? nameCampaign.Name : '',
                         }
                         res.json(result);
                     }
@@ -177,14 +186,12 @@ module.exports = {
                     OurRef = '' + NameAcronym;
             }
             var number = 1;
-            var addInf = await mAdditionalInformation(db).findOne(
-                {
-                    order: [
-                        Sequelize.literal('max(TimeCreate) DESC'),
-                    ],
-                    group: ['MarkN0', 'MarkName', 'HolderName', 'Representative', 'OurRef', 'ContactID', 'CampaignID', 'ID', 'PAT', 'Applicant', 'ApplicationNo', 'ClassA', 'FilingDate', 'DateSend', 'Result', 'DateReminder', 'PriorTrademark', 'CampaignID', 'Description', 'TimeUpdate', 'TimeCreate', 'TimeRemind', 'TimeStart', 'UserID', 'Rerminder', 'Status', 'Email', 'Fax', 'Tel', 'Address', 'Firm', 'ClassB', 'RegNo', 'Owner'],
-                }
-            );
+            var addInf = await mAdditionalInformation(db).findOne({
+                order: [
+                    Sequelize.literal('max(TimeCreate) DESC'),
+                ],
+                group: ['MarkN0', 'MarkName', 'HolderName', 'Representative', 'OurRef', 'ContactID', 'CampaignID', 'ID', 'PAT', 'Applicant', 'ApplicationNo', 'ClassA', 'FilingDate', 'DateSend', 'Result', 'DateReminder', 'PriorTrademark', 'CampaignID', 'Description', 'TimeUpdate', 'TimeCreate', 'TimeRemind', 'TimeStart', 'UserID', 'Rerminder', 'Status', 'Email', 'Fax', 'Tel', 'Address', 'Firm', 'ClassB', 'RegNo', 'Owner'],
+            });
             if (addInf)
                 number = Number(addInf.OurRef.substr(-4));
             else
@@ -409,8 +416,7 @@ module.exports = {
                         array: obj
                     }
                     res.json(result);
-                }
-                else {
+                } else {
                     var result = {
                         status: Constant.STATUS.FAIL,
                         message: Constant.MESSAGE.DATA_NOT_FOUND,
@@ -431,15 +437,15 @@ module.exports = {
                 });
 
                 mUser(db).findOne({ where: { ID: body.userID } }).then(async user => {
-                    await mAdditionalInformation(db).destroy(
-                        {
-                            where: {
-                                [Op.or]: {
-                                    ID: { [Op.in]: listAdditionalInformationID }
+                    await mAdditionalInformation(db).destroy({
+                        where: {
+                            [Op.or]: {
+                                ID: {
+                                    [Op.in]: listAdditionalInformationID
                                 }
                             }
-                        },
-                    ).then(() => {
+                        }
+                    }, ).then(() => {
                         res.json(Result.ACTION_SUCCESS);
                     });
 
@@ -447,7 +453,7 @@ module.exports = {
             }
         })
     },
-    getAllAdditionalInformation: (req, res) => {//take this list for dropdown
+    getAllAdditionalInformation: (req, res) => { //take this list for dropdown
         let body = req.body;
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -500,7 +506,9 @@ module.exports = {
             await contact.findAll({
                 where: {
                     [Op.or]: {
-                        ID: { [Op.in]: listContactID }
+                        ID: {
+                            [Op.in]: listContactID
+                        }
                     }
                 },
                 include: {
@@ -529,8 +537,7 @@ module.exports = {
                         message: '',
                     }
                     res.json(result)
-                }
-                else {
+                } else {
                     let result = {
                         status: Constant.STATUS.FAIL,
                         message: Constant.MESSAGE.DATA_NOT_FOUND,
