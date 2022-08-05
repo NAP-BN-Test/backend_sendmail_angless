@@ -44,8 +44,7 @@ function handleReplaceText(text, listKey, obj_information) {
             var re = RegExp('&lt;&lt;' + item + '&gt;&gt;', 'g');
             if (obj_information[item]) {
                 result = result.replace(re, `<img src="${obj_information[item]}" height="250px" width="500px"/>`);
-            }
-            else {
+            } else {
                 result = result.replace(re, obj_information[item] ? obj_information[item] : '');
             }
         } else {
@@ -66,6 +65,7 @@ async function handlePushDataToBody(text, infID, db) {
     var result = handleReplaceText(text, keyField, obj_information.dataValues);
     return result
 }
+
 function convertStringToListObject(string) {
     let result = [];
     let resultArray = [];
@@ -129,8 +129,7 @@ module.exports = {
                             DateSend: now,
                             Result: 'None'
                         }, { where: { ID: information[j].ID } })
-                    }
-                    else {
+                    } else {
                         await mAdditionalInformation(db).update({
                             DateReminder: now,
                         }, { where: { ID: information[j].ID } })
@@ -176,7 +175,7 @@ module.exports = {
                                 }
                             })
                         var emailR = arrayEmail[i].name;
-                        mCheckMail.checkEmail(emailR, db).then(async (checkMailRes) => {
+                        mCheckMail.checkEmail(emailR, db).then(async(checkMailRes) => {
                             if (checkMailRes == false) {
                                 var responeExits = await mMailResponse(db).findOne({
                                     where: {

@@ -43,7 +43,7 @@ module.exports = {
         })
     },
 
-    checkVerifyEmail: async (req, res) => { //take this list for dropdown
+    checkVerifyEmail: async(req, res) => { //take this list for dropdown
         let body = req.body;
 
         if (body.email) {
@@ -51,7 +51,7 @@ module.exports = {
             var params = {
                 Identities: [body.email]
             };
-            await ses.getIdentityVerificationAttributes(params, function (err, data) {
+            await ses.getIdentityVerificationAttributes(params, function(err, data) {
                 if (err) {
                     console.log(err, err.stack);
                     res.json(Result.SYS_ERROR_RESULT);
@@ -63,8 +63,7 @@ module.exports = {
                         res.json(Result.NO_PERMISSION)
                 }
             });
-        }
-        else res.json(Result.NO_PERMISSION);
+        } else res.json(Result.NO_PERMISSION);
     },
 
     verifyEmail: (req, res) => { //take this list for dropdown
@@ -74,7 +73,7 @@ module.exports = {
             var params = {
                 EmailAddress: body.email
             };
-            ses.verifyEmailIdentity(params, function (err, data) {
+            ses.verifyEmailIdentity(params, function(err, data) {
                 if (err) {
                     console.log(err, err.stack); // an error occurred
                 } else {
@@ -89,7 +88,7 @@ module.exports = {
             });
         }
     },
-    sendMail: async (req, res) => {
+    sendMail: async(req, res) => {
         let body = req.body;
         var nodemailer = require('nodemailer');
 
@@ -109,7 +108,7 @@ module.exports = {
             subject: body.subject,
             html: body.body,
         }
-        await mail.sendMail(mailOptions, function (error, info) {
+        await mail.sendMail(mailOptions, function(error, info) {
             if (error) {
                 console.log(error);
                 res.json({
@@ -159,35 +158,35 @@ module.exports = {
     //         }
     //     });
     // },
-    sendEmail: async function (emailSend, emailRecive, subject, body, array, req = null) { //take this list for dropdown
+    sendEmail: async function(emailSend, emailRecive, subject, body, array, req = null) { //take this list for dropdown
         var nodemailer = require('nodemailer');
         var mail;
         if (emailSend.MailServer && emailSend.OMPort) {
-            mail = nodemailer.createTransport({
-                host: emailSend.MailServer,
-                // secureConnection: true,
-                secure: false,
-                port: emailSend.OMPort ? emailSend.OMPort : null,
-                // thêm dòng này sẽ gửi dc
-                tls: {
-                    rejectUnauthorized: false
-                },
-                // service: 'gmail',
-                auth: {
-                    user: emailSend.EmailSend,
-                    pass: emailSend.Password,
-                }
-            });
             // mail = nodemailer.createTransport({
             //     host: emailSend.MailServer,
-            //     port: emailSend.OMPort ? emailSend.OMPort : null,
+            //     // secureConnection: true,
             //     secure: false,
-            //     ignoreTLS: true, // bắt buộc phải có
+            //     port: emailSend.OMPort ? emailSend.OMPort : null,
+            //     // thêm dòng này sẽ gửi dc
+            //     tls: {
+            //         rejectUnauthorized: false
+            //     },
+            //     // service: 'gmail',
             //     auth: {
             //         user: emailSend.EmailSend,
             //         pass: emailSend.Password,
             //     }
             // });
+            mail = nodemailer.createTransport({
+                host: emailSend.MailServer,
+                port: emailSend.OMPort ? emailSend.OMPort : null,
+                secure: false,
+                ignoreTLS: true, // bắt buộc phải có
+                auth: {
+                    user: emailSend.EmailSend,
+                    pass: emailSend.Password,
+                }
+            });
         } else {
             mail = nodemailer.createTransport({
                 service: 'gmail',
@@ -235,7 +234,7 @@ module.exports = {
             html: body,
             attachments: arraySend
         }
-        await mail.sendMail(mailOptions, function (error, info) {
+        await mail.sendMail(mailOptions, function(error, info) {
             if (error) {
                 console.log(error + '');
                 if (req)
@@ -245,7 +244,7 @@ module.exports = {
             }
         });
     },
-    sendMailTest: async (req, res) => {
+    sendMailTest: async(req, res) => {
         let body = req.body;
         var nodemailer = require('nodemailer');
         // If you're using Amazon SES in a region other than US West (Oregon),
@@ -327,8 +326,7 @@ This email was sent through the Amazon SES SMTP interface using Nodemailer.
                 //     'X-SES-MESSAGE-TAGS': tag0,
                 //     'X-SES-MESSAGE-TAGS': tag1
                 // },
-                attachments: [
-                    {
+                attachments: [{
                         path: 'http://dbdev.namanphu.vn:1357/ageless_sendmail/photo-1636517560450.xlsx'
                     },
                     {
