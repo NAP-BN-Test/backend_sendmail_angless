@@ -1,4 +1,3 @@
-
 const Op = require('sequelize').Op;
 const Constant = require('../constants/constant');
 const Result = require('../constants/result');
@@ -12,7 +11,15 @@ var mUser = require('../tables/user');
 module.exports = {
     configMailSend: (req, res) => {
         let body = req.body;
+        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
+            await mConfigEmailSend(db).update({ EmailSend: body.email }, {
+                where: {
+                    ID: {
+                        [Op.ne]: null
+                    }
+                }
+            })
             mUser(db).update({ Email: body.email }, { where: { Name: 'root' } }).then(response => {
                 if (response == 1) {
                     res.json(Result.ACTION_SUCCESS);
@@ -55,7 +62,7 @@ module.exports = {
 
         })
     },
-    getListUser: (req, res) => {//take this list for dropdown
+    getListUser: (req, res) => { //take this list for dropdown
         let body = req.body;
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
@@ -77,7 +84,13 @@ module.exports = {
                     res.json(result)
                 })
             } else {
-                mUser(db).findAll({ where: { ID: { [Op.ne]: body.userID } } }).then(data => {
+                mUser(db).findAll({
+                    where: {
+                        ID: {
+                            [Op.ne]: body.userID
+                        }
+                    }
+                }).then(data => {
                     var array = [];
 
                     data.forEach(elm => {
@@ -99,7 +112,7 @@ module.exports = {
         })
     },
 
-    checkUser: async function (ip, dbName, userID) {
+    checkUser: async function(ip, dbName, userID) {
         var db = await database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a');
         try {
             var data = await mUser(db).findOne({ where: { ID: userID } })
@@ -109,7 +122,7 @@ module.exports = {
         }
     },
 
-    updateEmailUser: async function (ip, dbName, userID, email) {
+    updateEmailUser: async function(ip, dbName, userID, email) {
         var db = await database.checkServerInvalid(ip, dbName, '00a2152372fa8e0e62edbb45dd82831a');
         try {
             var data = await mUser(db).update({ Email: email }, { where: { ID: userID } })
@@ -196,16 +209,32 @@ module.exports = {
 
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             try {
-                let whereSearch = [
-                    { Username: { [Op.like]: '%' + body.searchKey + '%' } },
-                    { Name: { [Op.like]: '%' + body.searchKey + '%' } },
-                    { Phone: { [Op.like]: '%' + body.searchKey + '%' } },
-                    { Email: { [Op.like]: '%' + body.searchKey + '%' } },
+                let whereSearch = [{
+                        Username: {
+                            [Op.like]: '%' + body.searchKey + '%'
+                        }
+                    },
+                    {
+                        Name: {
+                            [Op.like]: '%' + body.searchKey + '%'
+                        }
+                    },
+                    {
+                        Phone: {
+                            [Op.like]: '%' + body.searchKey + '%'
+                        }
+                    },
+                    {
+                        Email: {
+                            [Op.like]: '%' + body.searchKey + '%'
+                        }
+                    },
                 ];
 
                 var categoryData = await mUser(db).findAll({
-                    where: [
-                        { [Op.or]: whereSearch },
+                    where: [{
+                            [Op.or]: whereSearch
+                        },
                         { Active: true },
                         {
                             Name: {
@@ -263,7 +292,9 @@ module.exports = {
                     Active: false
                 }, {
                     where: {
-                        ID: { [Op.in]: listID }
+                        ID: {
+                            [Op.in]: listID
+                        }
                     }
                 })
                 res.json(Result.ACTION_SUCCESS);

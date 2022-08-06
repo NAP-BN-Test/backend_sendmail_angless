@@ -234,9 +234,9 @@ module.exports = {
             html: body,
             attachments: arraySend
         }
-        await mail.sendMail(mailOptions, function(error, info) {
+        mail.sendMail(mailOptions, function(error, info) {
             if (error) {
-                console.log(error + '');
+                console.log(error + '' + '----------------------------');
                 if (req)
                     req.session.cookie.io.sockets.emit("respone-send-mail", error + '')
             } else {

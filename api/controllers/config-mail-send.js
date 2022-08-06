@@ -4,10 +4,14 @@ const Result = require('../constants/result');
 var moment = require('moment');
 var mConfigEmailSend = require('../tables/config-mail-send')
 var database = require('../db');
+var mUser = require('../tables/user');
+
 async function deleteRelationshipConfigMailSend(db, listID) {
     await mConfigEmailSend(db).destroy({
         where: {
-            ID: { [Op.in]: listID }
+            ID: {
+                [Op.in]: listID
+            }
         }
     })
 }
@@ -112,12 +116,15 @@ module.exports = {
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
             if (db) {
                 try {
-                    mConfigEmailSend(db).findAll().then(data => {
+                    mConfigEmailSend(db).findAll().then(async data => {
                         var array = [];
+                        let user = await mUser(db).findOne({
+                            where: { Name: 'root' }
+                        })
                         data.forEach(element => {
                             var obj = {
                                 id: Number(element.ID),
-                                emailSend: element.EmailSend ? element.EmailSend : '',
+                                emailSend: user.Email ? user.Email : '',
                                 password: element.Password ? element.Password : '',
                                 mailServer: element.MailServer ? element.MailServer : '',
                                 smtpPort: element.SMTPPort ? element.SMTPPort : '',

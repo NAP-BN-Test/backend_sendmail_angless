@@ -163,6 +163,7 @@ module.exports = {
                             ],
                             where: { EmailSend: emailSend.Email }
                         });
+                        console.log(emailSend, 123456);
                         if (!mailUn)
                             mAmazon.sendEmail(emailSend, arrayEmail[i].name, Subject, bodyHtml, [], req).then(async response => {
                                 if (response) {
