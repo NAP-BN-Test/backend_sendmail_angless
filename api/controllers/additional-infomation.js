@@ -95,7 +95,6 @@ module.exports = {
                                         count > 1 ? listNameCampaign += ', [' + item.Campaign.Name + ']' : listNameCampaign += '[' + item.Campaign.Name + ']';
                                     }
                                 })
-                            console.log(data[i]);
                             array.push({
                                 ID: data[i].ID,
                                 OurRef: data[i].OurRef,
