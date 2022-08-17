@@ -161,27 +161,19 @@ module.exports = {
     sendEmail: async function(emailSend, emailRecive, subject, body, array, req = null) { //take this list for dropdown
         var nodemailer = require('nodemailer');
         var mail;
+        console.log(emailSend.MailServer, emailSend.OMPort);
         if (emailSend.MailServer && emailSend.OMPort) {
-            // mail = nodemailer.createTransport({
-            //     host: emailSend.MailServer,
-            //     // secureConnection: true,
-            //     secure: false,
-            //     port: emailSend.OMPort ? emailSend.OMPort : null,
-            //     // thêm dòng này sẽ gửi dc
-            //     tls: {
-            //         rejectUnauthorized: false
-            //     },
-            //     // service: 'gmail',
-            //     auth: {
-            //         user: emailSend.EmailSend,
-            //         pass: emailSend.Password,
-            //     }
-            // });
             mail = nodemailer.createTransport({
                 host: emailSend.MailServer,
                 port: emailSend.OMPort ? emailSend.OMPort : null,
-                secure: false,
-                ignoreTLS: true, // bắt buộc phải có
+                // secureConnection: true,
+                secure: true,
+                // thêm dòng này sẽ gửi dc
+                // tls: {
+                //     rejectUnauthorized: true
+                // },
+                ignoreTLS: true,
+                // service: 'gmail',
                 auth: {
                     user: emailSend.EmailSend,
                     pass: emailSend.Password,

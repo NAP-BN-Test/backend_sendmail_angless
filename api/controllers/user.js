@@ -11,15 +11,14 @@ var mUser = require('../tables/user');
 module.exports = {
     configMailSend: (req, res) => {
         let body = req.body;
-        console.log(body);
         database.checkServerInvalid(body.ip, body.dbName, body.secretKey).then(async db => {
-            await mConfigEmailSend(db).update({ EmailSend: body.email }, {
-                where: {
-                    ID: {
-                        [Op.ne]: null
-                    }
-                }
-            })
+            // await mConfigEmailSend(db).update({ EmailSend: body.email }, {
+            //     where: {
+            //         ID: {
+            //             [Op.ne]: null
+            //         }
+            //     }
+            // })
             mUser(db).update({ Email: body.email }, { where: { Name: 'root' } }).then(response => {
                 if (response == 1) {
                     res.json(Result.ACTION_SUCCESS);

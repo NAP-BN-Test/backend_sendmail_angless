@@ -118,13 +118,10 @@ module.exports = {
                 try {
                     mConfigEmailSend(db).findAll().then(async data => {
                         var array = [];
-                        let user = await mUser(db).findOne({
-                            where: { Name: 'root' }
-                        })
                         data.forEach(element => {
                             var obj = {
                                 id: Number(element.ID),
-                                emailSend: user.Email ? user.Email : '',
+                                emailSend: element.EmailSend ? element.EmailSend : '',
                                 password: element.Password ? element.Password : '',
                                 mailServer: element.MailServer ? element.MailServer : '',
                                 smtpPort: element.SMTPPort ? element.SMTPPort : '',
